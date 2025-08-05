@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { hollywood } from '@genkit-ai/googleai/experimental';
 
 // Define the schema for the flow's input, which is a single URL string.
 const EnhancePosterInputSchema = z.string().url();
@@ -37,33 +36,7 @@ const enhancePosterFlow = ai.defineFlow(
     outputSchema: EnhancePosterOutputSchema,
   },
   async (url) => {
-    try {
-      // Use the hollywood tool to edit the image.
-      // This tool can perform multiple operations in a sequence.
-      const { media } = await hollywood(
-        {
-          // We are providing the image via a URL.
-          image: { url },
-          // A sequence of editing operations to perform.
-          edit: [
-            // First, upscale the image to improve its resolution.
-            { type: 'upscale' },
-            // Second, crop the image to a standard 2:3 movie poster aspect ratio.
-            { type: 'crop', options: { aspectRatio: '2:3' } },
-          ],
-        }
-      );
-      
-      if (!media?.url) {
-        throw new Error('AI enhancement did not return an image.');
-      }
-      
-      // The tool returns a data URI which we can directly return.
-      return media.url;
-    } catch (error) {
-      console.error('Error in enhancePosterFlow:', error);
-      // If any step fails, throw a more user-friendly error.
-      throw new Error('Failed to enhance poster. The URL may be invalid or the image is unsupported.');
-    }
+    // Returning the original URL as the enhancement tool is not available.
+    return url;
   }
 );

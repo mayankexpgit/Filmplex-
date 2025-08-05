@@ -12,7 +12,6 @@ import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit, Loader2 } from 'lucide-react';
-import { enhancePoster } from '@/ai/flows/enhance-poster-flow';
 
 export default function UploadMovie() {
   const { toast } = useToast();
@@ -71,43 +70,32 @@ export default function UploadMovie() {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const enhancedUrl = await enhancePoster(posterUrl);
+    startTransition(() => {
+      const movieData: Movie = {
+        id: id || new Date().toISOString(),
+        title,
+        year,
+        posterUrl: posterUrl,
+        quality,
+        tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+        isFeatured: editingMovie?.isFeatured || false,
+        genre: editingMovie?.genre || 'Misc',
+      };
 
-        const movieData: Movie = {
-          id: id || new Date().toISOString(),
-          title,
-          year,
-          posterUrl: enhancedUrl,
-          quality,
-          tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-          isFeatured: editingMovie?.isFeatured || false,
-          genre: editingMovie?.genre || 'Misc',
-        };
-
-        if (id) {
-          updateMovie(id, movieData);
-          toast({
-            title: 'Success!',
-            description: `Movie "${title}" has been updated with an enhanced poster.`,
-          });
-        } else {
-          addMovie(movieData);
-          toast({
-            title: 'Success!',
-            description: `Movie "${title}" has been added with an enhanced poster.`,
-          });
-        }
-        resetForm();
-      } catch (error) {
-        console.error('Failed to enhance poster:', error);
+      if (id) {
+        updateMovie(id, movieData);
         toast({
-          variant: 'destructive',
-          title: 'Poster Enhancement Failed',
-          description: 'The poster URL might be invalid or the image could not be processed. Please try a different URL.',
+          title: 'Success!',
+          description: `Movie "${title}" has been updated.`,
+        });
+      } else {
+        addMovie(movieData);
+        toast({
+          title: 'Success!',
+          description: `Movie "${title}" has been added.`,
         });
       }
+      resetForm();
     });
   };
   
