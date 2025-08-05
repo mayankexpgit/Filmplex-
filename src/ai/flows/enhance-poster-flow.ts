@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { hollywood } from '@genkit-ai/googleai';
+import { hollywood } from '@genkit-ai/googleai/experimental';
 
 // Define the schema for the flow's input, which is a single URL string.
 const EnhancePosterInputSchema = z.string().url();
