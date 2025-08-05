@@ -36,7 +36,7 @@ export default async function MovieDetailPage({ params }: { params: { id: string
       <main className="container mx-auto py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
           {/* Movie Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-center text-gold-glow mb-4">{movie.title} ({movie.year})</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{movie.title} ({movie.year})</h1>
           
           {/* Share Buttons */}
            <div className="flex justify-center items-center gap-2 mb-8">
@@ -119,7 +119,7 @@ export default async function MovieDetailPage({ params }: { params: { id: string
           {movie.synopsis && (
             <section>
               <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Storyline</h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="leading-relaxed">
                 {movie.synopsis}
               </p>
             </section>
