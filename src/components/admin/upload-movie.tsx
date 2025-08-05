@@ -7,25 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addMovie, updateMovie, deleteMovie, fetchInitialData } from '@/store/movieStore';
+import { useMovieStore, addMovie, updateMovie, deleteMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit, Loader2 } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
-import { Skeleton } from '../ui/skeleton';
-
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { latestReleases, featuredMovies, isLoading, isInitialized } = useMovieStore();
+  // Data is now fetched by the AdminLayout. This component just displays it.
+  const { latestReleases, featuredMovies } = useMovieStore();
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (!isInitialized) {
-      fetchInitialData();
-    }
-  }, [isInitialized]);
 
   const movies = useMemo(() => {
     const all = [...latestReleases, ...featuredMovies];
@@ -228,33 +221,20 @@ export default function UploadMovie() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(isLoading || !isInitialized) ? (
-                  Array.from({ length: 10 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-1/2" /></TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Skeleton className="h-8 w-8 inline-block" />
-                        <Skeleton className="h-8 w-8 inline-block" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  filteredMovies.map((movie) => (
-                    <TableRow key={movie.id}>
-                      <TableCell className="font-medium">{movie.title}</TableCell>
-                      <TableCell>{movie.year}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(movie.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                {filteredMovies.map((movie) => (
+                  <TableRow key={movie.id}>
+                    <TableCell className="font-medium">{movie.title}</TableCell>
+                    <TableCell>{movie.year}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(movie.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </ScrollArea>

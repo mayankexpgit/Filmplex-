@@ -1,21 +1,14 @@
 
 'use client';
 
-import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { useMovieStore, fetchInitialData } from '@/store/movieStore';
-import { Skeleton } from '../ui/skeleton';
+import { useMovieStore } from '@/store/movieStore';
 
 export default function SecurityLog() {
-  const { securityLogs, isLoading, isInitialized } = useMovieStore();
-
-  useEffect(() => {
-    if (!isInitialized) {
-      fetchInitialData();
-    }
-  }, [isInitialized]);
+  // Data is now fetched by the AdminLayout. This component just displays it.
+  const { securityLogs } = useMovieStore();
   
   return (
     <Card>
@@ -34,23 +27,13 @@ export default function SecurityLog() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(isLoading || !isInitialized) ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[250px]" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                securityLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">{log.admin}</TableCell>
-                    <TableCell>{log.action}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{log.timestamp}</TableCell>
-                  </TableRow>
-                ))
-              )}
+              {securityLogs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell className="font-medium">{log.admin}</TableCell>
+                  <TableCell>{log.action}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">{log.timestamp}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </ScrollArea>

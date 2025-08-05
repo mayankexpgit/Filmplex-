@@ -45,8 +45,7 @@ interface MovieState {
   suggestions: Suggestion[];
   securityLogs: SecurityLog[];
 
-  // Initialization and Loading
-  isLoading: boolean;
+  // Initialization
   isInitialized: boolean;
 
   // Actions (only state setters)
@@ -57,7 +56,6 @@ interface MovieState {
 // =================================================================
 // 1. ZUSTAND STORE DEFINITION
 // The store is now only responsible for holding state.
-// All async logic and data fetching is moved outside.
 // =================================================================
 export const useMovieStore = create<MovieState>((set) => ({
   // --- Initial State ---
@@ -67,7 +65,6 @@ export const useMovieStore = create<MovieState>((set) => ({
   contactInfo: { email: '', message: '' },
   suggestions: [],
   securityLogs: [],
-  isLoading: true,
   isInitialized: false,
 
   // --- Actions ---
@@ -78,8 +75,8 @@ export const useMovieStore = create<MovieState>((set) => ({
 
 // =================================================================
 // 2. ASYNCHRONOUS ACTION FUNCTIONS
-// These functions orchestrate data fetching and update the store.
-// They are called directly from components.
+// These orchestrate data fetching and update the store.
+// They are now called centrally from layouts.
 // =================================================================
 
 /**
@@ -98,17 +95,17 @@ const addSecurityLog = async (action: string): Promise<void> => {
 };
 
 /**
- * Fetches all necessary data for the application from Firestore
- * and updates the store state.
+ * Fetches ALL data for the application from Firestore and updates the store.
+ * This function should be called once from a high-level layout component.
  */
+let isFetching = false;
 export const fetchInitialData = async (): Promise<void> => {
-  // Prevent re-fetching if already initialized
-  if (useMovieStore.getState().isInitialized) {
-    useMovieStore.setState({ isLoading: false });
+  // Prevent re-fetching if already initialized or a fetch is in progress
+  if (useMovieStore.getState().isInitialized || isFetching) {
     return;
   }
   
-  useMovieStore.setState({ isLoading: true });
+  isFetching = true;
 
   try {
     const [allMovies, contactInfo, suggestions, securityLogs] = await Promise.all([
@@ -128,9 +125,9 @@ export const fetchInitialData = async (): Promise<void> => {
     });
   } catch (error) {
     console.error("Failed to fetch initial data:", error);
-    // Optionally set an error state in the store
+    useMovieStore.setState({ isInitialized: true }); // Still set to true to unblock UI
   } finally {
-    useMovieStore.setState({ isLoading: false });
+    isFetching = false;
   }
 };
 
@@ -153,7 +150,8 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
 export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
   await dbUpdateMovie(id, updatedMovie);
   
-  const movieTitle = updatedMovie.title || useMovieStore.getState().featuredMovies.find(m => m.id === id)?.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title;
+  const movieTitle = updatedMovie.title || [...useMovieStore.getState().featuredMovies, ...useMovieStore.getState().latestReleases].find(m => m.id === id)?.title || 'Unknown Movie';
+  
   if (updatedMovie.posterUrl) {
     await addSecurityLog(`Updated Movie poster for: "${movieTitle}"`);
   } else {

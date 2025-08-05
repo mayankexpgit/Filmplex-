@@ -1,12 +1,28 @@
+
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { isInitialized } = useMovieStore();
+
+  useEffect(() => {
+    // Fetch all data required for the admin section when the layout mounts.
+    // This prevents individual pages from re-fetching and creating race conditions.
+    if (!isInitialized) {
+      fetchInitialData();
+    }
+  }, [isInitialized]);
+
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -20,7 +36,52 @@ export default function AdminLayout({
           </Button>
         </div>
       </header>
-      <main>{children}</main>
+      <main>
+        {!isInitialized ? (
+          <div className="container mx-auto py-8 md:py-12">
+            {/* A generic loading skeleton for the entire admin section */}
+            <div className="space-y-8 max-w-4xl mx-auto">
+              <CardSkeleton />
+              <CardSkeleton withTable />
+            </div>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
     </div>
   );
 }
+
+const CardSkeleton = ({ withTable = false }) => (
+  <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+    <Skeleton className="h-8 w-1/2" />
+    <Skeleton className="h-4 w-3/4" />
+    <div className="space-y-4 pt-4">
+      {withTable ? (
+        <>
+          <div className="flex justify-between">
+            <Skeleton className="h-10 w-1/3" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+          <Skeleton className="h-10 w-28" />
+        </>
+      )}
+    </div>
+  </div>
+);

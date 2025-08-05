@@ -8,26 +8,20 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, fetchInitialData, updateContactInfo as storeUpdateContactInfo } from '@/store/movieStore';
+import { useMovieStore, updateContactInfo as storeUpdateContactInfo } from '@/store/movieStore';
 import { Loader2 } from 'lucide-react';
-import { Skeleton } from '../ui/skeleton';
 
 export default function ContactManager() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const { contactInfo, isLoading, isInitialized } = useMovieStore();
+  const contactInfo = useMovieStore((state) => state.contactInfo);
 
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Fetch initial data if it hasn't been fetched yet.
-    if (!isInitialized) {
-      fetchInitialData();
-    }
-  }, [isInitialized]);
-
-  useEffect(() => {
+    // Data is now fetched by the AdminLayout.
+    // This component just needs to sync its local state when the store's data changes.
     if (contactInfo) {
       setEmail(contactInfo.email);
       setMessage(contactInfo.message);
@@ -51,27 +45,6 @@ export default function ContactManager() {
       }
     });
   };
-  
-  if (isLoading || !isInitialized) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Contact Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-          <Skeleton className="h-10 w-28" />
-        </CardContent>
-      </Card>
-    )
-  }
 
   return (
     <Card>

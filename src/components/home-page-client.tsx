@@ -42,23 +42,23 @@ function GridSkeleton() {
 
 export function HomePageClient() {
   const { 
-    isLoading,
     isInitialized,
     searchQuery,
     setSearchQuery,
   } = useMovieStore((state) => ({
-    isLoading: state.isLoading,
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
   }));
 
   useEffect(() => {
-    // This now fetches ALL data (movies and admin) if not already fetched.
-    fetchInitialData();
-  }, []);
+    // Data fetching is now centralized. We just need to ensure it's been initialized.
+    if (!isInitialized) {
+      fetchInitialData();
+    }
+  }, [isInitialized]);
 
-  if (isLoading || !isInitialized) {
+  if (!isInitialized) {
      return (
       <div className="container mx-auto py-8 md:py-12 space-y-12">
         <CarouselSkeleton />
