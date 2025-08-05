@@ -63,6 +63,12 @@ const nextConfig: NextConfig = {
         hostname: 'www.ecranlarge.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 's.yimg.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
