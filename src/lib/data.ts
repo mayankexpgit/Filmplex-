@@ -5,6 +5,8 @@ export interface Movie {
   year: number;
   isFeatured: boolean;
   genre: string;
+  quality?: string;
+  tags?: string[];
 }
 
 export const featuredMovies: Movie[] = [
@@ -15,6 +17,8 @@ export const featuredMovies: Movie[] = [
     year: 2024,
     isFeatured: true,
     genre: 'Sci-Fi, Action',
+    quality: '4K',
+    tags: ['Featured', 'New'],
   },
   {
     id: '2',
@@ -23,6 +27,8 @@ export const featuredMovies: Movie[] = [
     year: 2024,
     isFeatured: true,
     genre: 'Cyberpunk, Thriller',
+    quality: 'HD',
+    tags: ['Featured'],
   },
   {
     id: '3',
@@ -31,6 +37,8 @@ export const featuredMovies: Movie[] = [
     year: 2024,
     isFeatured: true,
     genre: 'Mystery, Crime',
+    quality: '4K',
+    tags: ['Featured'],
   },
   {
     id: '4',
@@ -39,6 +47,8 @@ export const featuredMovies: Movie[] = [
     year: 2024,
     isFeatured: true,
     genre: 'Space Opera, Adventure',
+    quality: 'HD',
+    tags: ['Featured'],
   },
     {
     id: '5',
@@ -47,6 +57,8 @@ export const featuredMovies: Movie[] = [
     year: 2023,
     isFeatured: true,
     genre: 'Drama, Romance',
+    quality: '4K',
+    tags: ['Featured'],
   },
 ];
 
@@ -58,6 +70,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Horror, Thriller',
+    quality: 'HD',
+    tags: ['New Release'],
   },
   {
     id: '7',
@@ -66,6 +80,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Fantasy, Adventure',
+    quality: '4K',
+    tags: ['New Release'],
   },
   {
     id: '8',
@@ -74,6 +90,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Action, Espionage',
+    quality: 'HD',
+    tags: ['New Release'],
   },
   {
     id: '9',
@@ -82,6 +100,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Action, Crime',
+    quality: '4K',
+    tags: ['New Release'],
   },
   {
     id: '10',
@@ -90,6 +110,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Comedy, Romance',
+    quality: 'HD',
+    tags: ['New Release'],
   },
   {
     id: '11',
@@ -98,6 +120,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Historical, Action',
+    quality: '4K',
+    tags: ['New Release'],
   },
    {
     id: '12',
@@ -106,6 +130,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Sci-Fi',
+    quality: 'HD',
+    tags: ['New Release'],
   },
   {
     id: '13',
@@ -114,6 +140,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Sci-Fi, Romance',
+    quality: '4K',
+    tags: ['New Release'],
   },
   {
     id: '14',
@@ -122,6 +150,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Vampire, Romance',
+    quality: 'HD',
+    tags: ['New Release'],
   },
   {
     id: '15',
@@ -130,6 +160,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Action, Western',
+    quality: '4K',
+    tags: ['New Release'],
   },
   {
     id: '16',
@@ -138,6 +170,8 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Sci-Fi, Horror',
+    quality: 'HD',
+    tags: ['New Release'],
   },
   {
     id: '17',
@@ -146,5 +180,7 @@ export const latestReleases: Movie[] = [
     year: 2024,
     isFeatured: false,
     genre: 'Drama, Historical',
+    quality: '4K',
+    tags: ['New Release'],
   },
 ];

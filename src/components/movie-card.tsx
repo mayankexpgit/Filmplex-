@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { Movie } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from './ui/badge';
 
 interface MovieCardProps {
   movie: Movie;
@@ -41,14 +42,6 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             data-ai-hint="movie poster"
           />
         </div>
-        <div className="mt-2">
-          <h3 className="font-bold truncate text-foreground text-sm">
-            {movie.title}
-          </h3>
-          <div className="text-muted-foreground text-xs">
-            <span>{movie.year}</span> &bull; <span>{movie.genre}</span>
-          </div>
-        </div>
       </div>
     );
   }
@@ -66,13 +59,27 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="movie poster"
           />
+           {movie.quality && (
+            <Badge variant="destructive" className="absolute top-2 right-2 rounded-sm text-xs">
+              {movie.quality}
+            </Badge>
+          )}
         </div>
-        <div className="p-3 bg-black flex-grow flex flex-col justify-center">
-          <h3 className="font-bold text-foreground text-base leading-tight">
-            {movie.title}
-          </h3>
-          <div className="text-muted-foreground text-sm mt-1">
-            <span>{movie.year}</span> &bull; <span>{movie.genre}</span>
+        <div className="p-3 bg-black flex-grow flex flex-col justify-between">
+          <div>
+            <h3 className="font-bold text-foreground text-base leading-tight truncate">
+              {movie.title}
+            </h3>
+            <div className="text-muted-foreground text-sm mt-1">
+              <span>{movie.year}</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {movie.tags?.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs rounded-sm">
+                {tag}
+              </Badge>
+            ))}
           </div>
         </div>
       </CardContent>
