@@ -51,6 +51,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.zee5.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
