@@ -1,18 +1,17 @@
-
 'use client';
 
 import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
+import { Button } from './ui/button';
 import { Flame } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import Pagination from './pagination';
 
 const MOVIES_PER_PAGE = 12;
 
 export default function MovieCardLarge() {
   const latestReleases = useMovieStore((state) => state.latestReleases);
   const searchQuery = useMovieStore((state) => state.searchQuery);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleMoviesCount, setVisibleMoviesCount] = useState(MOVIES_PER_PAGE);
 
   const filteredMovies = useMemo(() => {
     if (!searchQuery) {
@@ -23,18 +22,12 @@ export default function MovieCardLarge() {
     );
   }, [latestReleases, searchQuery]);
 
-  const totalPages = Math.ceil(filteredMovies.length / MOVIES_PER_PAGE);
+  const moviesToShow = useMemo(() => {
+    return filteredMovies.slice(0, visibleMoviesCount);
+  }, [filteredMovies, visibleMoviesCount]);
 
-  const paginatedMovies = useMemo(() => {
-    const startIndex = (currentPage - 1) * MOVIES_PER_PAGE;
-    const endIndex = startIndex + MOVIES_PER_PAGE;
-    return filteredMovies.slice(startIndex, endIndex);
-  }, [currentPage, filteredMovies]);
-  
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+  const handleMoreMovies = () => {
+    setVisibleMoviesCount(prevCount => prevCount + MOVIES_PER_PAGE);
   };
 
   return (
@@ -46,17 +39,15 @@ export default function MovieCardLarge() {
         </h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-4">
-        {paginatedMovies.map((movie) => (
+        {moviesToShow.map((movie) => (
           <MovieCard key={movie.id} movie={movie} variant="large" />
         ))}
       </div>
-      {totalPages > 1 && (
+      {visibleMoviesCount < filteredMovies.length && (
         <div className="mt-8 flex justify-center">
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+          <Button onClick={handleMoreMovies}>
+            More Movies
+          </Button>
         </div>
       )}
     </div>
