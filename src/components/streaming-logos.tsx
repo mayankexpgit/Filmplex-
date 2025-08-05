@@ -6,9 +6,6 @@ const StreamingLogos = () => {
     { name: 'Netflix', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/2560px-Netflix_2015_logo.svg.png' },
     { name: 'Prime Video', url: 'https://logos-world.net/wp-content/uploads/2021/04/Amazon-Prime-Video-Logo-2022.png' },
     { name: 'Crunchyroll', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Crunchyroll_2024_stacked.svg/1200px-Crunchyroll_2024_stacked.svg.png' },
-    { name: 'SonyLIV', url: 'https://upload.wikimedia.org/wikipedia/en/thumb/9/91/SonyLIV_2020.svg/2560px-SonyLIV_2020.svg.png' },
-    { name: 'ZEE5', url: 'https://www.zee5.com/images/zee5-logo-dark-bg.png' },
-    { name: 'Viki', url: 'https://cdn.worldvectorlogo.com/logos/viki.svg' },
   ];
 
   return (
