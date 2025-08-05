@@ -85,28 +85,32 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
       addMovie: async (movieData: Omit<Movie, 'id'>) => {
         await dbAddMovie(movieData);
-        await get().fetchHomepageData();
         await get().addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
+        await get().fetchHomepageData();
       },
 
       updateMovie: async (id: string, updatedMovie: Partial<Movie>) => {
-        const movies = [...get().featuredMovies, ...get().latestReleases];
-        const movie = movies.find((m) => m.id === id);
-        const title = updatedMovie.title || movie?.title;
+        const title = updatedMovie.title;
         
         await dbUpdateMovie(id, updatedMovie);
-        await get().fetchHomepageData();
         if (title) {
           await get().addSecurityLog(`Updated Movie: "${title}"`);
+        } else {
+           const movies = [...get().featuredMovies, ...get().latestReleases];
+           const movie = movies.find((m) => m.id === id);
+           if (movie) {
+              await get().addSecurityLog(`Updated Movie: "${movie.title}"`);
+           }
         }
+        await get().fetchHomepageData();
       },
 
       deleteMovie: async (id: string) => {
         const movie = [...get().latestReleases, ...get().featuredMovies].find(m => m.id === id);
         if (movie) {
             await dbDeleteMovie(id);
-            await get().fetchHomepageData();
             await get().addSecurityLog(`Deleted Movie: "${movie.title}"`);
+            await get().fetchHomepageData();
         }
       },
 
@@ -129,10 +133,10 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
       deleteSuggestion: async (id: string) => {
         await dbDeleteSuggestion(id);
+        await get().addSecurityLog(`Deleted Suggestion ID: ${id}`);
         set((state) => ({
           suggestions: state.suggestions.filter((s) => s.id !== id)
         }));
-        await get().addSecurityLog(`Deleted Suggestion ID: ${id}`);
       },
       
       addSecurityLog: async (action: string) => {

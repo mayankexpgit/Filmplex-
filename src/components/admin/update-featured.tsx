@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore } from '@/store/movieStore';
 import { Loader2 } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
 
 export default function UpdateFeatured() {
   const { toast } = useToast();
-  const { featuredMovies, updateMovie, fetchHomepageData } = useMovieStore();
+  const { featuredMovies, isLoading, updateMovie, fetchHomepageData } = useMovieStore();
   const [isPending, startTransition] = useTransition();
   
   const [posters, setPosters] = useState<Record<string, string>>({});
@@ -72,6 +73,27 @@ export default function UpdateFeatured() {
       }
     });
   };
+
+  if (isLoading && featuredMovies.length === 0) {
+    return (
+       <Card>
+        <CardHeader>
+          <CardTitle>Update Featured Movie Posters</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="space-y-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+           <Skeleton className="h-10 w-28" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>

@@ -9,12 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore } from '@/store/movieStore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Skeleton } from 'lucide-react';
 
 export default function ContactManager() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const { contactInfo, updateContactInfo, fetchAllAdminData } = useMovieStore();
+  const { contactInfo, isLoading, updateContactInfo, fetchAllAdminData } = useMovieStore();
 
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -48,6 +48,27 @@ export default function ContactManager() {
       }
     });
   };
+  
+  if (isLoading && !contactInfo.email) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Contact Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+          <Skeleton className="h-10 w-28" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
