@@ -47,7 +47,7 @@ export default function MovieCardLarge() {
       {visibleMoviesCount < filteredMovies.length && (
         <div className="mt-8 flex justify-center">
           <Button onClick={handleMoreMovies}>
-            More
+            Load more
           </Button>
         </div>
       )}
