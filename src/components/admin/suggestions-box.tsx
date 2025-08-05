@@ -6,12 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, deleteSuggestion as storeDeleteSuggestion, fetchInitialData } from '@/store/movieStore';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 
 export default function SuggestionsBox() {
-  const { suggestions, deleteSuggestion, isLoading, isInitialized, fetchInitialData } = useMovieStore();
+  const { suggestions, isLoading, isInitialized } = useMovieStore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
@@ -19,12 +19,12 @@ export default function SuggestionsBox() {
     if (!isInitialized) {
       fetchInitialData();
     }
-  }, [isInitialized, fetchInitialData]);
+  }, [isInitialized]);
 
   const handleDelete = (id: string) => {
     startTransition(async () => {
       try {
-        await deleteSuggestion(id);
+        await storeDeleteSuggestion(id);
         toast({
           title: 'Suggestion Removed',
           description: `Suggestion with ID ${id} has been deleted.`,

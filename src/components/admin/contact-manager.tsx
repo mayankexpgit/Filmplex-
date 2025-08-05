@@ -8,24 +8,24 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData, updateContactInfo as storeUpdateContactInfo } from '@/store/movieStore';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
 export default function ContactManager() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const { contactInfo, isLoading, isInitialized, fetchInitialData, updateContactInfo } = useMovieStore();
+  const { contactInfo, isLoading, isInitialized } = useMovieStore();
 
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Initial fetch of all data if not already initialized
+    // Fetch initial data if it hasn't been fetched yet.
     if (!isInitialized) {
       fetchInitialData();
     }
-  }, [isInitialized, fetchInitialData]);
+  }, [isInitialized]);
 
   useEffect(() => {
     if (contactInfo) {
@@ -37,7 +37,7 @@ export default function ContactManager() {
   const handleSave = () => {
     startTransition(async () => {
       try {
-        await updateContactInfo({ email, message });
+        await storeUpdateContactInfo({ email, message });
         toast({
           title: 'Success!',
           description: 'Contact information has been updated.',

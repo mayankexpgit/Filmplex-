@@ -5,17 +5,17 @@ import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { Skeleton } from '../ui/skeleton';
 
 export default function SecurityLog() {
-  const { securityLogs, isLoading, isInitialized, fetchInitialData } = useMovieStore();
+  const { securityLogs, isLoading, isInitialized } = useMovieStore();
 
   useEffect(() => {
     if (!isInitialized) {
       fetchInitialData();
     }
-  }, [isInitialized, fetchInitialData]);
+  }, [isInitialized]);
   
   return (
     <Card>

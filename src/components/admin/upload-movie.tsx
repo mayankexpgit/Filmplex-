@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, addMovie, updateMovie, deleteMovie, fetchInitialData } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,14 +18,14 @@ import { Skeleton } from '../ui/skeleton';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie, fetchInitialData, isLoading, isInitialized } = useMovieStore();
+  const { latestReleases, featuredMovies, isLoading, isInitialized } = useMovieStore();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!isInitialized) {
       fetchInitialData();
     }
-  }, [isInitialized, fetchInitialData]);
+  }, [isInitialized]);
 
   const movies = useMemo(() => {
     const all = [...latestReleases, ...featuredMovies];

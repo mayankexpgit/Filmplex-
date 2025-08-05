@@ -6,14 +6,13 @@ import {
   updateMovie as dbUpdateMovie,
   deleteMovie as dbDeleteMovie,
   fetchMovies as dbFetchMovies,
-  fetchContactInfo,
+  fetchContactInfo as dbFetchContactInfo,
   updateContactInfo as dbUpdateContactInfo,
-  fetchSuggestions,
+  fetchSuggestions as dbFetchSuggestions,
   deleteSuggestion as dbDeleteSuggestion,
-  fetchSecurityLogs,
+  fetchSecurityLogs as dbFetchSecurityLogs,
   addSecurityLog as dbAddSecurityLog,
 } from '@/services/movieService';
-
 
 // --- Types ---
 export interface ContactInfo {
@@ -40,153 +39,167 @@ interface MovieState {
   featuredMovies: Movie[];
   latestReleases: Movie[];
   searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  addMovie: (movie: Omit<Movie, 'id'>) => Promise<void>;
-  updateMovie: (id: string, updatedMovie: Partial<Movie>) => Promise<void>;
-  deleteMovie: (id: string) => Promise<void>;
   
-  // Contact Info
+  // Admin Data
   contactInfo: ContactInfo;
-  updateContactInfo: (info: ContactInfo) => Promise<void>;
-
-  // Suggestions
   suggestions: Suggestion[];
-  deleteSuggestion: (id: string) => Promise<void>;
-
-  // Security Logs
   securityLogs: SecurityLog[];
-  addSecurityLog: (action: string) => Promise<void>;
 
   // Initialization and Loading
   isLoading: boolean;
   isInitialized: boolean;
-  fetchInitialData: () => Promise<void>;
-  fetchAllAdminData: () => Promise<void>; // Kept for targeted admin refresh if needed
+
+  // Actions (only state setters)
+  setSearchQuery: (query: string) => void;
+  setState: (state: Partial<MovieState>) => void;
 }
 
-export const useMovieStore = create<MovieState>((set, get) => ({
-      // --- Initial State ---
-      featuredMovies: [],
-      latestReleases: [],
-      isLoading: true, // Start in loading state until initial fetch is complete
-      isInitialized: false, // This will be true only once the first fetch succeeds
-      searchQuery: '',
-      contactInfo: {
-        email: '',
-        message: '',
-      },
-      suggestions: [],
-      securityLogs: [],
+// =================================================================
+// 1. ZUSTAND STORE DEFINITION
+// The store is now only responsible for holding state.
+// All async logic and data fetching is moved outside.
+// =================================================================
+export const useMovieStore = create<MovieState>((set) => ({
+  // --- Initial State ---
+  featuredMovies: [],
+  latestReleases: [],
+  searchQuery: '',
+  contactInfo: { email: '', message: '' },
+  suggestions: [],
+  securityLogs: [],
+  isLoading: true,
+  isInitialized: false,
 
-      // --- Actions ---
-      setSearchQuery: (query: string) => {
-        set({ searchQuery: query });
-      },
+  // --- Actions ---
+  setSearchQuery: (query: string) => set({ searchQuery: query }),
+  setState: (state: Partial<MovieState>) => set(state),
+}));
 
-      addMovie: async (movieData: Omit<Movie, 'id'>) => {
-        await dbAddMovie(movieData);
-        await get().addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
-        const allMovies = await dbFetchMovies();
-        set({
-          featuredMovies: allMovies.filter((m) => m.isFeatured),
-          latestReleases: allMovies.filter((m) => !m.isFeatured),
-        });
-      },
 
-      updateMovie: async (id: string, updatedMovie: Partial<Movie>) => {
-        await dbUpdateMovie(id, updatedMovie);
-        if (updatedMovie.title) {
-          await get().addSecurityLog(`Updated Movie: "${updatedMovie.title}"`);
-        } else {
-           const movies = [...get().featuredMovies, ...get().latestReleases];
-           const movie = movies.find((m) => m.id === id);
-           if (movie) {
-              await get().addSecurityLog(`Updated Movie poster for: "${movie.title}"`);
-           }
-        }
-        const allMovies = await dbFetchMovies();
-        set({
-          featuredMovies: allMovies.filter((m) => m.isFeatured),
-          latestReleases: allMovies.filter((m) => !m.isFeatured),
-        });
-      },
+// =================================================================
+// 2. ASYNCHRONOUS ACTION FUNCTIONS
+// These functions orchestrate data fetching and update the store.
+// They are called directly from components.
+// =================================================================
 
-      deleteMovie: async (id: string) => {
-        const movie = [...get().latestReleases, ...get().featuredMovies].find(m => m.id === id);
-        if (movie) {
-            await dbDeleteMovie(id);
-            await get().addSecurityLog(`Deleted Movie: "${movie.title}"`);
-            const allMovies = await dbFetchMovies();
-            set({
-              featuredMovies: allMovies.filter((m) => m.isFeatured),
-              latestReleases: allMovies.filter((m) => !m.isFeatured),
-            });
-        }
-      },
-      
-      updateContactInfo: async (info: ContactInfo) => {
-        await dbUpdateContactInfo(info);
-        set({ contactInfo: info });
-        await get().addSecurityLog('Updated Contact Info');
-      },
+/**
+ * Adds a security log entry.
+ */
+const addSecurityLog = async (action: string): Promise<void> => {
+    const newLog = {
+        admin: 'admin_user', // Placeholder
+        action,
+        timestamp: new Date().toLocaleString(),
+    };
+    const id = await dbAddSecurityLog(newLog);
+    useMovieStore.setState((state) => ({
+        securityLogs: [{ id, ...newLog }, ...state.securityLogs],
+    }));
+};
 
-      deleteSuggestion: async (id: string) => {
-        await dbDeleteSuggestion(id);
-        await get().addSecurityLog(`Deleted Suggestion ID: ${id}`);
-        set((state) => ({
-          suggestions: state.suggestions.filter((s) => s.id !== id)
-        }));
-      },
-      
-      addSecurityLog: async (action: string) => {
-        const newLog = {
-          admin: 'admin_user', // Placeholder
-          action,
-          timestamp: new Date().toLocaleString(),
-        };
-        const id = await dbAddSecurityLog(newLog);
-        set((state) => ({
-          securityLogs: [{ id, ...newLog }, ...state.securityLogs],
-        }));
-      },
+/**
+ * Fetches all necessary data for the application from Firestore
+ * and updates the store state.
+ */
+export const fetchInitialData = async (): Promise<void> => {
+  // Prevent re-fetching if already initialized
+  if (useMovieStore.getState().isInitialized) {
+    useMovieStore.setState({ isLoading: false });
+    return;
+  }
+  
+  useMovieStore.setState({ isLoading: true });
 
-      fetchAllAdminData: async () => {
-          const [contactInfo, suggestions, securityLogs] = await Promise.all([
-              fetchContactInfo(),
-              fetchSuggestions(),
-              fetchSecurityLogs()
-          ]);
-          set({
-              contactInfo,
-              suggestions,
-              securityLogs,
-          });
-      },
+  try {
+    const [allMovies, contactInfo, suggestions, securityLogs] = await Promise.all([
+      dbFetchMovies(),
+      dbFetchContactInfo(),
+      dbFetchSuggestions(),
+      dbFetchSecurityLogs(),
+    ]);
 
-      fetchInitialData: async () => {
-        if (get().isInitialized) return; // Prevent re-fetching if already initialized
-        
-        set({ isLoading: true });
-        
-        try {
-          // Fetch movies and admin data in parallel for efficiency
-          const [allMovies, _] = await Promise.all([
-            dbFetchMovies(),
-            get().fetchAllAdminData()
-          ]);
-          
-          set({
-            featuredMovies: allMovies.filter((m) => m.isFeatured),
-            latestReleases: allMovies.filter((m) => !m.isFeatured),
-            isInitialized: true,
-          });
+    useMovieStore.setState({
+      featuredMovies: allMovies.filter((m) => m.isFeatured),
+      latestReleases: allMovies.filter((m) => !m.isFeatured),
+      contactInfo,
+      suggestions,
+      securityLogs,
+      isInitialized: true,
+    });
+  } catch (error) {
+    console.error("Failed to fetch initial data:", error);
+    // Optionally set an error state in the store
+  } finally {
+    useMovieStore.setState({ isLoading: false });
+  }
+};
 
-        } catch (error) {
-          console.error("Failed to fetch initial data:", error);
-          // Handle error state if necessary
-        } finally {
-          set({ isLoading: false });
-        }
-      },
-    })
-);
+/**
+ * Adds a new movie to the database and refreshes the movie list.
+ */
+export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
+  await dbAddMovie(movieData);
+  await addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
+  const allMovies = await dbFetchMovies();
+  useMovieStore.setState({
+    featuredMovies: allMovies.filter((m) => m.isFeatured),
+    latestReleases: allMovies.filter((m) => !m.isFeatured),
+  });
+};
+
+/**
+ * Updates an existing movie in the database and refreshes the movie list.
+ */
+export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
+  await dbUpdateMovie(id, updatedMovie);
+  
+  const movieTitle = updatedMovie.title || useMovieStore.getState().featuredMovies.find(m => m.id === id)?.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title;
+  if (updatedMovie.posterUrl) {
+    await addSecurityLog(`Updated Movie poster for: "${movieTitle}"`);
+  } else {
+    await addSecurityLog(`Updated Movie: "${movieTitle}"`);
+  }
+  
+  const allMovies = await dbFetchMovies();
+  useMovieStore.setState({
+    featuredMovies: allMovies.filter((m) => m.isFeatured),
+    latestReleases: allMovies.filter((m) => !m.isFeatured),
+  });
+};
+
+/**
+ * Deletes a movie from the database and refreshes the movie list.
+ */
+export const deleteMovie = async (id: string): Promise<void> => {
+  const movies = [...useMovieStore.getState().latestReleases, ...useMovieStore.getState().featuredMovies];
+  const movie = movies.find(m => m.id === id);
+  if (movie) {
+    await dbDeleteMovie(id);
+    await addSecurityLog(`Deleted Movie: "${movie.title}"`);
+    const allMovies = await dbFetchMovies();
+    useMovieStore.setState({
+      featuredMovies: allMovies.filter((m) => m.isFeatured),
+      latestReleases: allMovies.filter((m) => !m.isFeatured),
+    });
+  }
+};
+
+/**
+ * Updates the contact information.
+ */
+export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
+  await dbUpdateContactInfo(info);
+  useMovieStore.setState({ contactInfo: info });
+  await addSecurityLog('Updated Contact Info');
+};
+
+/**
+ * Deletes a suggestion from the database.
+ */
+export const deleteSuggestion = async (id: string): Promise<void> => {
+  await dbDeleteSuggestion(id);
+  await addSecurityLog(`Deleted Suggestion ID: ${id}`);
+  useMovieStore.setState((state) => ({
+    suggestions: state.suggestions.filter((s) => s.id !== id)
+  }));
+};

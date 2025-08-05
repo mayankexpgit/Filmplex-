@@ -7,23 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, updateMovie as storeUpdateMovie, fetchInitialData } from '@/store/movieStore';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
 export default function UpdateFeatured() {
   const { toast } = useToast();
-  const { featuredMovies, isLoading, isInitialized, updateMovie, fetchInitialData } = useMovieStore();
+  const { featuredMovies, isLoading, isInitialized } = useMovieStore();
   const [isPending, startTransition] = useTransition();
   
   const [posters, setPosters] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Initial fetch of all data if not already initialized
     if (!isInitialized) {
       fetchInitialData();
     }
-  }, [isInitialized, fetchInitialData]);
+  }, [isInitialized]);
 
   useEffect(() => {
     if (featuredMovies.length > 0) {
@@ -47,7 +46,7 @@ export default function UpdateFeatured() {
       Object.entries(posters).forEach(([id, posterUrl]) => {
         const originalMovie = featuredMovies.find(m => m.id === id);
         if (originalMovie && originalMovie.posterUrl !== posterUrl) {
-          updatePromises.push(updateMovie(id, { posterUrl }));
+          updatePromises.push(storeUpdateMovie(id, { posterUrl }));
           updatedCount++;
         }
       });

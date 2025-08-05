@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import MovieCardSmall from '@/components/movie-card-small';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
@@ -44,23 +44,19 @@ export function HomePageClient() {
   const { 
     isLoading,
     isInitialized,
-    fetchInitialData,
     searchQuery,
     setSearchQuery,
   } = useMovieStore((state) => ({
     isLoading: state.isLoading,
     isInitialized: state.isInitialized,
-    fetchInitialData: state.fetchInitialData,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
   }));
 
   useEffect(() => {
     // This now fetches ALL data (movies and admin) if not already fetched.
-    if (!isInitialized) {
-      fetchInitialData();
-    }
-  }, [fetchInitialData, isInitialized]);
+    fetchInitialData();
+  }, []);
 
   if (isLoading || !isInitialized) {
      return (
