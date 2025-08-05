@@ -15,15 +15,17 @@ import { Trash2, Edit, Loader2 } from 'lucide-react';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { latestReleases, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
-    latestReleases: state.latestReleases,
+  const { movies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
+    movies: [...state.latestReleases, ...state.featuredMovies].filter(
+      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
+    ),
     addMovie: state.addMovie,
     updateMovie: state.updateMovie,
     deleteMovie: state.deleteMovie,
   }));
   const [isPending, startTransition] = useTransition();
 
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -34,8 +36,8 @@ export default function UploadMovie() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    setMovies(latestReleases);
-  }, [latestReleases]);
+    setAllMovies(movies);
+  }, [movies]);
 
   useEffect(() => {
     if (editingMovie) {
@@ -71,6 +73,9 @@ export default function UploadMovie() {
     }
 
     startTransition(() => {
+      // Find the full original movie object from the combined list to preserve all its properties
+      const originalMovie = allMovies.find(m => m.id === id) || { isFeatured: false, genre: 'Misc' };
+
       const movieData: Movie = {
         id: id || new Date().toISOString(),
         title,
@@ -78,8 +83,9 @@ export default function UploadMovie() {
         posterUrl: posterUrl,
         quality,
         tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        isFeatured: editingMovie?.isFeatured || false,
-        genre: editingMovie?.genre || 'Misc',
+        // Preserve existing properties that are not on the form
+        isFeatured: originalMovie.isFeatured,
+        genre: originalMovie.genre,
       };
 
       if (id) {
@@ -116,12 +122,15 @@ export default function UploadMovie() {
 
   const filteredMovies = useMemo(() => {
     if (!searchQuery) {
-      return movies;
+      // Sort by year, descending
+      return [...allMovies].sort((a, b) => b.year - a.year);
     }
-    return movies.filter((movie) =>
-      movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [movies, searchQuery]);
+    return [...allMovies]
+      .filter((movie) =>
+        movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => b.year - a.year);
+  }, [allMovies, searchQuery]);
 
   return (
     <div className="space-y-8">
