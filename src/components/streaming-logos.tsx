@@ -1,21 +1,27 @@
 import React from 'react';
+import Image from 'next/image';
 
 const StreamingLogos = () => {
   const logos = [
-    { name: 'Netflix', svg: <svg xmlns="http://www.w3.org/2000/svg" width="90" height="25" viewBox="0 0 169 46"><path fill="#E50914" d="M168.994 22.99C168.994 7.66 168.994 0 154.997 0H97.498v45.99h14.999V28.991h41.5v16.999h14.997s.002-21.503.002-23.001zm-106.495 0L19.498.01v45.98h15V.01L77.497 45.99h15V0H77.497l-42.998 45.99H19.498v-46H0v46h12.499L51.496.01h15v45.98h14.999V22.99z"/></svg> },
-    { name: 'Prime Video', svg: <svg xmlns="http://www.w3.org/2000/svg" width="105" height="32" viewBox="0 0 105 32"><path fill="#00A8E1" d="M88.75 1.5c-3.03 0-5.8.5-8.25 1.5-5.63 2.3-9.5 7.1-9.5 13s3.87 10.7 9.5 13c2.45 1 5.22 1.5 8.25 1.5s5.8-.5 8.25-1.5c5.63-2.3 9.5-7.1 9.5-13s-3.87-10.7-9.5-13c-2.45-1-5.22-1.5-8.25-1.5zM98 16c0 4.41-3.59 8-8 8s-8-3.59-8-8 3.59-8 8-8 8 3.59 8 8z"/><path d="M0 1.5v29h12V17.3h8.5c4.14 0 7.5-3.36 7.5-7.5S24.64 2.3 20.5 2.3H0v-.8zm6 3.2h6.5c2.48 0 4.5 2.02 4.5 4.5s-2.02 4.5-4.5 4.5H6v-9zM30.5 1.5v29h6v-29h-6zM46.5 1.5l-10 29h6l1.8-5.4h11.4l1.8 5.4h6l-10-29h-7zm2.2 18.6l3.3-10 3.3 10h-6.6zM69.9 19.3c-2.3-1.6-3.4-3.5-3.4-5.8 0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5c0 2.3-1.1 4.2-3.4 5.8l4.4 11.2h-6l-3.3-9-3.3 9h-6l4-11.2zM74 13.5c0-2.48-2.02-4.5-4.5-4.5S65 11.02 65 13.5s2.02 4.5 4.5 4.5 4.5-2.02 4.5-4.5z" fill="#fff"/></svg> },
-    { name: 'Crunchyroll', svg: <svg xmlns="http://www.w3.org/2000/svg" width="150" height="25" viewBox="0 0 150 25"><path fill="#F47521" d="M12.9 24.5C5.8 24.5 0 19 0 12.2 0 5.5 5.8 0 12.9 0c4.9 0 8.9 2.4 11.1 6.2l-4.2 2.5C18.2 6.5 15.8 4.8 12.9 4.8c-4.2 0-7.8 3.3-7.8 7.4s3.6 7.4 7.8 7.4c2.9 0 5.3-1.7 6.9-4.3l4.2 2.5c-2.2 3.8-6.2 6.2-11.1 6.2zM44.6 24.1h-5.2V0h5.2v24.1zM64.7 24.1h-5.2V0h5.2v24.1zM84.7 24.1h-5.2l-8-9.9v9.9h-5.2V0h5.2l8 9.9V0h5.2v24.1zM107.9 24.5c-7.1 0-12.9-5.5-12.9-12.3S100.8 0 107.9 0s12.9 5.5 12.9 12.3-5.8 12.2-12.9 12.2zm0-4.8c4.2 0 7.8-3.3 7.8-7.4s-3.6-7.4-7.8-7.4-7.8 3.3-7.8 7.4 3.6 7.4 7.8 7.4zM132.8 24.1h-5.2l-6.3-8.2h-1.7v8.2h-5.2V0h6.9c5.1 0 8.7 2.8 8.7 7.2 0 3.3-2 5.6-5.1 6.5l7 10.4zm-8-12.7c2.3 0 3.5-1.1 3.5-2.7s-1.2-2.7-3.5-2.7h-1.7v5.4h1.7zM149.8 14.8l-4.2-2.5c1.6-2.6 1.9-5.3 1.9-7.2h5.1v15l-2.8-2.3z"/></svg> },
-    { name: 'SonyLIV', svg: <svg xmlns="http://www.w3.org/2000/svg" width="100" height="25" viewBox="0 0 100 25"><path d="M12.9 24.5C5.8 24.5 0 19 0 12.2S5.8 0 12.9 0c4.9 0 8.9 2.4 11.1 6.2l-4.2 2.5C18.2 6.5 15.8 4.8 12.9 4.8c-4.2 0-7.8 3.3-7.8 7.4s3.6 7.4 7.8 7.4c2.9 0 5.3-1.7 6.9-4.3l4.2 2.5c-2.2 3.8-6.2 6.2-11.1 6.2zM28.7 0h5.2v24.1h-5.2zM52.4 12.2c0-7.1 5.8-12.2 12.9-12.2s12.9 5.1 12.9 12.2-5.8 12.3-12.9 12.3-12.9-5.2-12.9-12.3zm20.7 0c0-4.1-3.6-7.4-7.8-7.4s-7.8 3.3-7.8 7.4 3.6 7.4 7.8 7.4 7.8-3.3 7.8-7.4zM83.7 0l8 9.9V0h5.2v24.1h-5.2l-8-9.9v9.9h-5.2V0z" fill="#000"/><path d="M57.3 24.1h5.2V0h-5.2zM75.3 24.1h5.2V0h-5.2zM96.7 18.5c0 2.5 2 4.5 4.5 4.5s4.5-2 4.5-4.5-2-4.5-4.5-4.5-4.5 2-4.5 4.5zm-5.2-13.4v2.9h-3.3v13.2h3.3v2.9h-8.5v-2.9h3.3V2.9h-3.3V0h8.5z" fill="#E31F26"/></svg> },
-    { name: 'ZEE5', svg: <svg xmlns="http://www.w3.org/2000/svg" width="80" height="30" viewBox="0 0 80 30"><path fill="#753ECF" d="M11.1 0h14.5l-10 14h10v12H0V14h10L0 0h11.1zM28.6 0h14.5l-10 14h10v12H23.1V14h10L23.1 0h11.1zM46.1 0h14.5l-10 14h10v12H40.6V14h10L40.6 0h11.1zM65 17.5c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5-3.36 7.5-7.5 7.5-7.5-3.36-7.5-7.5zm12.5 0c0-2.76-2.24-5-5-5s-5 2.24-5 5 2.24 5 5 5 5-2.24 5-5z"/></svg> },
-    { name: 'Viki', svg: <svg xmlns="http://www.w3.org/2000/svg" width="70" height="25" viewBox="0 0 70 25"><path fill="#00A0E9" d="M12.9 24.1L0 0h5.8l7.1 14L20 0h5.8L12.9 24.1zM34.7 24.1h-5.2V0h5.2v24.1zM46.8 24.1h-5.2V8.3l-5.6 15.8h-4.3L26.1 8.3v15.8h-5.2V0h7.5l6.5 13.7L41.9 0h7.5l-2.6 24.1zM64.7 24.1h-5.2l-8-9.9v9.9h-5.2V0h5.2l8 9.9V0h5.2v24.1z"/></svg> },
+    { name: 'Netflix', url: 'https://cdn.jim-nielsen.com/macos/512/netflix-2018-11-01.png' },
+    { name: 'Prime Video', url: 'https://cdn.jim-nielsen.com/macos/512/amazon-prime-video-2022-07-27.png' },
+    { name: 'Crunchyroll', url: 'https://cdn.jim-nielsen.com/macos/512/crunchyroll-2023-02-06.png' },
+    { name: 'SonyLIV', url: 'https://upload.wikimedia.org/wikipedia/en/thumb/9/91/SonyLIV_2020.svg/2560px-SonyLIV_2020.svg.png' },
+    { name: 'ZEE5', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Zee5-official-logo.svg/2560px-Zee5-official-logo.svg.png' },
+    { name: 'Viki', url: 'https://cdn.worldvectorlogo.com/logos/viki.svg' },
   ];
 
   return (
     <div className="py-4">
       <div className="flex justify-center items-center gap-6 md:gap-8 flex-wrap">
         {logos.map((logo) => (
-          <div key={logo.name} className="grayscale hover:grayscale-0 transition-all duration-300 ease-in-out transform hover:scale-105">
-            {logo.svg}
+          <div key={logo.name} className="grayscale hover:grayscale-0 transition-all duration-300 ease-in-out transform hover:scale-105 relative h-8 w-24 sm:h-10 sm:w-32">
+            <Image
+              src={logo.url}
+              alt={`${logo.name} logo`}
+              layout="fill"
+              objectFit="contain"
+            />
           </div>
         ))}
       </div>
