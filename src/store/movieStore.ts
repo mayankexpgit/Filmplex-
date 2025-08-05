@@ -87,7 +87,7 @@ export const fetchMovieData = async (): Promise<void> => {
     const allMovies = await dbFetchMovies();
     useMovieStore.setState({
       featuredMovies: allMovies.filter((m) => m.isFeatured),
-      latestReleases: allMovies.filter((m) => !m.isFeatured),
+      latestReleases: allMovies, // Show all movies in the main list
       isInitialized: true,
     });
   } catch (error) {
@@ -149,7 +149,7 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
     featuredMovies: allMovies.filter((m) => m.isFeatured),
-    latestReleases: allMovies.filter((m) => !m.isFeatured),
+    latestReleases: allMovies,
   });
 };
 
@@ -172,7 +172,7 @@ export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Pro
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
     featuredMovies: allMovies.filter((m) => m.isFeatured),
-    latestReleases: allMovies.filter((m) => !m.isFeatured),
+    latestReleases: allMovies,
   });
 };
 
@@ -188,7 +188,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
     const allMovies = await dbFetchMovies();
     useMovieStore.setState({
       featuredMovies: allMovies.filter((m) => m.isFeatured),
-      latestReleases: allMovies.filter((m) => !m.isFeatured),
+      latestReleases: allMovies,
     });
   }
 };
