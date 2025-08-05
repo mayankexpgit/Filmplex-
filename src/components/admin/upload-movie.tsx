@@ -154,8 +154,8 @@ export default function UploadMovie() {
           });
         } else {
           // Explicitly remove id for new movies to prevent Firestore errors
-          delete movieData.id;
-          await addMovie(movieData as Omit<Movie, 'id'>);
+          const { id, ...newMovieData } = movieData;
+          await addMovie(newMovieData as Omit<Movie, 'id'>);
           toast({
             title: 'Success!',
             description: `Movie "${formData.title}" has been added.`,
@@ -198,30 +198,30 @@ export default function UploadMovie() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="movie-title">Title</Label>
-              <Input id="movie-title" value={formData.title} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isPending} />
+              <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isPending} />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="movie-genre">Genre</Label>
-                    <Input id="movie-genre" value={formData.genre} onChange={(e) => handleInputChange('genre', e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isPending} />
+                    <Input id="movie-genre" value={formData.genre || ''} onChange={(e) => handleInputChange('genre', e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isPending} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="movie-year">Year</Label>
-                    <Input id="movie-year" type="number" value={formData.year} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isPending} />
+                    <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isPending} />
                 </div>
             </div>
             <div className="space-y-2">
                 <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
-                <Input id="movie-tags" value={formData.tagsString} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isPending} />
+                <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isPending} />
             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="movie-language">Language</Label>
-                    <Input id="movie-language" value={formData.language} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isPending} />
+                    <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isPending} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="movie-channel">Streaming Channel</Label>
-                    <Input id="movie-channel" value={formData.streamingChannel} onChange={(e) => handleInputChange('streamingChannel', e.target.value)} placeholder="e.g. Netflix, Prime Video" disabled={isPending} />
+                    <Input id="movie-channel" value={formData.streamingChannel || ''} onChange={(e) => handleInputChange('streamingChannel', e.target.value)} placeholder="e.g. Netflix, Prime Video" disabled={isPending} />
                 </div>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function UploadMovie() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="movie-poster">Poster URL</Label>
-              <Input id="movie-poster" value={formData.posterUrl} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
+              <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
             </div>
             <div className="space-y-4 pt-2">
                 <Label>Download Links</Label>
@@ -274,7 +274,7 @@ export default function UploadMovie() {
                 <Label htmlFor="movie-synopsis">Synopsis / Storyline</Label>
                 <Textarea 
                     id="movie-synopsis" 
-                    value={formData.synopsis} 
+                    value={formData.synopsis || ''} 
                     onChange={(e) => handleInputChange('synopsis', e.target.value)} 
                     disabled={isPending} 
                     rows={10}
