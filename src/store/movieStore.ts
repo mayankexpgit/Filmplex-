@@ -6,6 +6,8 @@ interface MovieState {
   latestReleases: Movie[];
   isLoadingFeatured: boolean;
   isLoadingLatest: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   fetchHomepageData: () => Promise<void>;
   fetchFeaturedMovies: () => Promise<void>;
   fetchLatestReleases: () => Promise<void>;
@@ -18,6 +20,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   latestReleases: [],
   isLoadingFeatured: true,
   isLoadingLatest: true,
+  searchQuery: '',
+
+  setSearchQuery: (query: string) => {
+    set({ searchQuery: query });
+  },
 
   fetchFeaturedMovies: async () => {
     set({ isLoadingFeatured: true });

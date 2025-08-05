@@ -3,9 +3,20 @@
 import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
 import { Flame } from 'lucide-react';
+import { useMemo } from 'react';
 
 export default function MovieCardLarge() {
   const latestReleases = useMovieStore((state) => state.latestReleases);
+  const searchQuery = useMovieStore((state) => state.searchQuery);
+
+  const filteredMovies = useMemo(() => {
+    if (!searchQuery) {
+      return latestReleases;
+    }
+    return latestReleases.filter((movie) =>
+      movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [latestReleases, searchQuery]);
 
   return (
     <div>
@@ -16,7 +27,7 @@ export default function MovieCardLarge() {
         </h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-4">
-        {latestReleases.map((movie) => (
+        {filteredMovies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} variant="large" />
         ))}
       </div>

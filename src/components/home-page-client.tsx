@@ -43,6 +43,9 @@ export function HomePageClient() {
   const fetchHomepageData = useMovieStore((state) => state.fetchHomepageData);
   const isLoadingFeatured = useMovieStore((state) => state.isLoadingFeatured);
   const isLoadingLatest = useMovieStore((state) => state.isLoadingLatest);
+  const searchQuery = useMovieStore((state) => state.searchQuery);
+  const setSearchQuery = useMovieStore((state) => state.setSearchQuery);
+
 
   useEffect(() => {
     fetchHomepageData();
@@ -61,6 +64,8 @@ export function HomePageClient() {
             <Input
               placeholder="Search movies..."
               className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="border-l border-border flex items-center p-1">
