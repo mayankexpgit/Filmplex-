@@ -13,13 +13,29 @@ const StreamingLogos = () => {
     <div className="py-4">
       <div className="flex justify-center items-center gap-6 md:gap-8 flex-wrap">
         {logos.map((logo) => (
-          <div key={logo.name} className="transition-all duration-300 ease-in-out transform hover:scale-105 relative h-14 w-36 sm:h-16 sm:w-40">
-            <Image
-              src={logo.url}
-              alt={`${logo.name} logo`}
-              fill
-              className="object-contain"
-            />
+          <div key={logo.name} className="transition-all duration-300 ease-in-out transform hover:scale-105 h-14 w-auto flex items-center justify-center">
+            {logo.name === 'Apple TV' ? (
+              <div className="flex items-center gap-1 h-14 w-40 relative">
+                 <div className="relative h-12 w-32">
+                    <Image
+                      src={logo.url}
+                      alt={`${logo.name} logo`}
+                      fill
+                      className="object-contain"
+                    />
+                 </div>
+                <span className="text-4xl font-light text-white -ml-4">+</span>
+              </div>
+            ) : (
+              <div className="relative h-14 w-36 sm:h-16 sm:w-40">
+                <Image
+                  src={logo.url}
+                  alt={`${logo.name} logo`}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
