@@ -7,7 +7,7 @@ const StreamingLogos = () => {
     { name: 'Prime Video', url: 'https://logos-world.net/wp-content/uploads/2021/04/Amazon-Prime-Video-Logo-2022.png' },
     { name: 'Crunchyroll', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Crunchyroll_2024_stacked.svg/1200px-Crunchyroll_2024_stacked.svg.png' },
     { name: 'SonyLIV', url: 'https://upload.wikimedia.org/wikipedia/en/thumb/9/91/SonyLIV_2020.svg/2560px-SonyLIV_2020.svg.png' },
-    { name: 'ZEE5', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Zee5-official-logo.svg/2560px-Zee5-official-logo.svg.png' },
+    { name: 'ZEE5', url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQ2_VYnz6-xSwTwtUs-j4UTdGx7avJx70OKAbl2DzsjfBMok2ZHH7-x71I&s=10' },
     { name: 'Viki', url: 'https://cdn.worldvectorlogo.com/logos/viki.svg' },
   ];
 
