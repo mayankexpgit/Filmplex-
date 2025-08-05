@@ -37,7 +37,7 @@ export default function UploadMovie() {
       setYear(editingMovie.year);
       setPosterUrl(editingMovie.posterUrl);
       setQuality(editingMovie.quality || 'HD');
-      setTags(editingMovie.tags?.join(', ') || '');
+      setTags(editingMovie.tags ? editingMovie.tags.join(', ') : '');
     } else {
       resetForm();
     }
