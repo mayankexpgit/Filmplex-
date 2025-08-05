@@ -12,25 +12,23 @@ import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit, Loader2 } from 'lucide-react';
+import { Checkbox } from '../ui/checkbox';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie, addSecurityLog } = useMovieStore((state) => ({
-    latestReleases: state.latestReleases,
-    featuredMovies: state.featuredMovies,
-    addMovie: state.addMovie,
-    updateMovie: state.updateMovie,
-    deleteMovie: state.deleteMovie,
-    addSecurityLog: state.addSecurityLog,
-  }));
+  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie, fetchHomepageData } = useMovieStore();
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    fetchHomepageData();
+  }, [fetchHomepageData]);
 
   const movies = useMemo(() => {
     const all = [...latestReleases, ...featuredMovies];
     const unique = all.filter(
       (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
     );
-    return unique.sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
+    return unique.sort((a, b) => (a.title > b.title ? 1 : -1));
   }, [latestReleases, featuredMovies]);
 
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
@@ -40,6 +38,8 @@ export default function UploadMovie() {
   const [posterUrl, setPosterUrl] = useState('');
   const [quality, setQuality] = useState('HD');
   const [tags, setTags] = useState('');
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [genre, setGenre] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -50,6 +50,8 @@ export default function UploadMovie() {
       setPosterUrl(editingMovie.posterUrl);
       setQuality(editingMovie.quality || 'HD');
       setTags(editingMovie.tags ? editingMovie.tags.join(', ') : '');
+      setIsFeatured(editingMovie.isFeatured);
+      setGenre(editingMovie.genre);
     } else {
       resetForm();
     }
@@ -62,53 +64,54 @@ export default function UploadMovie() {
     setPosterUrl('');
     setQuality('HD');
     setTags('');
+    setIsFeatured(false);
+    setGenre('');
     setEditingMovie(null);
   };
 
   const handleSubmit = () => {
-    if (!title) {
+    if (!title || !genre) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please fill out the title field.',
+        description: 'Please fill out all required fields (Title, Genre).',
       });
       return;
     }
 
-    startTransition(() => {
+    startTransition(async () => {
       const movieData: Partial<Movie> = {
         title,
         year,
         posterUrl,
         quality,
         tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+        isFeatured,
+        genre,
       };
 
-      if (id) {
-        updateMovie(id, movieData);
-        addSecurityLog(`Updated Movie: "${title}"`);
+      try {
+        if (id) {
+          await updateMovie(id, movieData);
+          toast({
+            title: 'Success!',
+            description: `Movie "${title}" has been updated.`,
+          });
+        } else {
+          await addMovie(movieData as Omit<Movie, 'id'>);
+          toast({
+            title: 'Success!',
+            description: `Movie "${title}" has been added.`,
+          });
+        }
+        resetForm();
+      } catch (error) {
         toast({
-          title: 'Success!',
-          description: `Movie "${title}" has been updated.`,
-        });
-      } else {
-        const newMovie: Movie = {
-          id: new Date().toISOString(),
-          title,
-          year,
-          posterUrl,
-          quality,
-          tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-          isFeatured: false,
-          genre: 'Misc',
-        };
-        addMovie(newMovie);
-        toast({
-          title: 'Success!',
-          description: `Movie "${title}" has been added.`,
+          variant: 'destructive',
+          title: 'Database Error',
+          description: 'Could not save the movie. Please try again.',
         });
       }
-      resetForm();
     });
   };
   
@@ -117,14 +120,24 @@ export default function UploadMovie() {
   };
 
   const handleDelete = (movieId: string) => {
-    deleteMovie(movieId);
-    toast({
-      title: 'Success!',
-      description: 'Movie has been deleted.',
+    startTransition(async () => {
+      try {
+        await deleteMovie(movieId);
+        toast({
+          title: 'Success!',
+          description: 'Movie has been deleted.',
+        });
+        if (editingMovie && editingMovie.id === movieId) {
+          resetForm();
+        }
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Database Error',
+          description: 'Could not delete the movie. Please try again.',
+        });
+      }
     });
-    if (editingMovie && editingMovie.id === movieId) {
-      resetForm();
-    }
   }
 
   const filteredMovies = useMemo(() => {
@@ -147,6 +160,10 @@ export default function UploadMovie() {
             <Label htmlFor="movie-title">Title</Label>
             <Input id="movie-title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} />
           </div>
+           <div className="space-y-2">
+            <Label htmlFor="movie-genre">Genre</Label>
+            <Input id="movie-genre" value={genre} onChange={(e) => setGenre(e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isPending} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="movie-year">Year</Label>
             <Input id="movie-year" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} disabled={isPending} />
@@ -162,6 +179,12 @@ export default function UploadMovie() {
           <div className="space-y-2">
             <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
             <Input id="movie-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Action, New Release" disabled={isPending} />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="isFeatured" checked={isFeatured} onCheckedChange={(checked) => setIsFeatured(Boolean(checked))} disabled={isPending} />
+            <label htmlFor="isFeatured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Featured Movie
+            </label>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleSubmit} disabled={isPending}>

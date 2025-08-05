@@ -1,23 +1,26 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore } from '@/store/movieStore';
+import { Loader2 } from 'lucide-react';
 
 export default function UpdateFeatured() {
   const { toast } = useToast();
-  const { featuredMovies, updateMovie, addSecurityLog } = useMovieStore((state) => ({
-    featuredMovies: state.featuredMovies,
-    updateMovie: state.updateMovie,
-    addSecurityLog: state.addSecurityLog,
-  }));
+  const { featuredMovies, updateMovie, fetchHomepageData } = useMovieStore();
+  const [isPending, startTransition] = useTransition();
   
   const [posters, setPosters] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Initial fetch of movies
+    fetchHomepageData();
+  }, [fetchHomepageData]);
 
   useEffect(() => {
     if (featuredMovies.length > 0) {
@@ -34,27 +37,40 @@ export default function UpdateFeatured() {
   };
 
   const handleSaveChanges = () => {
-    let updatedCount = 0;
-    Object.entries(posters).forEach(([id, posterUrl]) => {
-      const originalMovie = featuredMovies.find(m => m.id === id);
-      if (originalMovie && originalMovie.posterUrl !== posterUrl) {
-        updateMovie(id, { posterUrl });
-        updatedCount++;
+    startTransition(async () => {
+      let updatedCount = 0;
+      const updatePromises: Promise<void>[] = [];
+      
+      Object.entries(posters).forEach(([id, posterUrl]) => {
+        const originalMovie = featuredMovies.find(m => m.id === id);
+        if (originalMovie && originalMovie.posterUrl !== posterUrl) {
+          updatePromises.push(updateMovie(id, { posterUrl }));
+          updatedCount++;
+        }
+      });
+
+      if (updatedCount === 0) {
+        toast({
+          title: 'No Changes',
+          description: 'No poster URLs were changed.',
+        });
+        return;
+      }
+
+      try {
+        await Promise.all(updatePromises);
+        toast({
+          title: 'Success!',
+          description: `Updated ${updatedCount} featured movie poster(s).`,
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Database Error',
+          description: 'Could not update posters. Please try again.',
+        });
       }
     });
-
-    if (updatedCount > 0) {
-      addSecurityLog(`Updated ${updatedCount} featured movie poster(s).`);
-      toast({
-        title: 'Success!',
-        description: 'Featured movie posters have been updated.',
-      });
-    } else {
-       toast({
-        title: 'No Changes',
-        description: 'No poster URLs were changed.',
-      });
-    }
   };
 
   return (
@@ -72,11 +88,15 @@ export default function UpdateFeatured() {
                 value={posters[movie.id] || ''}
                 onChange={(e) => handlePosterChange(movie.id, e.target.value)}
                 placeholder="https://placehold.co/400x600.png"
+                disabled={isPending}
               />
             </div>
           ))}
         </div>
-        <Button onClick={handleSaveChanges}>Save Changes</Button>
+        <Button onClick={handleSaveChanges} disabled={isPending}>
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isPending ? 'Saving...' : 'Save Changes'}
+        </Button>
       </CardContent>
     </Card>
   );

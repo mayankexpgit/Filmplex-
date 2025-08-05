@@ -1,13 +1,19 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
 import { useMovieStore } from '@/store/movieStore';
+import { Skeleton } from '../ui/skeleton';
 
 export default function SecurityLog() {
-  const logs = useMovieStore((state) => state.securityLogs);
+  const { securityLogs, isLoading, fetchAllAdminData } = useMovieStore();
+
+  useEffect(() => {
+    fetchAllAdminData();
+  }, [fetchAllAdminData]);
   
   return (
     <Card>
@@ -26,13 +32,23 @@ export default function SecurityLog() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">{log.admin}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell className="text-muted-foreground text-xs">{log.timestamp}</TableCell>
-                </TableRow>
-              ))}
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[250px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                securityLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="font-medium">{log.admin}</TableCell>
+                    <TableCell>{log.action}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{log.timestamp}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </ScrollArea>

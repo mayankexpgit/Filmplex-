@@ -1,150 +1,158 @@
 
 import { create } from 'zustand';
-import { featuredMovies as initialFeatured, latestReleases as initialLatest, type Movie } from '@/lib/data';
+import type { Movie } from '@/lib/data';
+import {
+  addMovie as dbAddMovie,
+  updateMovie as dbUpdateMovie,
+  deleteMovie as dbDeleteMovie,
+  fetchMovies as dbFetchMovies,
+  fetchContactInfo,
+  updateContactInfo as dbUpdateContactInfo,
+  fetchSuggestions,
+  deleteSuggestion as dbDeleteSuggestion,
+  fetchSecurityLogs,
+  addSecurityLog as dbAddSecurityLog,
+} from '@/services/movieService';
+
 
 // --- Types ---
-interface ContactInfo {
+export interface ContactInfo {
   email: string;
   message: string;
 }
 
-interface Suggestion {
-  id: number;
+export interface Suggestion {
+  id: string;
   user: string;
   suggestion: string;
   date: string;
 }
 
-interface SecurityLog {
-  id: number;
+export interface SecurityLog {
+  id: string;
   admin: string;
   action: string;
   timestamp: string;
 }
 
-// --- Initial Data ---
-const initialSuggestions: Suggestion[] = [
-  { id: 1, user: 'Cinephile123', suggestion: 'Please add The Matrix in 4K!', date: '2024-07-28' },
-  { id: 2, user: 'ActionFan', suggestion: 'More action movies like John Wick would be great.', date: '2024-07-27' },
-  { id: 3, user: 'AnimeWatcher', suggestion: 'Can we get more anime films? Your Name was amazing.', date: '2024-07-26' },
-  { id: 4, user: 'ClassicLover', suggestion: 'Requesting classic mob movies.', date: '2024-07-25' },
-];
-
-const initialSecurityLogs: SecurityLog[] = [
-  { id: 1, admin: 'admin_john', action: 'Uploaded Movie: "Chrono Rift"', timestamp: '2024-07-28 10:00 AM' },
-  { id: 2, admin: 'admin_jane', action: 'Updated Contact Info', timestamp: '2024-07-28 09:30 AM' },
-];
-
-
 interface MovieState {
   // Movies
   featuredMovies: Movie[];
   latestReleases: Movie[];
-  isLoadingFeatured: boolean;
-  isLoadingLatest: boolean;
+  isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  addMovie: (movie: Movie) => void;
-  updateMovie: (id: string, updatedMovie: Partial<Movie>) => void;
-  deleteMovie: (id: string) => void;
-  fetchHomepageData: () => void;
+  addMovie: (movie: Omit<Movie, 'id'>) => Promise<void>;
+  updateMovie: (id: string, updatedMovie: Partial<Movie>) => Promise<void>;
+  deleteMovie: (id: string) => Promise<void>;
+  fetchHomepageData: () => Promise<void>;
 
   // Contact Info
   contactInfo: ContactInfo;
-  updateContactInfo: (info: ContactInfo) => void;
+  updateContactInfo: (info: ContactInfo) => Promise<void>;
 
   // Suggestions
   suggestions: Suggestion[];
-  deleteSuggestion: (id: number) => void;
+  deleteSuggestion: (id: string) => Promise<void>;
 
   // Security Logs
   securityLogs: SecurityLog[];
-  addSecurityLog: (action: string) => void;
+  addSecurityLog: (action: string) => Promise<void>;
+
+  // Initialization
+  isInitialized: boolean;
+  fetchAllAdminData: () => Promise<void>;
 }
 
 export const useMovieStore = create<MovieState>((set, get) => ({
       // --- Initial State ---
-      featuredMovies: initialFeatured,
-      latestReleases: initialLatest,
-      isLoadingFeatured: false, // Data is loaded statically
-      isLoadingLatest: false,
+      featuredMovies: [],
+      latestReleases: [],
+      isLoading: true,
       searchQuery: '',
       contactInfo: {
-        email: 'admin@filmplex.com',
-        message: 'For any queries, please reach out to us.',
+        email: 'loading@filmplex.com',
+        message: 'Loading contact information...',
       },
-      suggestions: initialSuggestions,
-      securityLogs: initialSecurityLogs,
+      suggestions: [],
+      securityLogs: [],
+      isInitialized: false,
 
       // --- Actions ---
       setSearchQuery: (query: string) => {
         set({ searchQuery: query });
       },
 
-      addMovie: (movie: Movie) => {
-        set((state) => ({
-          latestReleases: [movie, ...state.latestReleases],
-        }));
-        get().addSecurityLog(`Uploaded Movie: "${movie.title}"`);
+      addMovie: async (movieData: Omit<Movie, 'id'>) => {
+        const newId = await dbAddMovie(movieData);
+        await get().fetchHomepageData();
+        await get().addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
       },
 
-      updateMovie: (id: string, updatedMovie: Partial<Movie>) => {
-        set((state) => ({
-          latestReleases: state.latestReleases.map((movie) =>
-            movie.id === id ? { ...movie, ...updatedMovie } : movie
-          ),
-          featuredMovies: state.featuredMovies.map((movie) =>
-            movie.id === id ? { ...movie, ...updatedMovie } : movie
-          ),
-        }));
+      updateMovie: async (id: string, updatedMovie: Partial<Movie>) => {
+        await dbUpdateMovie(id, updatedMovie);
+        await get().fetchHomepageData();
       },
 
-      deleteMovie: (id: string) => {
-        const movie = get().latestReleases.find(m => m.id === id) || get().featuredMovies.find(m => m.id === id);
-        set((state) => ({
-          latestReleases: state.latestReleases.filter((movie) => movie.id !== id),
-          featuredMovies: state.featuredMovies.filter((movie) => movie.id !== id),
-        }));
+      deleteMovie: async (id: string) => {
+        const movie = [...get().latestReleases, ...get().featuredMovies].find(m => m.id === id);
         if (movie) {
-            get().addSecurityLog(`Deleted Movie: "${movie.title}"`);
+            await dbDeleteMovie(id);
+            await get().fetchHomepageData();
+            await get().addSecurityLog(`Deleted Movie: "${movie.title}"`);
         }
       },
 
-      fetchHomepageData: () => {
-        // Data is loaded statically on init, so this can be a no-op.
-        set({ isLoadingFeatured: false, isLoadingLatest: false });
+      fetchHomepageData: async () => {
+        set({ isLoading: true });
+        const allMovies = await dbFetchMovies();
+        set({
+          featuredMovies: allMovies.filter((m) => m.isFeatured),
+          latestReleases: allMovies.filter((m) => !m.isFeatured),
+          isLoading: false,
+          isInitialized: true,
+        });
       },
 
-      updateContactInfo: (info: ContactInfo) => {
+      updateContactInfo: async (info: ContactInfo) => {
+        await dbUpdateContactInfo(info);
         set({ contactInfo: info });
-        get().addSecurityLog('Updated Contact Info');
+        await get().addSecurityLog('Updated Contact Info');
       },
 
-      deleteSuggestion: (id: number) => {
+      deleteSuggestion: async (id: string) => {
+        await dbDeleteSuggestion(id);
         set((state) => ({
           suggestions: state.suggestions.filter((s) => s.id !== id)
         }));
-        get().addSecurityLog(`Deleted Suggestion ID: ${id}`);
+        await get().addSecurityLog(`Deleted Suggestion ID: ${id}`);
       },
       
-      addSecurityLog: (action: string) => {
+      addSecurityLog: async (action: string) => {
+        const newLog = {
+          admin: 'admin_user', // Placeholder
+          action,
+          timestamp: new Date().toLocaleString(),
+        };
+        const id = await dbAddSecurityLog(newLog);
         set((state) => ({
-          securityLogs: [
-            {
-              id: state.securityLogs.length + 1,
-              admin: 'admin_user', // Placeholder for admin user
-              action,
-              timestamp: new Date().toLocaleString(),
-            },
-            ...state.securityLogs,
-          ]
+          securityLogs: [{ id, ...newLog }, ...state.securityLogs],
         }));
       },
+
+      fetchAllAdminData: async () => {
+        set({isLoading: true});
+        const [contactInfo, suggestions, securityLogs] = await Promise.all([
+          fetchContactInfo(),
+          fetchSuggestions(),
+          fetchSecurityLogs()
+        ]);
+        set({
+          contactInfo,
+          suggestions,
+          securityLogs,
+          isLoading: false,
+        })
+      }
     })
 );
-
-// This hook is kept for compatibility, but it's no longer necessary for hydration.
-// It simply returns true, indicating the component can render immediately with static data.
-export const useHydratedMovieStore = () => {
-  return true;
-};

@@ -10,7 +10,8 @@ export interface Movie {
   tags?: string[];
 }
 
-export const featuredMovies: Movie[] = [
+// This data is now used for initial database seeding.
+export const initialFeaturedMovies: Movie[] = [
   {
     id: '1',
     title: 'Inception',
@@ -113,7 +114,7 @@ export const featuredMovies: Movie[] = [
   },
 ];
 
-export const latestReleases: Movie[] = [
+export const initialLatestReleases: Movie[] = [
   {
     id: '11',
     title: 'Oppenheimer',
@@ -207,7 +208,7 @@ export const latestReleases: Movie[] = [
   {
     id: '20',
     title: 'The Social Network',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/n0ybibhJtQ5icDqNs2BT90gBfgM.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/Amv78dggsxK5lIJqT2l2I4jxqfW.jpg',
     year: 2010,
     isFeatured: false,
     genre: 'Drama, History',

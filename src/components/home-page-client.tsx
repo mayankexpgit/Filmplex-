@@ -42,21 +42,26 @@ function GridSkeleton() {
 
 export function HomePageClient() {
   const { 
-    isLoadingFeatured, 
-    isLoadingLatest, 
+    isLoading,
+    isInitialized,
     fetchHomepageData,
     searchQuery,
     setSearchQuery,
-  } = useMovieStore();
+  } = useMovieStore((state) => ({
+    isLoading: state.isLoading,
+    isInitialized: state.isInitialized,
+    fetchHomepageData: state.fetchHomepageData,
+    searchQuery: state.searchQuery,
+    setSearchQuery: state.setSearchQuery,
+  }));
 
   useEffect(() => {
-    // Fetches static data on mount, basically just toggles loading state.
-    fetchHomepageData();
-  }, [fetchHomepageData]);
+    if (!isInitialized) {
+      fetchHomepageData();
+    }
+  }, [fetchHomepageData, isInitialized]);
 
-  const isLoading = isLoadingFeatured || isLoadingLatest;
-
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
      return (
       <div className="container mx-auto py-8 md:py-12 space-y-12">
         <CarouselSkeleton />
