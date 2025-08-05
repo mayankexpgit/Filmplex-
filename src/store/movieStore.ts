@@ -39,14 +39,12 @@ interface MovieState {
   // Movies
   featuredMovies: Movie[];
   latestReleases: Movie[];
-  isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   addMovie: (movie: Omit<Movie, 'id'>) => Promise<void>;
   updateMovie: (id: string, updatedMovie: Partial<Movie>) => Promise<void>;
   deleteMovie: (id: string) => Promise<void>;
-  fetchHomepageData: () => Promise<void>;
-
+  
   // Contact Info
   contactInfo: ContactInfo;
   updateContactInfo: (info: ContactInfo) => Promise<void>;
@@ -59,24 +57,26 @@ interface MovieState {
   securityLogs: SecurityLog[];
   addSecurityLog: (action: string) => Promise<void>;
 
-  // Initialization
+  // Initialization and Loading
+  isLoading: boolean;
   isInitialized: boolean;
-  fetchAllAdminData: () => Promise<void>;
+  fetchInitialData: () => Promise<void>;
+  fetchAllAdminData: () => Promise<void>; // Kept for targeted admin refresh if needed
 }
 
 export const useMovieStore = create<MovieState>((set, get) => ({
       // --- Initial State ---
       featuredMovies: [],
       latestReleases: [],
-      isLoading: true,
+      isLoading: true, // Start in loading state until initial fetch is complete
+      isInitialized: false, // This will be true only once the first fetch succeeds
       searchQuery: '',
       contactInfo: {
-        email: 'loading@filmplex.com',
-        message: 'Loading contact information...',
+        email: '',
+        message: '',
       },
       suggestions: [],
       securityLogs: [],
-      isInitialized: false,
 
       // --- Actions ---
       setSearchQuery: (query: string) => {
@@ -86,23 +86,29 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       addMovie: async (movieData: Omit<Movie, 'id'>) => {
         await dbAddMovie(movieData);
         await get().addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
-        await get().fetchHomepageData();
+        const allMovies = await dbFetchMovies();
+        set({
+          featuredMovies: allMovies.filter((m) => m.isFeatured),
+          latestReleases: allMovies.filter((m) => !m.isFeatured),
+        });
       },
 
       updateMovie: async (id: string, updatedMovie: Partial<Movie>) => {
-        const title = updatedMovie.title;
-        
         await dbUpdateMovie(id, updatedMovie);
-        if (title) {
-          await get().addSecurityLog(`Updated Movie: "${title}"`);
+        if (updatedMovie.title) {
+          await get().addSecurityLog(`Updated Movie: "${updatedMovie.title}"`);
         } else {
            const movies = [...get().featuredMovies, ...get().latestReleases];
            const movie = movies.find((m) => m.id === id);
            if (movie) {
-              await get().addSecurityLog(`Updated Movie: "${movie.title}"`);
+              await get().addSecurityLog(`Updated Movie poster for: "${movie.title}"`);
            }
         }
-        await get().fetchHomepageData();
+        const allMovies = await dbFetchMovies();
+        set({
+          featuredMovies: allMovies.filter((m) => m.isFeatured),
+          latestReleases: allMovies.filter((m) => !m.isFeatured),
+        });
       },
 
       deleteMovie: async (id: string) => {
@@ -110,21 +116,14 @@ export const useMovieStore = create<MovieState>((set, get) => ({
         if (movie) {
             await dbDeleteMovie(id);
             await get().addSecurityLog(`Deleted Movie: "${movie.title}"`);
-            await get().fetchHomepageData();
+            const allMovies = await dbFetchMovies();
+            set({
+              featuredMovies: allMovies.filter((m) => m.isFeatured),
+              latestReleases: allMovies.filter((m) => !m.isFeatured),
+            });
         }
       },
-
-      fetchHomepageData: async () => {
-        set({ isLoading: true });
-        const allMovies = await dbFetchMovies();
-        set({
-          featuredMovies: allMovies.filter((m) => m.isFeatured),
-          latestReleases: allMovies.filter((m) => !m.isFeatured),
-          isLoading: false,
-          isInitialized: true,
-        });
-      },
-
+      
       updateContactInfo: async (info: ContactInfo) => {
         await dbUpdateContactInfo(info);
         set({ contactInfo: info });
@@ -152,18 +151,42 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       },
 
       fetchAllAdminData: async () => {
-        set({isLoading: true});
-        const [contactInfo, suggestions, securityLogs] = await Promise.all([
-          fetchContactInfo(),
-          fetchSuggestions(),
-          fetchSecurityLogs()
-        ]);
-        set({
-          contactInfo,
-          suggestions,
-          securityLogs,
-          isLoading: false,
-        })
-      }
+          const [contactInfo, suggestions, securityLogs] = await Promise.all([
+              fetchContactInfo(),
+              fetchSuggestions(),
+              fetchSecurityLogs()
+          ]);
+          set({
+              contactInfo,
+              suggestions,
+              securityLogs,
+          });
+      },
+
+      fetchInitialData: async () => {
+        if (get().isInitialized) return; // Prevent re-fetching if already initialized
+        
+        set({ isLoading: true });
+        
+        try {
+          // Fetch movies and admin data in parallel for efficiency
+          const [allMovies, _] = await Promise.all([
+            dbFetchMovies(),
+            get().fetchAllAdminData()
+          ]);
+          
+          set({
+            featuredMovies: allMovies.filter((m) => m.isFeatured),
+            latestReleases: allMovies.filter((m) => !m.isFeatured),
+            isInitialized: true,
+          });
+
+        } catch (error) {
+          console.error("Failed to fetch initial data:", error);
+          // Handle error state if necessary
+        } finally {
+          set({ isLoading: false });
+        }
+      },
     })
 );

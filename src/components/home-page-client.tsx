@@ -44,22 +44,23 @@ export function HomePageClient() {
   const { 
     isLoading,
     isInitialized,
-    fetchHomepageData,
+    fetchInitialData,
     searchQuery,
     setSearchQuery,
   } = useMovieStore((state) => ({
     isLoading: state.isLoading,
     isInitialized: state.isInitialized,
-    fetchHomepageData: state.fetchHomepageData,
+    fetchInitialData: state.fetchInitialData,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
   }));
 
   useEffect(() => {
+    // This now fetches ALL data (movies and admin) if not already fetched.
     if (!isInitialized) {
-      fetchHomepageData();
+      fetchInitialData();
     }
-  }, [fetchHomepageData, isInitialized]);
+  }, [fetchInitialData, isInitialized]);
 
   if (isLoading || !isInitialized) {
      return (

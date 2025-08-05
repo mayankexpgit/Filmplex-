@@ -9,20 +9,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore } from '@/store/movieStore';
-import { Loader2, Skeleton } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
 
 export default function ContactManager() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const { contactInfo, isLoading, updateContactInfo, fetchAllAdminData } = useMovieStore();
+  const { contactInfo, isLoading, isInitialized, fetchInitialData, updateContactInfo } = useMovieStore();
 
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Initial fetch of admin data
-    fetchAllAdminData();
-  }, [fetchAllAdminData]);
+    // Initial fetch of all data if not already initialized
+    if (!isInitialized) {
+      fetchInitialData();
+    }
+  }, [isInitialized, fetchInitialData]);
 
   useEffect(() => {
     if (contactInfo) {
@@ -49,7 +52,7 @@ export default function ContactManager() {
     });
   };
   
-  if (isLoading && !contactInfo.email) {
+  if (isLoading || !isInitialized) {
     return (
       <Card>
         <CardHeader>

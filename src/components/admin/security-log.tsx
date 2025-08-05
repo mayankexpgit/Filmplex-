@@ -9,11 +9,13 @@ import { useMovieStore } from '@/store/movieStore';
 import { Skeleton } from '../ui/skeleton';
 
 export default function SecurityLog() {
-  const { securityLogs, isLoading, fetchAllAdminData } = useMovieStore();
+  const { securityLogs, isLoading, isInitialized, fetchInitialData } = useMovieStore();
 
   useEffect(() => {
-    fetchAllAdminData();
-  }, [fetchAllAdminData]);
+    if (!isInitialized) {
+      fetchInitialData();
+    }
+  }, [isInitialized, fetchInitialData]);
   
   return (
     <Card>
@@ -32,7 +34,7 @@ export default function SecurityLog() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {(isLoading || !isInitialized) ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
                     <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>

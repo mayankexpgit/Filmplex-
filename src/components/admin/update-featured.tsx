@@ -13,15 +13,17 @@ import { Skeleton } from '../ui/skeleton';
 
 export default function UpdateFeatured() {
   const { toast } = useToast();
-  const { featuredMovies, isLoading, updateMovie, fetchHomepageData } = useMovieStore();
+  const { featuredMovies, isLoading, isInitialized, updateMovie, fetchInitialData } = useMovieStore();
   const [isPending, startTransition] = useTransition();
   
   const [posters, setPosters] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Initial fetch of movies
-    fetchHomepageData();
-  }, [fetchHomepageData]);
+    // Initial fetch of all data if not already initialized
+    if (!isInitialized) {
+      fetchInitialData();
+    }
+  }, [isInitialized, fetchInitialData]);
 
   useEffect(() => {
     if (featuredMovies.length > 0) {
@@ -74,7 +76,7 @@ export default function UpdateFeatured() {
     });
   };
 
-  if (isLoading && featuredMovies.length === 0) {
+  if (isLoading || !isInitialized) {
     return (
        <Card>
         <CardHeader>

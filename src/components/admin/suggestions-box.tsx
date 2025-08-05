@@ -11,13 +11,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 
 export default function SuggestionsBox() {
-  const { suggestions, deleteSuggestion, isLoading, fetchAllAdminData } = useMovieStore();
+  const { suggestions, deleteSuggestion, isLoading, isInitialized, fetchInitialData } = useMovieStore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    fetchAllAdminData();
-  }, [fetchAllAdminData]);
+    if (!isInitialized) {
+      fetchInitialData();
+    }
+  }, [isInitialized, fetchInitialData]);
 
   const handleDelete = (id: string) => {
     startTransition(async () => {
@@ -46,7 +48,7 @@ export default function SuggestionsBox() {
       <CardContent>
         <ScrollArea className="h-[250px] pr-4">
           <div className="space-y-4">
-            {isLoading ? (
+            {(isLoading || !isInitialized) ? (
                Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="p-3 bg-secondary rounded-lg flex justify-between items-center">
                   <div className="w-full">
