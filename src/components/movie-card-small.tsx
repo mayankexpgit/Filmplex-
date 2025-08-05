@@ -28,7 +28,7 @@ const MovieCardSmall: FC = () => {
       >
         <CarouselContent className="-ml-1">
           {featuredMovies.map((movie) => (
-            <CarouselItem key={movie.id} className="pl-1 basis-1/8">
+            <CarouselItem key={movie.id} className="pl-1 basis-1/5">
               <MovieCard movie={movie} variant="small"/>
             </CarouselItem>
           ))}
