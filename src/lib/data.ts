@@ -376,3 +376,5 @@ export const initialLatestReleases: Movie[] = [
     tags: ['Pixar'],
   },
 ];
+
+    
