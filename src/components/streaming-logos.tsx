@@ -24,5 +24,3 @@ const StreamingLogos = () => {
 };
 
 export default StreamingLogos;
-
-    
