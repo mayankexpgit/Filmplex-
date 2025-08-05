@@ -75,26 +75,40 @@ export default function UploadMovie() {
     }
 
     startTransition(() => {
-      const originalMovie = movies.find(m => m.id === id);
-
-      const movieData: Movie = {
-        id: id || new Date().toISOString(),
-        title,
-        year,
-        posterUrl,
-        quality,
-        tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        isFeatured: originalMovie?.isFeatured ?? false,
-        genre: originalMovie?.genre ?? 'Misc',
-      };
-      
       if (id) {
+        // This is an update to an existing movie.
+        const originalMovie = movies.find(m => m.id === id);
+
+        // Construct the updated movie data, taking the new values from the form.
+        // For fields not in the form (isFeatured, genre), keep the original values.
+        const movieData: Movie = {
+          id: id,
+          title,
+          year,
+          posterUrl,
+          quality,
+          tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+          isFeatured: originalMovie?.isFeatured ?? false,
+          genre: originalMovie?.genre ?? 'Misc',
+        };
+
         updateMovie(id, movieData);
         toast({
           title: 'Success!',
           description: `Movie "${title}" has been updated.`,
         });
       } else {
+        // This is a new movie.
+        const movieData: Movie = {
+          id: new Date().toISOString(),
+          title,
+          year,
+          posterUrl,
+          quality,
+          tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+          isFeatured: false, // Default for new movie
+          genre: 'Misc', // Default for new movie
+        };
         addMovie(movieData);
         toast({
           title: 'Success!',
@@ -121,7 +135,7 @@ export default function UploadMovie() {
   }
 
   const filteredMovies = useMemo(() => {
-    const sortedMovies = [...movies].sort((a, b) => b.year - a.year);
+    const sortedMovies = [...movies].sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
     if (!searchQuery) {
       return sortedMovies;
     }
