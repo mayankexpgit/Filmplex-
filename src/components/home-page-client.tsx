@@ -63,9 +63,9 @@ export function HomePageClient() {
               className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
-          <div className="border-l border-border h-10 flex items-center">
-            <Button variant="default" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none px-4">
-              <Film className="h-5 w-5 mr-2" />
+          <div className="border-l border-border flex items-center p-1">
+            <Button variant="default" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md px-3 h-8">
+              <Film className="h-4 w-4 mr-2" />
               <span>4K/HD</span>
             </Button>
           </div>
