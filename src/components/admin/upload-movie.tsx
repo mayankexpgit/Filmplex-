@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ export default function UploadMovie() {
   const [posterUrl, setPosterUrl] = useState('');
   const [quality, setQuality] = useState('HD');
   const [tags, setTags] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setMovies(latestReleases);
@@ -111,6 +112,15 @@ export default function UploadMovie() {
     }
   }
 
+  const filteredMovies = useMemo(() => {
+    if (!searchQuery) {
+      return movies;
+    }
+    return movies.filter((movie) =>
+      movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [movies, searchQuery]);
+
   return (
     <div className="space-y-8">
       <Card>
@@ -149,7 +159,16 @@ export default function UploadMovie() {
         <CardHeader>
           <CardTitle>Movie List</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+           <div className="space-y-2">
+            <Label htmlFor="search-movie">Search Movie</Label>
+            <Input 
+              id="search-movie" 
+              placeholder="Search by title..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
           <ScrollArea className="h-[400px]">
             <Table>
               <TableHeader>
@@ -160,7 +179,7 @@ export default function UploadMovie() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {movies.map((movie) => (
+                {filteredMovies.map((movie) => (
                   <TableRow key={movie.id}>
                     <TableCell className="font-medium">{movie.title}</TableCell>
                     <TableCell>{movie.year}</TableCell>
