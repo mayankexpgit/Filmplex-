@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -61,7 +62,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
           />
            {movie.quality && (
             <Badge className="absolute top-2 right-2 rounded-sm border-amber-400/80 bg-gold-metallic text-primary-foreground text-xs font-bold">
-              {movie.quality}
+              {movie.quality === '4K' ? '4K/HD' : movie.quality}
             </Badge>
           )}
         </div>
