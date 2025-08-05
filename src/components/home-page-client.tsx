@@ -8,6 +8,7 @@ import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Menu, Search } from 'lucide-react';
+import StreamingLogos from './streaming-logos';
 
 function CarouselSkeleton() {
   return (
@@ -52,6 +53,7 @@ export function HomePageClient() {
       <section>
         {isLoadingFeatured ? <CarouselSkeleton /> : <MovieCardSmall />}
       </section>
+
       <section className="space-y-6">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
@@ -66,6 +68,9 @@ export function HomePageClient() {
             <span className="sr-only">Open menu</span>
           </Button>
         </div>
+        
+        <StreamingLogos />
+
         {isLoadingLatest ? <GridSkeleton /> : <MovieCardLarge />}
       </section>
     </div>
