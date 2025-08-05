@@ -53,10 +53,10 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
     );
   }
 
-  // Large variant with grey background frame
+  // Large variant with dark section for details
   return (
-    <Card className="overflow-hidden bg-card border-border group rounded-lg">
-       <CardContent className="p-0">
+    <Card className="overflow-hidden bg-card border-0 group rounded-lg flex flex-col">
+       <CardContent className="p-0 flex flex-col h-full">
         <div className="relative block overflow-hidden">
           <Image
             src={movie.posterUrl}
@@ -67,11 +67,11 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             data-ai-hint="movie poster"
           />
         </div>
-        <div className="p-3">
-          <h3 className="font-bold truncate text-foreground text-base">
+        <div className="p-3 bg-black flex-grow flex flex-col justify-center">
+          <h3 className="font-bold text-foreground text-base leading-tight">
             {movie.title}
           </h3>
-          <div className="text-muted-foreground text-sm">
+          <div className="text-muted-foreground text-sm mt-1">
             <span>{movie.year}</span> &bull; <span>{movie.genre}</span>
           </div>
         </div>
