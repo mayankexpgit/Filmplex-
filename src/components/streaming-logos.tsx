@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Image from 'next/image';
 
@@ -33,7 +34,10 @@ const StreamingLogos = () => {
                   src={logo.url}
                   alt={`${logo.name} logo`}
                   fill
-                  className="object-contain"
+                  className={cn(
+                    "object-contain",
+                    logo.name === 'Disney+' && 'mix-blend-color-burn'
+                  )}
                 />
               </div>
             )}
