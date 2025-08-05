@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Upload, MessageCircle, Bell, User, Shield, Flame } from 'lucide-react';
+import { Upload, MessageCircle, Bell, User, Shield, Flame, List } from 'lucide-react';
 
 const adminSections = [
   {
@@ -9,6 +9,12 @@ const adminSections = [
     description: 'Add new movies to the catalog.',
     href: '/admin/upload-movie',
     icon: Upload,
+  },
+  {
+    title: 'Movie List',
+    description: 'Edit, view, and manage all movies.',
+    href: '/admin/movie-list',
+    icon: List,
   },
   {
     title: 'Update Featured Movies',
