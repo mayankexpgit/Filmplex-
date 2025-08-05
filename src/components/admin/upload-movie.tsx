@@ -13,6 +13,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit, Loader2 } from 'lucide-react';
 import { Checkbox } from '../ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function UploadMovie() {
   const { toast } = useToast();
@@ -29,6 +40,7 @@ export default function UploadMovie() {
   }, [latestReleases, featuredMovies]);
 
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
+  const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear());
@@ -116,15 +128,17 @@ export default function UploadMovie() {
     setEditingMovie(movie);
   };
 
-  const handleDelete = (movieId: string) => {
+  const handleDelete = () => {
+    if (!movieToDelete) return;
+    
     startTransition(async () => {
       try {
-        await deleteMovie(movieId);
+        await deleteMovie(movieToDelete.id);
         toast({
           title: 'Success!',
-          description: 'Movie has been deleted.',
+          description: `Movie "${movieToDelete.title}" has been deleted.`,
         });
-        if (editingMovie && editingMovie.id === movieId) {
+        if (editingMovie && editingMovie.id === movieToDelete.id) {
           resetForm();
         }
       } catch (error) {
@@ -133,6 +147,8 @@ export default function UploadMovie() {
           title: 'Database Error',
           description: 'Could not delete the movie. Please try again.',
         });
+      } finally {
+        setMovieToDelete(null);
       }
     });
   }
@@ -197,49 +213,69 @@ export default function UploadMovie() {
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Movie List</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-           <div className="space-y-2">
-            <Label htmlFor="search-movie">Search Movie</Label>
-            <Input 
-              id="search-movie" 
-              placeholder="Search by title..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <ScrollArea className="h-[400px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Year</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMovies.map((movie) => (
-                  <TableRow key={movie.id}>
-                    <TableCell className="font-medium">{movie.title}</TableCell>
-                    <TableCell>{movie.year}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(movie.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
+      <AlertDialog>
+        <Card>
+          <CardHeader>
+            <CardTitle>Movie List</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="search-movie">Search Movie</Label>
+              <Input 
+                id="search-movie" 
+                placeholder="Search by title..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <ScrollArea className="h-[400px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Year</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {filteredMovies.map((movie) => (
+                    <TableRow key={movie.id}>
+                      <TableCell className="font-medium">{movie.title}</TableCell>
+                      <TableCell>{movie.year}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the movie
+              <span className="font-bold"> {movieToDelete?.title}</span> from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setMovieToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
