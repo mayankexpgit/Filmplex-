@@ -138,7 +138,7 @@ export default function UploadMovie() {
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
         downloadLinks: (formData.downloadLinks || []).filter(link => link.url.trim() !== ''),
       };
-      // Remove temporary fields
+      // Remove temporary fields that are not part of the Movie interface
       delete (movieData as any).tagsString;
       
       // Simulate upload progress
@@ -153,6 +153,8 @@ export default function UploadMovie() {
             description: `Movie "${formData.title}" has been updated.`,
           });
         } else {
+          // Explicitly remove id for new movies to prevent Firestore errors
+          delete movieData.id;
           await addMovie(movieData as Omit<Movie, 'id'>);
           toast({
             title: 'Success!',
@@ -166,6 +168,7 @@ export default function UploadMovie() {
         resetForm();
 
       } catch (error) {
+        console.error("Database operation failed:", error);
         toast({
           variant: 'destructive',
           title: 'Database Error',
@@ -181,9 +184,9 @@ export default function UploadMovie() {
   const isStageComplete = () => {
       if (isUploading) return false;
       switch(currentStage) {
-          case 0: return formData.title && formData.genre;
-          case 1: return formData.posterUrl && (formData.downloadLinks || []).some(l => l.url);
-          case 2: return formData.synopsis;
+          case 0: return !!(formData.title && formData.genre);
+          case 1: return !!(formData.posterUrl && (formData.downloadLinks || []).some(l => l.url));
+          case 2: return !!formData.synopsis;
           default: return false;
       }
   }
