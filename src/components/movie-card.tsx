@@ -6,6 +6,7 @@ import type { Movie } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from './ui/badge';
+import Link from 'next/link';
 
 interface MovieCardProps {
   movie: Movie;
@@ -15,43 +16,8 @@ interface MovieCardProps {
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
   const qualityToDisplay = movie.downloadLinks?.[0]?.quality;
 
-  if (variant === 'featured') {
-    return (
-      <div className="group">
-        <div className="relative block overflow-hidden rounded-md">
-          <Image
-            src={movie.posterUrl}
-            alt={`Poster for ${movie.title}`}
-            width={380}
-            height={570}
-            className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint="movie poster"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === 'small') {
-    return (
-      <div className="group">
-        <div className="relative block overflow-hidden">
-          <Image
-            src={movie.posterUrl}
-            alt={`Poster for ${movie.title}`}
-            width={380}
-            height={570}
-            className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint="movie poster"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Large variant with dark section for details
-  return (
-    <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col">
+  const cardContent = (
+    <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
        <CardContent className="p-0 flex flex-col h-full">
         <div className="relative block overflow-hidden">
           <Image
@@ -87,5 +53,43 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
         </div>
       </CardContent>
     </Card>
+  );
+
+  const smallVariantContent = (
+     <div className="group cursor-pointer">
+        <div className="relative block overflow-hidden">
+          <Image
+            src={movie.posterUrl}
+            alt={`Poster for ${movie.title}`}
+            width={380}
+            height={570}
+            className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
+            data-ai-hint="movie poster"
+          />
+        </div>
+      </div>
+  );
+
+  if (variant === 'featured') {
+    return (
+       <Link href={`/movie/${movie.id}`} passHref>
+         {smallVariantContent}
+       </Link>
+    );
+  }
+
+  if (variant === 'small') {
+     return (
+       <Link href={`/movie/${movie.id}`} passHref>
+         {smallVariantContent}
+       </Link>
+    );
+  }
+
+  // Large variant
+  return (
+    <Link href={`/movie/${movie.id}`} passHref>
+      {cardContent}
+    </Link>
   );
 }

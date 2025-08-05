@@ -7,6 +7,8 @@ export interface Movie {
   genre: string;
   tags?: string[];
   downloadLinks?: { quality: string; url: string }[];
+  synopsis?: string;
+  screenshots?: string[];
 }
 
 // This data is now used for initial database seeding.
@@ -22,6 +24,12 @@ export const initialMovies: Movie[] = [
       { quality: '4K/HD', url: 'https://example.com/inception-4k' },
       { quality: 'HD', url: 'https://example.com/inception-hd' },
     ],
+    synopsis: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '2',
@@ -34,6 +42,12 @@ export const initialMovies: Movie[] = [
       { quality: 'HD', url: 'https://example.com/dk-hd' },
       { quality: '720p', url: 'https://example.com/dk-720p' },
     ],
+    synopsis: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '3',
@@ -44,6 +58,12 @@ export const initialMovies: Movie[] = [
     tags: ['Space'],
     downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/interstellar-4k' },
+    ],
+    synopsis: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -56,6 +76,12 @@ export const initialMovies: Movie[] = [
     downloadLinks: [
       { quality: 'HD', url: 'https://example.com/parasite-hd' },
     ],
+    synopsis: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '5',
@@ -66,6 +92,12 @@ export const initialMovies: Movie[] = [
     tags: ['Psychological'],
     downloadLinks: [
        { quality: '4K/HD', url: 'https://example.com/joker-4k' },
+    ],
+    synopsis: 'A mentally troubled comedian embarks on a downward spiral that leads to the creation of an iconic villain.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -78,6 +110,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/dune-hd' },
     ],
+    synopsis: 'Feature adaptation of Frank Herbert\'s science fiction novel, about the son of a noble family entrusted with the protection of the most valuable asset and most vital element in the galaxy.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '7',
@@ -88,6 +126,12 @@ export const initialMovies: Movie[] = [
     tags: ['Marvel'],
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/sm-nwh-4k' },
+    ],
+     synopsis: 'With Spider-Man\'s identity now revealed, Peter asks Doctor Strange for help. When a spell goes wrong, dangerous foes from other worlds start to appear, forcing Peter to discover what it truly means to be Spider-Man.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -100,6 +144,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/matrix-hd' },
     ],
+    synopsis: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '9',
@@ -110,6 +160,12 @@ export const initialMovies: Movie[] = [
     tags: ['Heartwarming'],
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/fg-4k' },
+    ],
+    synopsis: 'The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -122,6 +178,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/pf-hd' },
     ],
+    synopsis: 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '11',
@@ -132,6 +194,12 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/oppenheimer-4k' },
+    ],
+    synopsis: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -144,6 +212,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/barbie-hd' },
     ],
+    synopsis: 'Barbie suffers a crisis that leads her to question her world and her existence.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '13',
@@ -154,6 +228,12 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/eeao-4k' },
+    ],
+    synopsis: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -166,6 +246,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/batman-hd' },
     ],
+    synopsis: 'When the Riddler, a sadistic serial killer, begins murdering key political figures in Gotham, Batman is forced to investigate the city\'s hidden corruption and question his family\'s involvement.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '15',
@@ -176,6 +262,12 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/tgm-4k' },
+    ],
+    synopsis: 'After more than thirty years of service as one of the Navy\'s top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -188,6 +280,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/avatar2-hd' },
     ],
+    synopsis: 'Jake Sully lives with his newfound family formed on the planet of Pandora. Once a familiar threat returns to finish what was previously started, Jake must work with Neytiri and the army of the Na\'vi race to protect their planet.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
    {
     id: '17',
@@ -198,6 +296,12 @@ export const initialMovies: Movie[] = [
     tags: ['Popular'],
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/ko-hd' },
+    ],
+    synopsis: 'A detective investigates the death of a patriarch of an eccentric, combative family.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -210,6 +314,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/go-4k' },
     ],
+    synopsis: 'A young African-American visits his white girlfriend\'s parents for the weekend, where his simmering uneasiness about their reception of him eventually reaches a boiling point.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '19',
@@ -220,6 +330,12 @@ export const initialMovies: Movie[] = [
     tags: ['Adrenaline Rush'],
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/mmfr-hd' },
+    ],
+    synopsis: 'In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the help of a group of female prisoners, a psychotic worshiper, and a drifter named Max.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
     ],
   },
   {
@@ -232,6 +348,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/tsn-4k' },
     ],
+    synopsis: 'As Harvard student Mark Zuckerberg creates the social networking site that would become known as Facebook, he is sued by the twins who claimed he stole their idea, and by the co-founder who was later squeezed out of the business.',
+     screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ],
   },
   {
     id: '21',
@@ -243,6 +365,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/whiplash-hd' },
     ],
+    synopsis: 'A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who will stop at nothing to realize a student\'s potential.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '22',
@@ -254,6 +382,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/br2049-4k' },
     ],
+    synopsis: 'Young Blade Runner K\'s discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who\'s been missing for thirty years.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '23',
@@ -265,6 +399,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/lll-hd' },
     ],
+    synopsis: 'While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations for the future.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '24',
@@ -276,6 +416,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/aqp-4k' },
     ],
+    synopsis: 'In a post-apocalyptic world, a family is forced to live in silence while hiding from monsters with ultra-sensitive hearing.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '25',
@@ -287,6 +433,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/gbh-hd' },
     ],
+    synopsis: 'The adventures of Gustave H, a legendary concierge at a famous hotel from the fictional Republic of Zubrowka between the first and second World Wars, and Zero Moustafa, the lobby boy who becomes his most trusted friend.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '26',
@@ -298,6 +450,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/arrival-4k' },
     ],
+    synopsis: 'A linguist works with the military to communicate with alien lifeforms after twelve mysterious spacecraft appear around the world.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '27',
@@ -309,6 +467,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/her-hd' },
     ],
+    synopsis: 'In a near future, a lonely writer develops an unlikely relationship with an advanced operating system designed to meet his every need.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '28',
@@ -320,6 +484,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/moonlight-4k' },
     ],
+    synopsis: 'A look at three defining chapters in the life of Chiron, a young black man growing up in Miami. His epic journey to manhood is guided by the kindness, support and love of the community that helps raise him.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '29',
@@ -331,6 +501,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/jojo-hd' },
     ],
+    synopsis: 'A young boy in Hitler\'s army finds out his mother is hiding a Jewish girl in their home.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '30',
@@ -342,6 +518,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/1917-4k' },
     ],
+    synopsis: 'April 6th, 1917. As a regiment assembles to wage war deep in enemy territory, two soldiers are assigned to race against time and deliver a message that will stop 1,600 men from walking straight into a deadly trap.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '31',
@@ -353,6 +535,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/revenant-hd' },
     ],
+    synopsis: 'A frontiersman on a fur trading expedition in the 1820s fights for survival after being mauled by a bear and left for dead by members of his own hunting team.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '32',
@@ -364,6 +552,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/sm-itsv-4k' },
     ],
+    synopsis: 'Teen Miles Morales becomes the Spider-Man of his universe, and must join with five spider-powered individuals from other dimensions to stop a threat for all realities.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '33',
@@ -375,6 +569,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/fvf-hd' },
     ],
+    synopsis: 'American car designer Carroll Shelby and driver Ken Miles battle corporate interference and the laws of physics to build a revolutionary race car for Ford in order to defeat Ferrari at the 24 Hours of Le Mans in 1966.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '34',
@@ -386,6 +586,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/logan-4k' },
     ],
+    synopsis: 'In a future where mutants are nearly extinct, an elderly and weary Logan leads a quiet life. But when Laura, a mutant child pursued by scientists, comes to him for help, he must get her to safety.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '35',
@@ -397,6 +603,12 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/ouatih-hd' },
     ],
+    synopsis: 'A faded television actor and his stunt double strive to achieve fame and success in the final years of Hollywood\'s Golden Age in 1969 Los Angeles.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
   {
     id: '36',
@@ -408,5 +620,11 @@ export const initialMovies: Movie[] = [
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/soul-4k' },
     ],
+    synopsis: 'A musician who has lost his passion for music is transported out of his body and must find his way back with the help of an infant soul learning about herself.',
+    screenshots: [
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+        'https://placehold.co/1280x720.png',
+    ]
   },
 ];
