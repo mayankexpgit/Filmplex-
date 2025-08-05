@@ -32,12 +32,9 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   },
 
   fetchHomepageData: async () => {
-    // Check if data is already loading to prevent parallel requests on fast refresh
-    if (get().isLoadingFeatured || get().isLoadingLatest) {
-        await Promise.all([
-            get().fetchFeaturedMovies(),
-            get().fetchLatestReleases(),
-        ]);
-    }
+    await Promise.all([
+      get().fetchFeaturedMovies(),
+      get().fetchLatestReleases(),
+    ]);
   },
 }));
