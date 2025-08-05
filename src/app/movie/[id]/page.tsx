@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Download, PlayCircle, Share2, MessageSquare, ThumbsUp, Star } from 'lucide-react';
 import Link from 'next/link';
 import MovieCardSmall from '@/components/movie-card-small';
-import { Header } from '@/components/layout/header';
 
 async function getMovie(id: string): Promise<Movie | undefined> {
   const movies = await fetchMovies();
@@ -19,7 +18,11 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
   if (!movie) {
     return (
       <div>
-        <Header />
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
+          <div className="container max-w-screen-2xl">
+            <MovieCardSmall />
+          </div>
+        </header>
         <div className="container mx-auto py-12 text-center">
           <h1 className="text-4xl font-bold">Movie not found</h1>
           <p className="text-muted-foreground mt-4">The movie you are looking for does not exist.</p>
@@ -30,6 +33,9 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
       </div>
     );
   }
+
+  const trailerUrl = movie.trailerUrl ? `${movie.trailerUrl}?autoplay=1&mute=1&loop=1&playlist=${movie.trailerUrl.split('/').pop()}` : null;
+
 
   return (
     <div className="bg-background min-h-screen text-foreground">
@@ -114,10 +120,22 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
           {/* Trailer */}
            <section className="mb-12">
              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Watch Trailer</h2>
-             <div className="aspect-video relative">
-                <div className="w-full h-full bg-secondary rounded-lg flex items-center justify-center text-muted-foreground">
-                    <PlayCircle className="h-16 w-16" />
-                </div>
+             <div className="aspect-video relative bg-secondary rounded-lg overflow-hidden">
+                {trailerUrl ? (
+                    <iframe
+                        src={trailerUrl}
+                        title={`Trailer for ${movie.title}`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                    ></iframe>
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <PlayCircle className="h-16 w-16" />
+                        <p className="ml-4">Trailer not available</p>
+                    </div>
+                )}
              </div>
            </section>
            

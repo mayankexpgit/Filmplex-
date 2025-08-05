@@ -44,6 +44,7 @@ export default function UploadMovie() {
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear());
   const [posterUrl, setPosterUrl] = useState('');
+  const [trailerUrl, setTrailerUrl] = useState('');
   const [tags, setTags] = useState('');
   const [genre, setGenre] = useState('');
   const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([{ quality: 'HD', url: '' }]);
@@ -55,6 +56,7 @@ export default function UploadMovie() {
       setTitle(editingMovie.title);
       setYear(editingMovie.year);
       setPosterUrl(editingMovie.posterUrl);
+      setTrailerUrl(editingMovie.trailerUrl || '');
       setTags(editingMovie.tags ? editingMovie.tags.join(', ') : '');
       setGenre(editingMovie.genre);
       setDownloadLinks(editingMovie.downloadLinks && editingMovie.downloadLinks.length > 0 ? editingMovie.downloadLinks : [{ quality: 'HD', url: '' }]);
@@ -68,6 +70,7 @@ export default function UploadMovie() {
     setTitle('');
     setYear(new Date().getFullYear());
     setPosterUrl('');
+    setTrailerUrl('');
     setTags('');
     setGenre('');
     setDownloadLinks([{ quality: 'HD', url: '' }]);
@@ -104,6 +107,7 @@ export default function UploadMovie() {
         title,
         year,
         posterUrl,
+        trailerUrl,
         tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
         genre,
         downloadLinks: downloadLinks.filter(link => link.url.trim() !== ''),
@@ -194,6 +198,10 @@ export default function UploadMovie() {
           <div className="space-y-2">
             <Label htmlFor="movie-poster">Poster URL</Label>
             <Input id="movie-poster" value={posterUrl} onChange={(e) => setPosterUrl(e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="movie-trailer">Trailer URL (YouTube Embed)</Label>
+            <Input id="movie-trailer" value={trailerUrl} onChange={(e) => setTrailerUrl(e.target.value)} placeholder="https://www.youtube.com/embed/..." disabled={isPending} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
