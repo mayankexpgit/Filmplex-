@@ -206,13 +206,13 @@ export const latestReleases: Movie[] = [
   },
   {
     id: '20',
-    title: 'The Grand Budapest Hotel',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg',
-    year: 2014,
+    title: 'The Social Network',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/n0ybibhJtQ5icDqNs2BT90gBfgM.jpg',
+    year: 2010,
     isFeatured: false,
-    genre: 'Comedy, Drama',
+    genre: 'Drama, History',
     quality: '4K',
-    tags: ['Stylistic'],
+    tags: ['Biography'],
   },
   {
     id: '21',
