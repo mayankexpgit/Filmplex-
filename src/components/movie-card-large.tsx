@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMovieStore } from '@/store/movieStore';
@@ -46,7 +47,7 @@ export default function MovieCardLarge() {
       {visibleMoviesCount < filteredMovies.length && (
         <div className="mt-8 flex justify-center">
           <Button onClick={handleMoreMovies}>
-            More Movies
+            More
           </Button>
         </div>
       )}
