@@ -27,7 +27,7 @@ const FeaturedCarousel: FC = () => {
       >
         <CarouselContent className="-ml-4">
           {featuredMovies.map((movie) => (
-            <CarouselItem key={movie.id} className="pl-4 basis-1/5">
+            <CarouselItem key={movie.id} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/5">
               <MovieCard movie={movie} variant="featured"/>
             </CarouselItem>
           ))}
