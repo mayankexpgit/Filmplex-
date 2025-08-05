@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ import { useMovieStore } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, Loader2 } from 'lucide-react';
+import { enhancePoster } from '@/ai/flows/enhance-poster-flow';
 
 export default function UploadMovie() {
   const { toast } = useToast();
@@ -21,6 +22,7 @@ export default function UploadMovie() {
     updateMovie: state.updateMovie,
     deleteMovie: state.deleteMovie,
   }));
+  const [isPending, startTransition] = useTransition();
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
@@ -69,32 +71,44 @@ export default function UploadMovie() {
       return;
     }
 
-    const movieData: Movie = {
-      id: id || new Date().toISOString(),
-      title,
-      year,
-      posterUrl,
-      quality,
-      tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-      isFeatured: editingMovie?.isFeatured || false,
-      genre: editingMovie?.genre || 'Misc',
-    };
+    startTransition(async () => {
+      try {
+        const enhancedUrl = await enhancePoster(posterUrl);
 
-    if (id) {
-      updateMovie(id, movieData);
-      toast({
-        title: 'Success!',
-        description: `Movie "${title}" has been updated.`,
-      });
-    } else {
-      addMovie(movieData);
-      toast({
-        title: 'Success!',
-        description: `Movie "${title}" has been added.`,
-      });
-    }
+        const movieData: Movie = {
+          id: id || new Date().toISOString(),
+          title,
+          year,
+          posterUrl: enhancedUrl,
+          quality,
+          tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+          isFeatured: editingMovie?.isFeatured || false,
+          genre: editingMovie?.genre || 'Misc',
+        };
 
-    resetForm();
+        if (id) {
+          updateMovie(id, movieData);
+          toast({
+            title: 'Success!',
+            description: `Movie "${title}" has been updated with an enhanced poster.`,
+          });
+        } else {
+          addMovie(movieData);
+          toast({
+            title: 'Success!',
+            description: `Movie "${title}" has been added with an enhanced poster.`,
+          });
+        }
+        resetForm();
+      } catch (error) {
+        console.error('Failed to enhance poster:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Poster Enhancement Failed',
+          description: 'The poster URL might be invalid or the image could not be processed. Please try a different URL.',
+        });
+      }
+    });
   };
   
   const handleEdit = (movie: Movie) => {
@@ -130,27 +144,34 @@ export default function UploadMovie() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="movie-title">Title</Label>
-            <Input id="movie-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input id="movie-title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={isPending} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="movie-year">Year</Label>
-            <Input id="movie-year" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+            <Input id="movie-year" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} disabled={isPending} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="movie-poster">Poster URL</Label>
-            <Input id="movie-poster" value={posterUrl} onChange={(e) => setPosterUrl(e.target.value)} placeholder="https://placehold.co/400x600.png" />
+            <Input id="movie-poster" value={posterUrl} onChange={(e) => setPosterUrl(e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="movie-quality">Quality (e.g., 4K, HD)</Label>
-            <Input id="movie-quality" value={quality} onChange={(e) => setQuality(e.target.value)} />
+            <Input id="movie-quality" value={quality} onChange={(e) => setQuality(e.target.value)} disabled={isPending} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
-            <Input id="movie-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Action, New Release" />
+            <Input id="movie-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Action, New Release" disabled={isPending} />
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSubmit}>{id ? 'Update Movie' : 'Add Movie'}</Button>
-            {id && <Button variant="outline" onClick={resetForm}>Cancel Edit</Button>}
+            <Button onClick={handleSubmit} disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : id ? 'Update Movie' : 'Add Movie'}
+            </Button>
+            {id && <Button variant="outline" onClick={resetForm} disabled={isPending}>Cancel Edit</Button>}
           </div>
         </CardContent>
       </Card>
