@@ -69,7 +69,7 @@ export default function UploadMovie() {
       year,
       posterUrl,
       quality,
-      tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
       isFeatured: editingMovie?.isFeatured || false,
       genre: editingMovie?.genre || 'Misc',
     };
