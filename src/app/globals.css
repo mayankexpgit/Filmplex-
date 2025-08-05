@@ -84,7 +84,7 @@
 }
 
 @layer utilities {
-  .text-gold-metallic {
-    @apply bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 via-yellow-400 to-yellow-600;
+  .bg-gold-metallic {
+    @apply bg-gradient-to-br from-yellow-400 to-amber-600;
   }
 }

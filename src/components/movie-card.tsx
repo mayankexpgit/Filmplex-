@@ -60,7 +60,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             data-ai-hint="movie poster"
           />
            {movie.quality && (
-            <Badge className="absolute top-2 right-2 rounded-sm border-yellow-500/50 bg-black/50 backdrop-blur-sm text-xs font-bold text-gold-metallic">
+            <Badge className="absolute top-2 right-2 rounded-sm border-amber-400/80 bg-gold-metallic text-primary-foreground text-xs font-bold">
               {movie.quality}
             </Badge>
           )}
