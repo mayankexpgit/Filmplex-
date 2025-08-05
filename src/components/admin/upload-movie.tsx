@@ -12,7 +12,7 @@ import type { Movie } from '@/lib/data';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const addMovie = (movie: Movie) => useMovieStore.getState().latestReleases.push(movie);
+  const addMovie = useMovieStore((state) => state.addMovie);
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear());
   const [posterUrl, setPosterUrl] = useState('');
