@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from '../ui/badge';
 
 export default function UploadMovie() {
   const { toast } = useToast();
@@ -216,7 +217,10 @@ export default function UploadMovie() {
       <AlertDialog>
         <Card>
           <CardHeader>
-            <CardTitle>Movie List</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Movie List</span>
+              <Badge variant="secondary">{movies.length} movies</Badge>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
