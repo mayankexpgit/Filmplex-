@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useMovieStore, fetchInitialData } from '@/store/movieStore';
+import { useMovieStore, fetchMovieData } from '@/store/movieStore';
 import MovieCardSmall from '@/components/movie-card-small';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
@@ -52,9 +52,9 @@ export function HomePageClient() {
   }));
 
   useEffect(() => {
-    // Data fetching is now centralized. We just need to ensure it's been initialized.
+    // Fetch movie data when the component mounts if not already initialized.
     if (!isInitialized) {
-      fetchInitialData();
+      fetchMovieData();
     }
   }, [isInitialized]);
 

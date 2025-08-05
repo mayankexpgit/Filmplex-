@@ -55,7 +55,6 @@ interface MovieState {
 
 // =================================================================
 // 1. ZUSTAND STORE DEFINITION
-// The store is now only responsible for holding state.
 // =================================================================
 export const useMovieStore = create<MovieState>((set) => ({
   // --- Initial State ---
@@ -75,40 +74,38 @@ export const useMovieStore = create<MovieState>((set) => ({
 
 // =================================================================
 // 2. ASYNCHRONOUS ACTION FUNCTIONS
-// These orchestrate data fetching and update the store.
-// They are now called centrally from layouts.
 // =================================================================
 
-/**
- * Adds a security log entry.
- */
-const addSecurityLog = async (action: string): Promise<void> => {
-    const newLog = {
-        admin: 'admin_user', // Placeholder
-        action,
-        timestamp: new Date().toLocaleString(),
-    };
-    const id = await dbAddSecurityLog(newLog);
-    useMovieStore.setState((state) => ({
-        securityLogs: [{ id, ...newLog }, ...state.securityLogs],
-    }));
-};
-
-/**
- * Fetches ALL data for the application from Firestore and updates the store.
- * This function should be called once from a high-level layout component.
- */
-let isFetching = false;
-export const fetchInitialData = async (): Promise<void> => {
-  // Prevent re-fetching if already initialized or a fetch is in progress
-  if (useMovieStore.getState().isInitialized || isFetching) {
+let isFetchingMovies = false;
+export const fetchMovieData = async (): Promise<void> => {
+  if (useMovieStore.getState().isInitialized || isFetchingMovies) {
     return;
   }
-  
-  isFetching = true;
-
+  isFetchingMovies = true;
   try {
-    const [allMovies, contactInfo, suggestions, securityLogs] = await Promise.all([
+    const allMovies = await dbFetchMovies();
+    useMovieStore.setState({
+      featuredMovies: allMovies.filter((m) => m.isFeatured),
+      latestReleases: allMovies.filter((m) => !m.isFeatured),
+      isInitialized: true,
+    });
+  } catch (error) {
+    console.error("Failed to fetch movie data:", error);
+    useMovieStore.setState({ isInitialized: true });
+  } finally {
+    isFetchingMovies = false;
+  }
+};
+
+
+let isFetchingAdmin = false;
+export const fetchAdminData = async (): Promise<void> => {
+  if (useMovieStore.getState().isInitialized || isFetchingAdmin) {
+    return;
+  }
+  isFetchingAdmin = true;
+  try {
+     const [allMovies, contactInfo, suggestions, securityLogs] = await Promise.all([
       dbFetchMovies(),
       dbFetchContactInfo(),
       dbFetchSuggestions(),
@@ -124,11 +121,26 @@ export const fetchInitialData = async (): Promise<void> => {
       isInitialized: true,
     });
   } catch (error) {
-    console.error("Failed to fetch initial data:", error);
-    useMovieStore.setState({ isInitialized: true }); // Still set to true to unblock UI
+    console.error("Failed to fetch admin data:", error);
+     useMovieStore.setState({ isInitialized: true });
   } finally {
-    isFetching = false;
+    isFetchingAdmin = false;
   }
+};
+
+/**
+ * Adds a security log entry.
+ */
+const addSecurityLog = async (action: string): Promise<void> => {
+    const newLog = {
+        admin: 'admin_user', // Placeholder
+        action,
+        timestamp: new Date().toLocaleString(),
+    };
+    const id = await dbAddSecurityLog(newLog);
+    useMovieStore.setState((state) => ({
+        securityLogs: [{ id, ...newLog }, ...state.securityLogs],
+    }));
 };
 
 /**
@@ -148,9 +160,8 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
  * Updates an existing movie in the database and refreshes the movie list.
  */
 export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
-  await dbUpdateMovie(id, updatedMovie);
-  
   const movieTitle = updatedMovie.title || [...useMovieStore.getState().featuredMovies, ...useMovieStore.getState().latestReleases].find(m => m.id === id)?.title || 'Unknown Movie';
+  await dbUpdateMovie(id, updatedMovie);
   
   if (updatedMovie.posterUrl) {
     await addSecurityLog(`Updated Movie poster for: "${movieTitle}"`);

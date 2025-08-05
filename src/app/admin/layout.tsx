@@ -4,8 +4,8 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { useMovieStore, fetchInitialData } from '@/store/movieStore';
+import { ArrowLeft } from 'lucide-react';
+import { useMovieStore, fetchAdminData } from '@/store/movieStore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminLayout({
@@ -17,9 +17,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     // Fetch all data required for the admin section when the layout mounts.
-    // This prevents individual pages from re-fetching and creating race conditions.
     if (!isInitialized) {
-      fetchInitialData();
+      fetchAdminData();
     }
   }, [isInitialized]);
 
