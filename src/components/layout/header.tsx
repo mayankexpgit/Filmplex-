@@ -4,9 +4,9 @@ export function Header() {
       <div className="container flex h-16 max-w-screen-2xl items-center justify-center">
         <a href="/" className="flex items-center gap-2">
           <div className="text-5xl font-bold flex items-center">
-            <span className="text-6xl text-gold-metallic">F</span>
-            <span className="text-5xl text-gold-metallic tracking-tighter scale-y-110">ILMPLE</span>
-            <span className="text-6xl text-gold-metallic">X</span>
+            <span className="text-6xl text-primary">F</span>
+            <span className="text-5xl text-primary tracking-tighter scale-y-110">ILMPLE</span>
+            <span className="text-6xl text-primary">X</span>
           </div>
         </a>
       </div>
