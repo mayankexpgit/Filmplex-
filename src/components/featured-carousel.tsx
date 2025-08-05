@@ -1,9 +1,8 @@
 'use client';
 
 import type { FC } from 'react';
-import { Flame } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import MovieCard from './movie-card';
 import Autoplay from "embla-carousel-autoplay"
 import React from 'react';
@@ -16,8 +15,7 @@ const FeaturedCarousel: FC = () => {
 
   return (
     <div className="space-y-4">
-       <h2 className="text-xl font-bold flex items-center gap-2 text-primary">
-        <Flame className="w-6 h-6" />
+       <h2 className="text-2xl font-bold text-foreground">
         Featured Today
       </h2>
       <Carousel
