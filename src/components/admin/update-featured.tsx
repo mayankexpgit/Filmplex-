@@ -11,8 +11,11 @@ import { useMovieStore } from '@/store/movieStore';
 
 export default function UpdateFeatured() {
   const { toast } = useToast();
-  const featuredMovies = useMovieStore((state) => state.featuredMovies);
-  const updateMovie = useMovieStore((state) => state.updateMovie);
+  const { featuredMovies, updateMovie, addSecurityLog } = useMovieStore((state) => ({
+    featuredMovies: state.featuredMovies,
+    updateMovie: state.updateMovie,
+    addSecurityLog: state.addSecurityLog,
+  }));
   
   const [posters, setPosters] = useState<Record<string, string>>({});
 
@@ -31,19 +34,27 @@ export default function UpdateFeatured() {
   };
 
   const handleSaveChanges = () => {
+    let updatedCount = 0;
     Object.entries(posters).forEach(([id, posterUrl]) => {
-      // Find the original movie to see if the poster URL has actually changed.
       const originalMovie = featuredMovies.find(m => m.id === id);
       if (originalMovie && originalMovie.posterUrl !== posterUrl) {
-        // Use the global updateMovie function to ensure data consistency everywhere.
         updateMovie(id, { posterUrl });
+        updatedCount++;
       }
     });
 
-    toast({
-      title: 'Success!',
-      description: 'Featured movie posters have been updated.',
-    });
+    if (updatedCount > 0) {
+      addSecurityLog(`Updated ${updatedCount} featured movie poster(s).`);
+      toast({
+        title: 'Success!',
+        description: 'Featured movie posters have been updated.',
+      });
+    } else {
+       toast({
+        title: 'No Changes',
+        description: 'No poster URLs were changed.',
+      });
+    }
   };
 
   return (

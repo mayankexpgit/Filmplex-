@@ -3,7 +3,42 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { featuredMovies as initialFeatured, latestReleases as initialLatest, type Movie } from '@/lib/data';
 
-interface MovieState {
+// --- Types ---
+interface ContactInfo {
+  email: string;
+  message: string;
+}
+
+interface Suggestion {
+  id: number;
+  user: string;
+  suggestion: string;
+  date: string;
+}
+
+interface SecurityLog {
+  id: number;
+  admin: string;
+  action: string;
+  timestamp: string;
+}
+
+// --- Initial Data ---
+const initialSuggestions: Suggestion[] = [
+  { id: 1, user: 'Cinephile123', suggestion: 'Please add The Matrix in 4K!', date: '2024-07-28' },
+  { id: 2, user: 'ActionFan', suggestion: 'More action movies like John Wick would be great.', date: '2024-07-27' },
+  { id: 3, user: 'AnimeWatcher', suggestion: 'Can we get more anime films? Your Name was amazing.', date: '2024-07-26' },
+  { id: 4, user: 'ClassicLover', suggestion: 'Requesting classic mob movies.', date: '2024-07-25' },
+];
+
+const initialSecurityLogs: SecurityLog[] = [
+  { id: 1, admin: 'admin_john', action: 'Uploaded Movie: "Chrono Rift"', timestamp: '2024-07-28 10:00 AM' },
+  { id: 2, admin: 'admin_jane', action: 'Updated Contact Info', timestamp: '2024-07-28 09:30 AM' },
+];
+
+
+interface AdminState {
+  // Movies
   featuredMovies: Movie[];
   latestReleases: Movie[];
   isLoadingFeatured: boolean;
@@ -15,18 +50,38 @@ interface MovieState {
   deleteMovie: (id: string) => void;
   fetchHomepageData: () => void;
   isInitialized: boolean;
+
+  // Contact Info
+  contactInfo: ContactInfo;
+  updateContactInfo: (info: ContactInfo) => void;
+
+  // Suggestions
+  suggestions: Suggestion[];
+  deleteSuggestion: (id: number) => void;
+
+  // Security Logs
+  securityLogs: SecurityLog[];
+  addSecurityLog: (action: string) => void;
 }
 
-export const useMovieStore = create<MovieState>()(
+export const useMovieStore = create<AdminState>()(
   persist(
     (set, get) => ({
+      // --- Initial State ---
       featuredMovies: [],
       latestReleases: [],
       isLoadingFeatured: true,
       isLoadingLatest: true,
       searchQuery: '',
       isInitialized: false,
+      contactInfo: {
+        email: 'admin@filmplex.com',
+        message: 'For any queries, please reach out to us.',
+      },
+      suggestions: initialSuggestions,
+      securityLogs: initialSecurityLogs,
 
+      // --- Actions ---
       setSearchQuery: (query: string) => {
         set({ searchQuery: query });
       },
@@ -35,6 +90,7 @@ export const useMovieStore = create<MovieState>()(
         set((state) => ({
           latestReleases: [movie, ...state.latestReleases],
         }));
+        get().addSecurityLog(`Uploaded Movie: "${movie.title}"`);
       },
 
       updateMovie: (id: string, updatedMovie: Partial<Movie>) => {
@@ -49,37 +105,62 @@ export const useMovieStore = create<MovieState>()(
       },
 
       deleteMovie: (id: string) => {
+        const movie = get().latestReleases.find(m => m.id === id) || get().featuredMovies.find(m => m.id === id);
         set((state) => ({
           latestReleases: state.latestReleases.filter((movie) => movie.id !== id),
           featuredMovies: state.featuredMovies.filter((movie) => movie.id !== id),
         }));
+        if (movie) {
+            get().addSecurityLog(`Deleted Movie: "${movie.title}"`);
+        }
       },
 
       fetchHomepageData: () => {
-        // This function will now only set the initial data if the store hasn't been initialized from localStorage yet.
         if (!get().isInitialized) {
             set({
                 featuredMovies: initialFeatured,
                 latestReleases: initialLatest,
                 isLoadingFeatured: false,
                 isLoadingLatest: false,
-                isInitialized: true, 
             });
         } else {
-            // If already initialized, we just ensure loading states are false.
              set({
                 isLoadingFeatured: false,
                 isLoadingLatest: false,
             });
         }
       },
+
+      updateContactInfo: (info: ContactInfo) => {
+        set({ contactInfo: info });
+        get().addSecurityLog('Updated Contact Info');
+      },
+
+      deleteSuggestion: (id: number) => {
+        set((state) => ({
+          suggestions: state.suggestions.filter((s) => s.id !== id)
+        }));
+        get().addSecurityLog(`Deleted Suggestion ID: ${id}`);
+      },
+      
+      addSecurityLog: (action: string) => {
+        set((state) => ({
+          securityLogs: [
+            {
+              id: state.securityLogs.length + 1,
+              admin: 'admin_user', // Placeholder for admin user
+              action,
+              timestamp: new Date().toLocaleString(),
+            },
+            ...state.securityLogs,
+          ]
+        }));
+      },
     }),
     {
-      name: 'movie-storage', // unique name for the localStorage key
-      storage: createJSONStorage(() => localStorage), // use localStorage
+      name: 'admin-storage', // unique name for the localStorage key
+      storage: createJSONStorage(() => localStorage),
       onRehydrate: () => {
-        // This is called when the state is restored from localStorage.
-        // We set isInitialized to true, so we don't load default data again.
         useMovieStore.setState({ isInitialized: true, isLoadingFeatured: false, isLoadingLatest: false });
       }
     }

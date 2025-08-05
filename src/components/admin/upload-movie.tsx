@@ -15,12 +15,13 @@ import { Trash2, Edit, Loader2 } from 'lucide-react';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
+  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie, addSecurityLog } = useMovieStore((state) => ({
     latestReleases: state.latestReleases,
     featuredMovies: state.featuredMovies,
     addMovie: state.addMovie,
     updateMovie: state.updateMovie,
     deleteMovie: state.deleteMovie,
+    addSecurityLog: state.addSecurityLog,
   }));
   const [isPending, startTransition] = useTransition();
 
@@ -85,6 +86,7 @@ export default function UploadMovie() {
 
       if (id) {
         updateMovie(id, movieData);
+        addSecurityLog(`Updated Movie: "${title}"`);
         toast({
           title: 'Success!',
           description: `Movie "${title}" has been updated.`,

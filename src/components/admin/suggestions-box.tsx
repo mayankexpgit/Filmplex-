@@ -3,16 +3,26 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '../ui/badge';
-
-const suggestions = [
-  { id: 1, user: 'Cinephile123', movie: 'The Matrix', suggestion: 'Please add The Matrix in 4K!', date: '2024-07-28' },
-  { id: 2, user: 'ActionFan', movie: 'John Wick 4', suggestion: 'More action movies like John Wick would be great.', date: '2024-07-27' },
-  { id: 3, user: 'AnimeWatcher', movie: 'Your Name', suggestion: 'Can we get more anime films? Your Name was amazing.', date: '2024-07-26' },
-  { id: 4, user: 'ClassicLover', movie: 'The Godfather', suggestion: 'Requesting classic mob movies.', date: '2024-07-25' },
-];
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import { useMovieStore } from '@/store/movieStore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SuggestionsBox() {
+  const { suggestions, deleteSuggestion } = useMovieStore((state) => ({
+    suggestions: state.suggestions,
+    deleteSuggestion: state.deleteSuggestion,
+  }));
+  const { toast } = useToast();
+
+  const handleDelete = (id: number) => {
+    deleteSuggestion(id);
+    toast({
+      title: 'Suggestion Removed',
+      description: `Suggestion with ID ${id} has been deleted.`,
+    });
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -23,14 +33,17 @@ export default function SuggestionsBox() {
         <ScrollArea className="h-[250px] pr-4">
           <div className="space-y-4">
             {suggestions.map((item) => (
-              <div key={item.id} className="p-3 bg-secondary rounded-lg">
-                <div className="flex justify-between items-start">
+              <div key={item.id} className="p-3 bg-secondary rounded-lg flex justify-between items-center">
+                <div>
                   <p className="text-sm text-foreground font-semibold">{item.suggestion}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-muted-foreground">by @{item.user}</p>
+                    <p className="text-xs text-muted-foreground">{item.date}</p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-muted-foreground">by @{item.user}</p>
-                  <p className="text-xs text-muted-foreground">{item.date}</p>
-                </div>
+                <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
             ))}
           </div>

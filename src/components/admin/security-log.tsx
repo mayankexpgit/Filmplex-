@@ -4,15 +4,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-
-const logs = [
-  { id: 1, admin: 'admin_john', action: 'Uploaded Movie: "Chrono Rift"', timestamp: '2024-07-28 10:00 AM' },
-  { id: 2, admin: 'admin_jane', action: 'Updated Contact Info', timestamp: '2024-07-28 09:30 AM' },
-  { id: 3, admin: 'admin_john', action: 'Deleted Suggestion ID: 15', timestamp: '2024-07-27 05:00 PM' },
-  { id: 4, admin: 'admin_jane', action: 'Sent Notification: "New Horror Movies Added"', timestamp: '2024-07-27 02:15 PM' },
-];
+import { useMovieStore } from '@/store/movieStore';
 
 export default function SecurityLog() {
+  const logs = useMovieStore((state) => state.securityLogs);
+  
   return (
     <Card>
       <CardHeader>

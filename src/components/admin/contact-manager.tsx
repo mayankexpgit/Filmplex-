@@ -1,21 +1,32 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useMovieStore } from '@/store/movieStore';
 
 export default function ContactManager() {
   const { toast } = useToast();
-  const [contactEmail, setContactEmail] = useState('admin@filmplex.com');
-  const [contactMessage, setContactMessage] = useState('For any queries, please reach out to us.');
+  const { contactInfo, updateContactInfo } = useMovieStore((state) => ({
+    contactInfo: state.contactInfo,
+    updateContactInfo: state.updateContactInfo,
+  }));
+
+  const [email, setEmail] = useState(contactInfo.email);
+  const [message, setMessage] = useState(contactInfo.message);
+
+  useEffect(() => {
+    setEmail(contactInfo.email);
+    setMessage(contactInfo.message);
+  }, [contactInfo]);
 
   const handleSave = () => {
-    // Here you would typically make an API call to save the data
-    console.log('Saving contact info:', { contactEmail, contactMessage });
+    updateContactInfo({ email, message });
     toast({
       title: 'Success!',
       description: 'Contact information has been updated.',
@@ -33,16 +44,16 @@ export default function ContactManager() {
           <Input
             id="contact-email"
             type="email"
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="contact-message">Contact Message</Label>
           <Textarea
             id="contact-message"
-            value={contactMessage}
-            onChange={(e) => setContactMessage(e.target.value)}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
           />
         </div>
         <Button onClick={handleSave}>Save Changes</Button>
