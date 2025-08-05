@@ -10,6 +10,12 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Menu, Search, Film } from 'lucide-react';
 import StreamingLogos from './streaming-logos';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 function CarouselSkeleton() {
   return (
@@ -40,15 +46,40 @@ function GridSkeleton() {
   );
 }
 
+const genres = [
+  'All Genres',
+  'Action',
+  'Adventure',
+  'Animation',
+  'Anime',
+  'Bollywood',
+  'Comedy',
+  'Crime',
+  'Dubbed',
+  'Drama',
+  'Fantasy',
+  'Hollywood',
+  'Horror',
+  'Mystery',
+  'Romance',
+  'Sci-Fi',
+  'Thriller',
+  'War',
+];
+
 export function HomePageClient() {
   const { 
     isInitialized,
     searchQuery,
     setSearchQuery,
+    selectedGenre,
+    setSelectedGenre,
   } = useMovieStore((state) => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
+    selectedGenre: state.selectedGenre,
+    setSelectedGenre: state.setSelectedGenre,
   }));
 
   useEffect(() => {
@@ -91,10 +122,21 @@ export function HomePageClient() {
             </Button>
           </div>
           <div className="border-l border-border h-10 flex items-center">
-            <Button variant="outline" size="icon" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {genres.map((genre) => (
+                  <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
+                    {genre}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         

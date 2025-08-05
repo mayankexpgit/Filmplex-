@@ -39,6 +39,7 @@ interface MovieState {
   featuredMovies: Movie[];
   latestReleases: Movie[];
   searchQuery: string;
+  selectedGenre: string;
   
   // Admin Data
   contactInfo: ContactInfo;
@@ -50,6 +51,7 @@ interface MovieState {
 
   // Actions (only state setters)
   setSearchQuery: (query: string) => void;
+  setSelectedGenre: (genre: string) => void;
   setState: (state: Partial<MovieState>) => void;
 }
 
@@ -61,6 +63,7 @@ export const useMovieStore = create<MovieState>((set) => ({
   featuredMovies: [],
   latestReleases: [],
   searchQuery: '',
+  selectedGenre: 'All Genres',
   contactInfo: { email: '', message: '' },
   suggestions: [],
   securityLogs: [],
@@ -68,6 +71,7 @@ export const useMovieStore = create<MovieState>((set) => ({
 
   // --- Actions ---
   setSearchQuery: (query: string) => set({ searchQuery: query }),
+  setSelectedGenre: (genre: string) => set({ selectedGenre: genre }),
   setState: (state: Partial<MovieState>) => set(state),
 }));
 
@@ -120,9 +124,11 @@ export const fetchAdminData = async (): Promise<void> => {
       securityLogs,
       featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
+      isInitialized: true, // Also set initialized here for admin pages
     });
   } catch (error) {
     console.error("Failed to fetch admin data:", error);
+     useMovieStore.setState({ isInitialized: true });
   } finally {
     isFetchingAdmin = false;
   }

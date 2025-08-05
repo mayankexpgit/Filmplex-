@@ -16,6 +16,7 @@ export default function MovieCardLarge() {
     ...state.latestReleases,
   ]);
   const searchQuery = useMovieStore((state) => state.searchQuery);
+  const selectedGenre = useMovieStore((state) => state.selectedGenre);
   const [visibleMoviesCount, setVisibleMoviesCount] = useState(MOVIES_PER_PAGE);
   const [isPending, startTransition] = useTransition();
 
@@ -27,13 +28,24 @@ export default function MovieCardLarge() {
   }, [allMovies]);
 
   const filteredMovies = useMemo(() => {
-    if (!searchQuery) {
-      return uniqueMovies;
+    let movies = uniqueMovies;
+
+    // Filter by genre
+    if (selectedGenre && selectedGenre !== 'All Genres') {
+      movies = movies.filter((movie) =>
+        (movie.genre?.toLowerCase().includes(selectedGenre.toLowerCase())) ||
+        (movie.tags?.some(tag => tag.toLowerCase() === selectedGenre.toLowerCase()))
+      );
     }
-    return uniqueMovies.filter((movie) =>
-      movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [uniqueMovies, searchQuery]);
+    
+    // Filter by search query
+    if (searchQuery) {
+      movies = movies.filter((movie) =>
+        movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return movies;
+  }, [uniqueMovies, searchQuery, selectedGenre]);
 
   const moviesToShow = useMemo(() => {
     return filteredMovies.slice(0, visibleMoviesCount);
@@ -53,11 +65,19 @@ export default function MovieCardLarge() {
           <span>All Movies</span>
         </h2>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-4">
-        {moviesToShow.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} variant="large" />
-        ))}
-      </div>
+       {moviesToShow.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-4">
+          {moviesToShow.map((movie) => (
+            <MovieCard key={movie.id} movie={movie} variant="large" />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 text-muted-foreground">
+          <p className="text-lg">No movies found.</p>
+          <p>Try adjusting your search or genre filter.</p>
+        </div>
+      )}
+
       {visibleMoviesCount < filteredMovies.length && (
         <div className="mt-8 flex justify-center">
           <Button onClick={handleMoreMovies} variant="secondary" disabled={isPending}>
