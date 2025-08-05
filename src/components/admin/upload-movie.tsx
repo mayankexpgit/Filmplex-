@@ -15,15 +15,21 @@ import { Trash2, Edit, Loader2 } from 'lucide-react';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { movies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
-    movies: [...state.latestReleases, ...state.featuredMovies].filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-    ),
+  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
+    latestReleases: state.latestReleases,
+    featuredMovies: state.featuredMovies,
     addMovie: state.addMovie,
     updateMovie: state.updateMovie,
     deleteMovie: state.deleteMovie,
   }));
   const [isPending, startTransition] = useTransition();
+
+  const movies = useMemo(() => {
+    const all = [...latestReleases, ...featuredMovies];
+    return all.filter(
+      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
+    );
+  }, [latestReleases, featuredMovies]);
 
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
