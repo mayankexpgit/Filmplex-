@@ -61,7 +61,7 @@ export function HomePageClient() {
               className="pl-10 w-full"
             />
           </div>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Open menu</span>
           </Button>
