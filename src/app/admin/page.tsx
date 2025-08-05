@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {adminSections.map((section) => (
           <Link href={section.href} key={section.title} className="group">
-            <Card className="h-full hover:border-primary transition-colors">
+            <Card className="h-full hover:border-primary transition-all duration-300 ease-in-out transform hover:-translate-y-1">
               <CardHeader className="flex flex-row items-center gap-4">
                 <section.icon className="h-8 w-8 text-primary" />
                 <div>
