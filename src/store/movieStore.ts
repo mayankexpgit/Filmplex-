@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { featuredMovies, latestReleases, type Movie } from '@/lib/data';
 
@@ -9,6 +10,7 @@ interface MovieState {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   addMovie: (movie: Movie) => void;
+  updateFeaturedMovie: (id: string, posterUrl: string) => void;
   fetchHomepageData: () => Promise<void>;
   fetchFeaturedMovies: () => Promise<void>;
   fetchLatestReleases: () => Promise<void>;
@@ -30,6 +32,14 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   addMovie: (movie: Movie) => {
     set((state) => ({
       latestReleases: [movie, ...state.latestReleases],
+    }));
+  },
+
+  updateFeaturedMovie: (id: string, posterUrl: string) => {
+    set((state) => ({
+      featuredMovies: state.featuredMovies.map((movie) =>
+        movie.id === id ? { ...movie, posterUrl } : movie
+      ),
     }));
   },
 
