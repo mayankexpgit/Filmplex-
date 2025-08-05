@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'VEXEL Cinema',
+  title: 'FILMPLEX',
   description: 'The future of cinema.',
 };
 
