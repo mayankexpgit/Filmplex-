@@ -32,7 +32,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   if (variant === 'small') {
     return (
       <div className="group">
-        <div className="relative block overflow-hidden rounded-md">
+        <div className="relative block overflow-hidden">
           <Image
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
