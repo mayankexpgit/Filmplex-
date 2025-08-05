@@ -65,7 +65,7 @@ export function HomePageClient() {
           </div>
           <div className="border-l border-border flex items-center p-1">
             <Button variant="default" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md px-3 h-8">
-              <Film className="h-4 w-4 mr-2" />
+              <Film className="h-4 w-4" />
               <span>4K/HD</span>
             </Button>
           </div>
