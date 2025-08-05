@@ -14,6 +14,7 @@ import { Loader2, PlusCircle, XCircle, ArrowRight, ArrowLeft } from 'lucide-reac
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
 
 type DownloadLink = {
   quality: string;
@@ -30,6 +31,7 @@ const STAGES = ['Basic Info', 'Media Links', 'Content'];
 export default function UploadMovie() {
   const { toast } = useToast();
   const movies = useMovieStore((state) => state.latestReleases);
+  const featuredMoviesCount = useMovieStore((state) => state.featuredMovies.length);
   const [isPending, startTransition] = useTransition();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -48,6 +50,7 @@ export default function UploadMovie() {
     genre: '',
     language: '',
     streamingChannel: '',
+    isFeatured: false,
     downloadLinks: [{ quality: 'HD', url: '' }],
     synopsis: '',
     screenshots: [],
@@ -80,6 +83,7 @@ export default function UploadMovie() {
         genre: '',
         language: '',
         streamingChannel: '',
+        isFeatured: false,
         downloadLinks: [{ quality: 'HD', url: '' }],
         synopsis: '',
         screenshots: [],
@@ -190,6 +194,18 @@ export default function UploadMovie() {
           default: return false;
       }
   }
+  
+  const handleFeatureToggle = (checked: boolean) => {
+    if (checked && featuredMoviesCount >= 20) {
+      toast({
+        variant: 'destructive',
+        title: 'Cannot Add More',
+        description: 'Maximum of 20 featured movies reached.',
+      });
+      return;
+    }
+    handleInputChange('isFeatured', checked);
+  };
 
   const renderStage = () => {
     switch (currentStage) {
@@ -224,6 +240,17 @@ export default function UploadMovie() {
                     <Input id="movie-channel" value={formData.streamingChannel || ''} onChange={(e) => handleInputChange('streamingChannel', e.target.value)} placeholder="e.g. Netflix, Prime Video" disabled={isPending} />
                 </div>
             </div>
+            <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="is-featured"
+                  checked={formData.isFeatured}
+                  onCheckedChange={handleFeatureToggle}
+                  disabled={isPending || (!formData.isFeatured && featuredMoviesCount >= 20)}
+                />
+                <Label htmlFor="is-featured" className="cursor-pointer">
+                  Feature this movie on homepage carousel?
+                </Label>
+              </div>
           </div>
         );
       case 1: // Media Links

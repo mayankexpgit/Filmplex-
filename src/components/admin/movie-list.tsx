@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, deleteMovie } from '@/store/movieStore';
+import { useMovieStore, deleteMovie, updateMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Edit, Loader2 } from 'lucide-react';
+import { Trash2, Edit, Loader2, Star, CheckSquare } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,7 @@ import { Badge } from '../ui/badge';
 export default function MovieList() {
   const { toast } = useToast();
   const movies = useMovieStore((state) => state.latestReleases);
+  const featuredMoviesCount = useMovieStore((state) => state.featuredMovies.length);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -60,6 +61,41 @@ export default function MovieList() {
   const handleEdit = (movie: Movie) => {
     router.push(`/admin/upload-movie?id=${movie.id}`);
   };
+
+  const handleToggleFeatured = (movie: Movie) => {
+    if (!movie.isFeatured && featuredMoviesCount >= 20) {
+      toast({
+        variant: 'destructive',
+        title: 'Maximum Limit Reached',
+        description: 'You cannot have more than 20 featured movies.',
+      });
+      return;
+    }
+     if (movie.isFeatured && featuredMoviesCount <= 10) {
+      toast({
+        variant: 'destructive',
+        title: 'Minimum Limit Reached',
+        description: 'You must have at least 10 featured movies.',
+      });
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await updateMovie(movie.id, { isFeatured: !movie.isFeatured });
+        toast({
+          title: 'Success!',
+          description: `"${movie.title}" has been ${movie.isFeatured ? 'removed from' : 'added to'} featured.`,
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Database Error',
+          description: 'Could not update the movie. Please try again.',
+        });
+      }
+    });
+  }
 
   const filteredMovies = useMemo(() => {
     if (!searchQuery) {
@@ -104,6 +140,9 @@ export default function MovieList() {
                     <TableCell className="font-medium">{movie.title}</TableCell>
                     <TableCell>{movie.year}</TableCell>
                     <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
+                        {movie.isFeatured ? <Star className="h-4 w-4 text-primary" /> : <Star className="h-4 w-4 text-muted-foreground" />}
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
                         <Edit className="h-4 w-4" />
                       </Button>

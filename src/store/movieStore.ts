@@ -86,9 +86,8 @@ export const fetchMovieData = async (): Promise<void> => {
   try {
     const allMovies = await dbFetchMovies();
     useMovieStore.setState({
-      // For now, let's just feature the first 10 movies for the carousel.
-      featuredMovies: allMovies.slice(0, 10),
-      latestReleases: allMovies, // Show all movies in the main list
+      featuredMovies: allMovies.filter(movie => movie.isFeatured),
+      latestReleases: allMovies,
       isInitialized: true,
     });
   } catch (error) {
@@ -119,7 +118,7 @@ export const fetchAdminData = async (): Promise<void> => {
       contactInfo,
       suggestions,
       securityLogs,
-      featuredMovies: allMovies.slice(0, 10),
+      featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
     });
   } catch (error) {
@@ -152,7 +151,7 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   await addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
-    featuredMovies: allMovies.slice(0, 10),
+    featuredMovies: allMovies.filter(movie => movie.isFeatured),
     latestReleases: allMovies,
   });
 };
@@ -165,15 +164,15 @@ export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Pro
   
   const movieTitle = updatedMovie.title || useMovieStore.getState().featuredMovies.find(m => m.id === id)?.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
   
-  if (Object.keys(updatedMovie).length === 1 && updatedMovie.posterUrl) {
-    await addSecurityLog(`Updated Movie poster for: "${movieTitle}"`);
+  if (Object.keys(updatedMovie).length === 1 && 'isFeatured' in updatedMovie) {
+     await addSecurityLog(`Updated featured status for: "${movieTitle}"`);
   } else {
     await addSecurityLog(`Updated Movie: "${movieTitle}"`);
   }
   
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
-    featuredMovies: allMovies.slice(0, 10),
+    featuredMovies: allMovies.filter(movie => movie.isFeatured),
     latestReleases: allMovies,
   });
 };
@@ -189,7 +188,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
     await addSecurityLog(`Deleted Movie: "${movie.title}"`);
     const allMovies = await dbFetchMovies();
     useMovieStore.setState({
-      featuredMovies: allMovies.slice(0, 10),
+      featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
     });
   }

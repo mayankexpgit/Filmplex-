@@ -11,6 +11,7 @@ export interface Movie {
   downloadLinks?: { quality: string; url: string }[];
   synopsis?: string;
   screenshots?: string[];
+  isFeatured?: boolean;
 }
 
 // This data is now used for initial database seeding.
@@ -24,6 +25,7 @@ export const initialMovies: Movie[] = [
     language: 'English',
     streamingChannel: 'Netflix',
     tags: ['Mind-bending'],
+    isFeatured: true,
     downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/inception-4k' },
       { quality: 'HD', url: 'https://example.com/inception-hd' },
@@ -43,6 +45,7 @@ export const initialMovies: Movie[] = [
     genre: 'Action, Crime, Drama',
     language: 'English',
     tags: ['Superhero'],
+    isFeatured: true,
     downloadLinks: [
       { quality: 'HD', url: 'https://example.com/dk-hd' },
       { quality: '720p', url: 'https://example.com/dk-720p' },
@@ -61,6 +64,7 @@ export const initialMovies: Movie[] = [
     year: 2014,
     genre: 'Adventure, Drama, Sci-Fi',
     tags: ['Space'],
+    isFeatured: true,
     downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/interstellar-4k' },
     ],
@@ -78,6 +82,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'Comedy, Drama, Thriller',
     tags: ['Award-winning'],
+    isFeatured: true,
     downloadLinks: [
       { quality: 'HD', url: 'https://example.com/parasite-hd' },
     ],
@@ -95,6 +100,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'Crime, Drama, Thriller',
     tags: ['Psychological'],
+    isFeatured: true,
     downloadLinks: [
        { quality: '4K/HD', url: 'https://example.com/joker-4k' },
     ],
@@ -112,6 +118,7 @@ export const initialMovies: Movie[] = [
     year: 2021,
     genre: 'Sci-Fi, Adventure',
     tags: ['Epic'],
+    isFeatured: true,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/dune-hd' },
     ],
@@ -129,6 +136,7 @@ export const initialMovies: Movie[] = [
     year: 2021,
     genre: 'Action, Adventure, Sci-Fi',
     tags: ['Marvel'],
+    isFeatured: true,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/sm-nwh-4k' },
     ],
@@ -146,6 +154,7 @@ export const initialMovies: Movie[] = [
     year: 1999,
     genre: 'Action, Sci-Fi',
     tags: ['Classic'],
+    isFeatured: true,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/matrix-hd' },
     ],
@@ -163,6 +172,7 @@ export const initialMovies: Movie[] = [
     year: 1994,
     genre: 'Comedy, Drama, Romance',
     tags: ['Heartwarming'],
+    isFeatured: true,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/fg-4k' },
     ],
@@ -180,6 +190,7 @@ export const initialMovies: Movie[] = [
     year: 1994,
     genre: 'Crime, Drama',
     tags: ['Iconic'],
+    isFeatured: true,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/pf-hd' },
     ],
@@ -197,6 +208,7 @@ export const initialMovies: Movie[] = [
     year: 2023,
     genre: 'Biography, Drama, History',
     tags: ['New Release'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/oppenheimer-4k' },
     ],
@@ -214,6 +226,7 @@ export const initialMovies: Movie[] = [
     year: 2023,
     genre: 'Comedy, Adventure, Fantasy',
     tags: ['New Release'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/barbie-hd' },
     ],
@@ -231,6 +244,7 @@ export const initialMovies: Movie[] = [
     year: 2022,
     genre: 'Action, Adventure, Sci-Fi',
     tags: ['New Release'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/eeao-4k' },
     ],
@@ -248,6 +262,7 @@ export const initialMovies: Movie[] = [
     year: 2022,
     genre: 'Action, Crime, Drama',
     tags: ['New Release'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/batman-hd' },
     ],
@@ -265,6 +280,7 @@ export const initialMovies: Movie[] = [
     year: 2022,
     genre: 'Action, Drama',
     tags: ['New Release'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/tgm-4k' },
     ],
@@ -282,6 +298,7 @@ export const initialMovies: Movie[] = [
     year: 2022,
     genre: 'Sci-Fi, Adventure, Action',
     tags: ['New Release'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/avatar2-hd' },
     ],
@@ -299,6 +316,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'Comedy, Crime, Mystery',
     tags: ['Popular'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/ko-hd' },
     ],
@@ -316,6 +334,7 @@ export const initialMovies: Movie[] = [
     year: 2017,
     genre: 'Horror, Mystery, Thriller',
     tags: ['Critically Acclaimed'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/go-4k' },
     ],
@@ -333,6 +352,7 @@ export const initialMovies: Movie[] = [
     year: 2015,
     genre: 'Action, Adventure, Sci-Fi',
     tags: ['Adrenaline Rush'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/mmfr-hd' },
     ],
@@ -350,6 +370,7 @@ export const initialMovies: Movie[] = [
     year: 2010,
     genre: 'Drama, History',
     tags: ['Biography'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/tsn-4k' },
     ],
@@ -367,6 +388,7 @@ export const initialMovies: Movie[] = [
     year: 2014,
     genre: 'Drama, Music',
     tags: ['Intense'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/whiplash-hd' },
     ],
@@ -384,6 +406,7 @@ export const initialMovies: Movie[] = [
     year: 2017,
     genre: 'Sci-Fi, Thriller',
     tags: ['Visually Stunning'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/br2049-4k' },
     ],
@@ -401,6 +424,7 @@ export const initialMovies: Movie[] = [
     year: 2016,
     genre: 'Comedy, Drama, Music',
     tags: ['Musical'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/lll-hd' },
     ],
@@ -418,6 +442,7 @@ export const initialMovies: Movie[] = [
     year: 2018,
     genre: 'Horror, Sci-Fi',
     tags: ['Suspenseful'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/aqp-4k' },
     ],
@@ -435,6 +460,7 @@ export const initialMovies: Movie[] = [
     year: 2014,
     genre: 'Comedy, Drama',
     tags: ['Quirky'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/gbh-hd' },
     ],
@@ -452,6 +478,7 @@ export const initialMovies: Movie[] = [
     year: 2016,
     genre: 'Drama, Sci-Fi',
     tags: ['Thought-Provoking'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/arrival-4k' },
     ],
@@ -469,6 +496,7 @@ export const initialMovies: Movie[] = [
     year: 2013,
     genre: 'Romance, Sci-Fi, Drama',
     tags: ['Futuristic'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/her-hd' },
     ],
@@ -486,6 +514,7 @@ export const initialMovies: Movie[] = [
     year: 2016,
     genre: 'Drama',
     tags: ['Oscar Winner'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/moonlight-4k' },
     ],
@@ -503,6 +532,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'Comedy, Drama, War',
     tags: ['Satire'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/jojo-hd' },
     ],
@@ -520,6 +550,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'War, Drama',
     tags: ['One-Shot'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/1917-4k' },
     ],
@@ -537,6 +568,7 @@ export const initialMovies: Movie[] = [
     year: 2015,
     genre: 'Western, Drama, Adventure',
     tags: ['Survival'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/revenant-hd' },
     ],
@@ -554,6 +586,7 @@ export const initialMovies: Movie[] = [
     year: 2018,
     genre: 'Animation, Action, Adventure',
     tags: ['Animated'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/sm-itsv-4k' },
     ],
@@ -571,6 +604,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'Action, Drama',
     tags: ['Racing'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/fvf-hd' },
     ],
@@ -588,6 +622,7 @@ export const initialMovies: Movie[] = [
     year: 2017,
     genre: 'Action, Drama, Sci-Fi',
     tags: ['Gritty'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/logan-4k' },
     ],
@@ -605,6 +640,7 @@ export const initialMovies: Movie[] = [
     year: 2019,
     genre: 'Comedy, Drama',
     tags: ['Tarantino'],
+    isFeatured: false,
      downloadLinks: [
       { quality: 'HD', url: 'https://example.com/ouatih-hd' },
     ],
@@ -622,6 +658,7 @@ export const initialMovies: Movie[] = [
     year: 2020,
     genre: 'Animation, Comedy, Drama',
     tags: ['Pixar'],
+    isFeatured: false,
      downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/soul-4k' },
     ],
