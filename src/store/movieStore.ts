@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { featuredMovies as initialFeatured, latestReleases as initialLatest, type Movie } from '@/lib/data';
 
 // --- Types ---
@@ -22,6 +22,19 @@ interface SecurityLog {
   action: string;
   timestamp: string;
 }
+
+// --- LocalStorage Check for SSR ---
+const isServer = typeof window === 'undefined';
+
+// Dummy storage for server-side
+const noopStorage: StateStorage = {
+  getItem: (_key) => Promise.resolve(null),
+  setItem: (_key, _value) => Promise.resolve(),
+  removeItem: (_key) => Promise.resolve(),
+};
+
+const storage: StateStorage = isServer ? noopStorage : localStorage;
+
 
 // --- Initial Data ---
 const initialSuggestions: Suggestion[] = [
@@ -116,6 +129,7 @@ export const useMovieStore = create<AdminState>()(
       },
 
       fetchHomepageData: () => {
+        // Only initialize with default data if the store isn't already rehydrated
         if (!get().isInitialized) {
             set({
                 featuredMovies: initialFeatured,
@@ -159,13 +173,18 @@ export const useMovieStore = create<AdminState>()(
     }),
     {
       name: 'admin-storage', // unique name for the localStorage key
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => storage),
       onRehydrate: () => {
-        useMovieStore.setState({ isInitialized: true, isLoadingFeatured: false, isLoadingLatest: false });
-      }
+        // This is called when the state is rehydrated from storage.
+        useMovieStore.setState({ isInitialized: true });
+      },
+      // Skip hydration on server
+      skipHydration: isServer,
     }
   )
 );
 
-// Trigger the initial fetch/hydration check
-useMovieStore.getState().fetchHomepageData();
+// Trigger the initial fetch/hydration check only on the client
+if (!isServer) {
+  useMovieStore.getState().fetchHomepageData();
+}

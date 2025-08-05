@@ -177,7 +177,7 @@ export const latestReleases: Movie[] = [
    {
     id: '17',
     title: 'Knives Out',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/pThyQovXQrw2m0s9x82twY4imrL.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/6H2DNJOI4Ikmh1xQe4pG6K2iH22.jpg',
     year: 2019,
     isFeatured: false,
     genre: 'Comedy, Crime, Mystery',
@@ -187,7 +187,7 @@ export const latestReleases: Movie[] = [
   {
     id: '18',
     title: 'Get Out',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/pUeAyD2iH30hB1f3oT5B2OunD0.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/1swD0je224w0aP4iJd2NPh6voax.jpg',
     year: 2017,
     isFeatured: false,
     genre: 'Horror, Mystery, Thriller',
