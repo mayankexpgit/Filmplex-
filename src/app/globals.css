@@ -87,4 +87,8 @@
   .bg-gold-metallic {
     @apply bg-gradient-to-br from-yellow-400 to-amber-600;
   }
+  .text-gold-glow {
+    @apply text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-amber-500;
+    text-shadow: 0 0 8px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.3);
+  }
 }
