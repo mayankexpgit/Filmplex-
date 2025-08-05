@@ -7,7 +7,7 @@ import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Menu, Search } from 'lucide-react';
+import { Menu, Search, Film } from 'lucide-react';
 import StreamingLogos from './streaming-logos';
 
 function CarouselSkeleton() {
@@ -64,7 +64,13 @@ export function HomePageClient() {
             />
           </div>
           <div className="border-l border-border h-10 flex items-center">
-            <Button variant="outline" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent">
+            <Button variant="outline" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-4">
+              <Film className="h-5 w-5 mr-2" />
+              <span>4K/HD</span>
+            </Button>
+          </div>
+          <div className="border-l border-border h-10 flex items-center">
+            <Button variant="outline" size="icon" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
