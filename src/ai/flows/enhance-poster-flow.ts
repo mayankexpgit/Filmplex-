@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { anthonic, hollywood } from '@genkit-ai/googleai';
+import { hollywood } from '@genkit-ai/googleai';
 
 // Define the schema for the flow's input, which is a single URL string.
 const EnhancePosterInputSchema = z.string().url();
@@ -51,9 +51,7 @@ const enhancePosterFlow = ai.defineFlow(
             // Second, crop the image to a standard 2:3 movie poster aspect ratio.
             { type: 'crop', options: { aspectRatio: '2:3' } },
           ],
-        },
-        // Specify the anthonic tool for image editing.
-        { tool: anthonic }
+        }
       );
       
       if (!media?.url) {
