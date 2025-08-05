@@ -15,21 +15,15 @@ import { Trash2, Edit, Loader2 } from 'lucide-react';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
-    latestReleases: state.latestReleases,
-    featuredMovies: state.featuredMovies,
+  const { movies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
+    movies: [...state.latestReleases, ...state.featuredMovies].filter(
+      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
+    ),
     addMovie: state.addMovie,
     updateMovie: state.updateMovie,
     deleteMovie: state.deleteMovie,
   }));
   const [isPending, startTransition] = useTransition();
-
-  const movies = useMemo(() => {
-    const all = [...latestReleases, ...featuredMovies];
-    return all.filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-    );
-  }, [latestReleases, featuredMovies]);
 
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
@@ -79,19 +73,17 @@ export default function UploadMovie() {
     }
 
     startTransition(() => {
-      // Find the full original movie object from the combined list to preserve all its properties
-      const originalMovie = allMovies.find(m => m.id === id) || { isFeatured: false, genre: 'Misc' };
+      const originalMovie = movies.find(m => m.id === id);
 
       const movieData: Movie = {
         id: id || new Date().toISOString(),
         title,
         year,
-        posterUrl: posterUrl,
+        posterUrl,
         quality,
         tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        // Preserve existing properties that are not on the form
-        isFeatured: originalMovie.isFeatured,
-        genre: originalMovie.genre,
+        isFeatured: originalMovie?.isFeatured ?? false,
+        genre: originalMovie?.genre ?? 'Misc',
       };
 
       if (id) {
