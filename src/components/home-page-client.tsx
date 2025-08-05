@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useMovieStore, useHydratedMovieStore } from '@/store/movieStore';
+import { useMovieStore } from '@/store/movieStore';
 import MovieCardSmall from '@/components/movie-card-small';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
@@ -41,21 +41,23 @@ function GridSkeleton() {
 }
 
 export function HomePageClient() {
-  const isHydrated = useHydratedMovieStore();
-  const fetchHomepageData = useMovieStore((state) => state.fetchHomepageData);
-  const isLoading = useMovieStore((state) => state.isLoadingFeatured || state.isLoadingLatest);
-  const searchQuery = useMovieStore((state) => state.searchQuery);
-  const setSearchQuery = useMovieStore((state) => state.setSearchQuery);
+  const { 
+    isLoadingFeatured, 
+    isLoadingLatest, 
+    fetchHomepageData,
+    searchQuery,
+    setSearchQuery,
+  } = useMovieStore();
 
   useEffect(() => {
-    if (isHydrated) {
-      fetchHomepageData();
-    }
-  }, [isHydrated, fetchHomepageData]);
+    // Fetches static data on mount, basically just toggles loading state.
+    fetchHomepageData();
+  }, [fetchHomepageData]);
 
-  // We must wait until the store is rehydrated from localStorage
-  if (!isHydrated) {
-    return (
+  const isLoading = isLoadingFeatured || isLoadingLatest;
+
+  if (isLoading) {
+     return (
       <div className="container mx-auto py-8 md:py-12 space-y-12">
         <CarouselSkeleton />
         <GridSkeleton />
@@ -66,7 +68,7 @@ export function HomePageClient() {
   return (
     <div className="container mx-auto py-8 md:py-12 space-y-12">
       <section>
-        {isLoading ? <CarouselSkeleton /> : <MovieCardSmall />}
+        <MovieCardSmall />
       </section>
 
       <section className="space-y-6">
@@ -96,7 +98,7 @@ export function HomePageClient() {
         
         <StreamingLogos />
 
-        {isLoading ? <GridSkeleton /> : <MovieCardLarge />}
+        <MovieCardLarge />
       </section>
     </div>
   );

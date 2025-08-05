@@ -1,8 +1,6 @@
 
 import { create } from 'zustand';
-import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { featuredMovies as initialFeatured, latestReleases as initialLatest, type Movie } from '@/lib/data';
-import { useEffect, useState } from 'react';
 
 // --- Types ---
 interface ContactInfo {
@@ -24,19 +22,6 @@ interface SecurityLog {
   timestamp: string;
 }
 
-// --- LocalStorage Check for SSR ---
-const isServer = typeof window === 'undefined';
-
-// Dummy storage for server-side
-const noopStorage: StateStorage = {
-  getItem: (_key) => Promise.resolve(null),
-  setItem: (_key, _value) => Promise.resolve(),
-  removeItem: (_key) => Promise.resolve(),
-};
-
-const storage: StateStorage = isServer ? noopStorage : localStorage;
-
-
 // --- Initial Data ---
 const initialSuggestions: Suggestion[] = [
   { id: 1, user: 'Cinephile123', suggestion: 'Please add The Matrix in 4K!', date: '2024-07-28' },
@@ -51,7 +36,7 @@ const initialSecurityLogs: SecurityLog[] = [
 ];
 
 
-interface AdminState {
+interface MovieState {
   // Movies
   featuredMovies: Movie[];
   latestReleases: Movie[];
@@ -63,8 +48,6 @@ interface AdminState {
   updateMovie: (id: string, updatedMovie: Partial<Movie>) => void;
   deleteMovie: (id: string) => void;
   fetchHomepageData: () => void;
-  _hasHydrated: boolean;
-  setHasHydrated: (hydrated: boolean) => void;
 
   // Contact Info
   contactInfo: ContactInfo;
@@ -79,19 +62,13 @@ interface AdminState {
   addSecurityLog: (action: string) => void;
 }
 
-export const useMovieStore = create<AdminState>()(
-  persist(
-    (set, get) => ({
+export const useMovieStore = create<MovieState>((set, get) => ({
       // --- Initial State ---
       featuredMovies: initialFeatured,
       latestReleases: initialLatest,
-      isLoadingFeatured: true,
-      isLoadingLatest: true,
+      isLoadingFeatured: false, // Data is loaded statically
+      isLoadingLatest: false,
       searchQuery: '',
-      _hasHydrated: false,
-      setHasHydrated: (hydrated) => {
-        set({ _hasHydrated: hydrated });
-      },
       contactInfo: {
         email: 'admin@filmplex.com',
         message: 'For any queries, please reach out to us.',
@@ -134,21 +111,8 @@ export const useMovieStore = create<AdminState>()(
       },
 
       fetchHomepageData: () => {
-        if (get()._hasHydrated) {
-           set({
-            isLoadingFeatured: false,
-            isLoadingLatest: false,
-          });
-          return;
-        }
-
-        // If not hydrated, use initial data
-        set({
-            featuredMovies: initialFeatured,
-            latestReleases: initialLatest,
-            isLoadingFeatured: false,
-            isLoadingLatest: false,
-        });
+        // Data is loaded statically on init, so this can be a no-op.
+        set({ isLoadingFeatured: false, isLoadingLatest: false });
       },
 
       updateContactInfo: (info: ContactInfo) => {
@@ -176,24 +140,11 @@ export const useMovieStore = create<AdminState>()(
           ]
         }));
       },
-    }),
-    {
-      name: 'admin-storage', // unique name for the localStorage key
-      storage: createJSONStorage(() => storage),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.setHasHydrated(true);
-        }
-      },
-    }
-  )
+    })
 );
 
-/**
- * Custom hook to ensure Zustand store is hydrated on the client-side
- * before rendering the component. This prevents hydration mismatches.
- */
+// This hook is kept for compatibility, but it's no longer necessary for hydration.
+// It simply returns true, indicating the component can render immediately with static data.
 export const useHydratedMovieStore = () => {
-  const isHydrated = useMovieStore((state) => state._hasHydrated);
-  return isHydrated;
+  return true;
 };
