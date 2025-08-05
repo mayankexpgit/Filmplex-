@@ -15,17 +15,23 @@ import { Trash2, Edit, Loader2 } from 'lucide-react';
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const { movies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
-    movies: [...state.latestReleases, ...state.featuredMovies].filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-    ),
+  const { latestReleases, featuredMovies, addMovie, updateMovie, deleteMovie } = useMovieStore((state) => ({
+    latestReleases: state.latestReleases,
+    featuredMovies: state.featuredMovies,
     addMovie: state.addMovie,
     updateMovie: state.updateMovie,
     deleteMovie: state.deleteMovie,
   }));
   const [isPending, startTransition] = useTransition();
 
-  const [allMovies, setAllMovies] = useState<Movie[]>([]);
+  const movies = useMemo(() => {
+    const all = [...latestReleases, ...featuredMovies];
+    const unique = all.filter(
+      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
+    );
+    return unique;
+  }, [latestReleases, featuredMovies]);
+
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -34,10 +40,6 @@ export default function UploadMovie() {
   const [quality, setQuality] = useState('HD');
   const [tags, setTags] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    setAllMovies(movies);
-  }, [movies]);
 
   useEffect(() => {
     if (editingMovie) {
@@ -85,7 +87,7 @@ export default function UploadMovie() {
         isFeatured: originalMovie?.isFeatured ?? false,
         genre: originalMovie?.genre ?? 'Misc',
       };
-
+      
       if (id) {
         updateMovie(id, movieData);
         toast({
@@ -119,16 +121,14 @@ export default function UploadMovie() {
   }
 
   const filteredMovies = useMemo(() => {
+    const sortedMovies = [...movies].sort((a, b) => b.year - a.year);
     if (!searchQuery) {
-      // Sort by year, descending
-      return [...allMovies].sort((a, b) => b.year - a.year);
+      return sortedMovies;
     }
-    return [...allMovies]
-      .filter((movie) =>
+    return sortedMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .sort((a, b) => b.year - a.year);
-  }, [allMovies, searchQuery]);
+      );
+  }, [movies, searchQuery]);
 
   return (
     <div className="space-y-8">
