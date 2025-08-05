@@ -134,7 +134,18 @@ export const useMovieStore = create<AdminState>()(
       },
 
       fetchHomepageData: () => {
+        if (get()._hasHydrated) {
+           set({
+            isLoadingFeatured: false,
+            isLoadingLatest: false,
+          });
+          return;
+        }
+
+        // If not hydrated, use initial data
         set({
+            featuredMovies: initialFeatured,
+            latestReleases: initialLatest,
             isLoadingFeatured: false,
             isLoadingLatest: false,
         });
@@ -183,24 +194,6 @@ export const useMovieStore = create<AdminState>()(
  * before rendering the component. This prevents hydration mismatches.
  */
 export const useHydratedMovieStore = () => {
-  const [isHydrated, setIsHydrated] = useState(useMovieStore.getState()._hasHydrated);
-
-  useEffect(() => {
-    // A listener to update the local state when the store is rehydrated.
-    const unsub = useMovieStore.persist.onRehydrate(() => {
-      setIsHydrated(true);
-    });
-
-    // If the store is already hydrated, update the state immediately.
-    if (useMovieStore.getState()._hasHydrated) {
-      setIsHydrated(true);
-    }
-    
-    // Cleanup the listener on unmount.
-    return () => {
-      unsub();
-    };
-  }, []);
-
+  const isHydrated = useMovieStore((state) => state._hasHydrated);
   return isHydrated;
 };
