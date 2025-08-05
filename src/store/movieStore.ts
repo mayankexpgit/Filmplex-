@@ -18,8 +18,6 @@ interface MovieState {
   fetchLatestReleases: () => Promise<void>;
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export const useMovieStore = create<MovieState>((set, get) => ({
   featuredMovies: [],
   latestReleases: [],
@@ -65,13 +63,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
   fetchFeaturedMovies: async () => {
     set({ isLoadingFeatured: true });
-    await sleep(500);
     set({ featuredMovies, isLoadingFeatured: false });
   },
 
   fetchLatestReleases: async () => {
     set({ isLoadingLatest: true });
-    await sleep(800);
     set({ latestReleases, isLoadingLatest: false });
   },
 
