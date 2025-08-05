@@ -12,7 +12,7 @@ interface MovieCardProps {
 export default function MovieCard({ movie, variant = 'default' }: MovieCardProps) {
   return (
     <div className="flex flex-col group">
-      <div className="relative block overflow-hidden">
+      <div className="relative block overflow-hidden rounded-md">
         <Image
           src={movie.posterUrl}
           alt={`Poster for ${movie.title}`}
@@ -21,9 +21,6 @@ export default function MovieCard({ movie, variant = 'default' }: MovieCardProps
           className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
           data-ai-hint="movie poster"
         />
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <Button variant="outline" size="sm">View Details</Button>
-        </div>
       </div>
     </div>
   );
