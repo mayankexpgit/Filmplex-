@@ -10,25 +10,25 @@ import React from 'react';
 const MovieCardSmall: FC = () => {
   const featuredMovies = useMovieStore((state) => state.featuredMovies);
 
+  const plugin = React.useRef(
+    Autoplay({ delay: 2000, stopOnInteraction: true })
+  )
+
   return (
     <div className="space-y-4">
       <Carousel
+        plugins={[plugin.current]}
+        className="w-full"
         opts={{
           align: 'start',
           loop: true,
         }}
-        plugins={[
-          Autoplay({
-            delay: 2000,
-            stopOnInteraction: false,
-            stopOnMouseEnter: true,
-          }),
-        ]}
-        className="w-full"
+        onMouseEnter={plugin.current.stop}
+        onMouseLeave={plugin.current.reset}
       >
-        <CarouselContent className="-ml-1">
+        <CarouselContent className="-ml-2">
           {featuredMovies.map((movie) => (
-            <CarouselItem key={movie.id} className="pl-1 basis-1/5">
+            <CarouselItem key={movie.id} className="pl-2 basis-1/5">
               <MovieCard movie={movie} variant="small"/>
             </CarouselItem>
           ))}
