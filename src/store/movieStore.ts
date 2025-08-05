@@ -84,14 +84,21 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       },
 
       addMovie: async (movieData: Omit<Movie, 'id'>) => {
-        const newId = await dbAddMovie(movieData);
+        await dbAddMovie(movieData);
         await get().fetchHomepageData();
         await get().addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
       },
 
       updateMovie: async (id: string, updatedMovie: Partial<Movie>) => {
+        const movies = [...get().featuredMovies, ...get().latestReleases];
+        const movie = movies.find((m) => m.id === id);
+        const title = updatedMovie.title || movie?.title;
+        
         await dbUpdateMovie(id, updatedMovie);
         await get().fetchHomepageData();
+        if (title) {
+          await get().addSecurityLog(`Updated Movie: "${title}"`);
+        }
       },
 
       deleteMovie: async (id: string) => {
