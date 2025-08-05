@@ -22,6 +22,7 @@ export default function UploadMovie() {
     deleteMovie: state.deleteMovie,
   }));
 
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -29,6 +30,10 @@ export default function UploadMovie() {
   const [posterUrl, setPosterUrl] = useState('');
   const [quality, setQuality] = useState('HD');
   const [tags, setTags] = useState('');
+
+  useEffect(() => {
+    setMovies(latestReleases);
+  }, [latestReleases]);
 
   useEffect(() => {
     if (editingMovie) {
@@ -155,7 +160,7 @@ export default function UploadMovie() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {latestReleases.map((movie) => (
+                {movies.map((movie) => (
                   <TableRow key={movie.id}>
                     <TableCell className="font-medium">{movie.title}</TableCell>
                     <TableCell>{movie.year}</TableCell>
