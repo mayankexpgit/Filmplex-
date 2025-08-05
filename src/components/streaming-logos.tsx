@@ -6,7 +6,7 @@ const StreamingLogos = () => {
     { name: 'Netflix', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/2560px-Netflix_2015_logo.svg.png' },
     { name: 'Prime Video', url: 'https://logos-world.net/wp-content/uploads/2021/04/Amazon-Prime-Video-Logo-2022.png' },
     { name: 'Crunchyroll', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Crunchyroll_2024_stacked.svg/1200px-Crunchyroll_2024_stacked.svg.png' },
-    { name: 'Apple TV', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Apple_TV_logo_2022.svg/1024px-Apple_TV_logo_2022.svg.png' },
+    { name: 'Apple TV', url: 'https://logos-world.net/wp-content/uploads/2020/04/Apple-TV-Logo-2015-present.png' },
   ];
 
   return (
