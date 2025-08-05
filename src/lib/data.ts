@@ -5,6 +5,8 @@ export interface Movie {
   posterUrl: string;
   year: number;
   genre: string;
+  language?: string;
+  streamingChannel?: string;
   tags?: string[];
   downloadLinks?: { quality: string; url: string }[];
   synopsis?: string;
@@ -19,6 +21,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq27gApcjBveAabcF.jpg',
     year: 2010,
     genre: 'Sci-Fi, Action',
+    language: 'English',
+    streamingChannel: 'Netflix',
     tags: ['Mind-bending'],
     downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/inception-4k' },
@@ -37,6 +41,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
     year: 2008,
     genre: 'Action, Crime, Drama',
+    language: 'English',
     tags: ['Superhero'],
     downloadLinks: [
       { quality: 'HD', url: 'https://example.com/dk-hd' },
