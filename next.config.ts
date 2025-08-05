@@ -69,6 +69,12 @@ const nextConfig: NextConfig = {
         hostname: 's.yimg.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.edigitalagency.com.au',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
