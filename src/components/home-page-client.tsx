@@ -55,16 +55,16 @@ export function HomePageClient() {
       </section>
 
       <section className="space-y-6">
-        <div className="bg-secondary p-2 rounded-lg border border-border">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search movies..."
-                className="pl-10 w-full"
-              />
-            </div>
-            <Button variant="outline" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+        <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search movies..."
+              className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
+          <div className="border-l border-border h-10 flex items-center">
+            <Button variant="outline" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Open menu</span>
             </Button>
