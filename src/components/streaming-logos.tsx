@@ -15,7 +15,7 @@ const StreamingLogos = () => {
     <div className="py-4">
       <div className="flex justify-center items-center gap-6 md:gap-8 flex-wrap">
         {logos.map((logo) => (
-          <div key={logo.name} className="transition-all duration-300 ease-in-out transform hover:scale-105 relative h-16 w-40">
+          <div key={logo.name} className="transition-all duration-300 ease-in-out transform hover:scale-105 relative h-12 w-36 sm:h-14 sm:w-40">
             <Image
               src={logo.url}
               alt={`${logo.name} logo`}
