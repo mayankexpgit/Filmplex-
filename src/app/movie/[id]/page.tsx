@@ -2,10 +2,11 @@
 import { fetchMovies } from '@/services/movieService';
 import type { Movie } from '@/lib/data';
 import Image from 'next/image';
-import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Download, PlayCircle, Share2, MessageSquare, ThumbsUp, Star } from 'lucide-react';
 import Link from 'next/link';
+import MovieCardSmall from '@/components/movie-card-small';
+import { Header } from '@/components/layout/header';
 
 async function getMovie(id: string): Promise<Movie | undefined> {
   const movies = await fetchMovies();
@@ -32,7 +33,11 @@ export default async function MovieDetailPage({ params }: { params: { id: string
 
   return (
     <div className="bg-background min-h-screen text-foreground">
-      <Header />
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
+        <div className="container max-w-screen-2xl">
+           <MovieCardSmall />
+        </div>
+      </header>
       <main className="container mx-auto py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
           {/* Movie Title */}
