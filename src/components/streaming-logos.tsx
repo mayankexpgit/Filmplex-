@@ -24,7 +24,7 @@ const StreamingLogos = () => {
                       className="object-contain"
                     />
                  </div>
-                <span className="text-4xl font-light text-white -ml-4">+</span>
+                <span className="text-5xl font-normal text-white -ml-4">+</span>
               </div>
             ) : (
               <div className="relative h-14 w-36 sm:h-16 sm:w-40">
