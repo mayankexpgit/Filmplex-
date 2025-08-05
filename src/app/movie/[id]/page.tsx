@@ -13,7 +13,7 @@ async function getMovie(id: string): Promise<Movie | undefined> {
   return movies.find((movie) => movie.id === id);
 }
 
-export default async function MovieDetailPage({ params }: { params: { id: string } }) {
+export default async function MovieDetailPage({ params }: { params: { id:string } }) {
   const movie = await getMovie(params.id);
 
   if (!movie) {
@@ -40,16 +40,6 @@ export default async function MovieDetailPage({ params }: { params: { id: string
       </header>
       <main className="container mx-auto py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
-          {/* Movie Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{movie.title} ({movie.year})</h1>
-          
-          {/* Share Buttons */}
-           <div className="flex justify-center items-center gap-2 mb-8">
-              <Button variant="secondary" size="sm"><Share2 className="mr-2" /> Share</Button>
-              <Button variant="secondary" size="sm"><MessageSquare className="mr-2" /> Comment</Button>
-              <Button variant="secondary" size="sm"><ThumbsUp className="mr-2" /> Like</Button>
-              <Button variant="secondary" size="sm"><Star className="mr-2" /> Rate</Button>
-          </div>
           
           {/* Movie Poster */}
           <div className="flex justify-center mb-8">
@@ -61,6 +51,17 @@ export default async function MovieDetailPage({ params }: { params: { id: string
               className="rounded-lg shadow-lg"
               data-ai-hint="movie poster"
             />
+          </div>
+
+          {/* Movie Title */}
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{movie.title} ({movie.year})</h1>
+          
+          {/* Share Buttons */}
+           <div className="flex justify-center items-center gap-2 mb-8">
+              <Button variant="secondary" size="sm"><Share2 className="mr-2" /> Share</Button>
+              <Button variant="secondary" size="sm"><MessageSquare className="mr-2" /> Comment</Button>
+              <Button variant="secondary" size="sm"><ThumbsUp className="mr-2" /> Like</Button>
+              <Button variant="secondary" size="sm"><Star className="mr-2" /> Rate</Button>
           </div>
 
           {/* Ad Placeholder */}
