@@ -1,3 +1,4 @@
+
 export interface Movie {
   id: string;
   title: string;
@@ -50,7 +51,7 @@ export const featuredMovies: Movie[] = [
     quality: 'HD',
     tags: ['Featured'],
   },
-    {
+  {
     id: '5',
     title: 'Ocean\'s Whisper',
     posterUrl: 'https://placehold.co/400x608.png',
@@ -58,6 +59,56 @@ export const featuredMovies: Movie[] = [
     isFeatured: true,
     genre: 'Drama, Romance',
     quality: '4K',
+    tags: ['Featured'],
+  },
+  {
+    id: '6',
+    title: 'Forgotten Echoes',
+    posterUrl: 'https://placehold.co/400x599.png',
+    year: 2024,
+    isFeatured: true,
+    genre: 'Horror, Thriller',
+    quality: 'HD',
+    tags: ['Featured'],
+  },
+  {
+    id: '7',
+    title: 'The Alchemist\'s Heir',
+    posterUrl: 'https://placehold.co/400x601.png',
+    year: 2024,
+    isFeatured: true,
+    genre: 'Fantasy, Adventure',
+    quality: '4K',
+    tags: ['Featured'],
+  },
+  {
+    id: '8',
+    title: 'Zero Protocol',
+    posterUrl: 'https://placehold.co/400x603.png',
+    year: 2024,
+    isFeatured: true,
+    genre: 'Action, Espionage',
+    quality: 'HD',
+    tags: ['Featured'],
+  },
+  {
+    id: '9',
+    title: 'Concrete Jungle',
+    posterUrl: 'https://placehold.co/400x605.png',
+    year: 2024,
+    isFeatured: true,
+    genre: 'Action, Crime',
+    quality: '4K',
+    tags: ['Featured'],
+  },
+  {
+    id: '10',
+    title: 'Summer Bloom',
+    posterUrl: 'https://placehold.co/400x607.png',
+    year: 2024,
+    isFeatured: true,
+    genre: 'Comedy, Romance',
+    quality: 'HD',
     tags: ['Featured'],
   },
 ];
