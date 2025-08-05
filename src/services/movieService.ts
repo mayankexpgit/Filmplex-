@@ -14,7 +14,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import type { Movie } from '@/lib/data';
-import { initialFeaturedMovies, initialLatestReleases } from '@/lib/data';
+import { initialMovies } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog } from '@/store/movieStore';
 
 
@@ -104,9 +104,8 @@ export const addSecurityLog = async (log: Omit<SecurityLog, 'id'>): Promise<stri
 export const seedDatabase = async (): Promise<Movie[]> => {
   const moviesCollection = collection(db, 'movies');
   const batch = writeBatch(db);
-  const allMovies = [...initialFeaturedMovies, ...initialLatestReleases];
   
-  allMovies.forEach((movie) => {
+  initialMovies.forEach((movie) => {
     // We can use the old ID for the new document ID to maintain consistency if needed
     const docRef = doc(db, 'movies', movie.id);
     batch.set(docRef, movie);
@@ -114,5 +113,5 @@ export const seedDatabase = async (): Promise<Movie[]> => {
   
   await batch.commit();
   console.log('Database seeded successfully!');
-  return allMovies;
+  return initialMovies;
 };

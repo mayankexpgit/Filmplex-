@@ -86,7 +86,8 @@ export const fetchMovieData = async (): Promise<void> => {
   try {
     const allMovies = await dbFetchMovies();
     useMovieStore.setState({
-      featuredMovies: allMovies.filter((m) => m.isFeatured),
+      // For now, let's just feature the first 10 movies for the carousel.
+      featuredMovies: allMovies.slice(0, 10),
       latestReleases: allMovies, // Show all movies in the main list
       isInitialized: true,
     });
@@ -107,16 +108,19 @@ export const fetchAdminData = async (): Promise<void> => {
   }
   isFetchingAdmin = true;
   try {
-     const [contactInfo, suggestions, securityLogs] = await Promise.all([
+     const [contactInfo, suggestions, securityLogs, allMovies] = await Promise.all([
       dbFetchContactInfo(),
       dbFetchSuggestions(),
       dbFetchSecurityLogs(),
+      dbFetchMovies(), // Also fetch movies to ensure admin lists are up to date
     ]);
 
     useMovieStore.setState({
       contactInfo,
       suggestions,
       securityLogs,
+      featuredMovies: allMovies.slice(0, 10),
+      latestReleases: allMovies,
     });
   } catch (error) {
     console.error("Failed to fetch admin data:", error);
@@ -148,7 +152,7 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   await addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
-    featuredMovies: allMovies.filter((m) => m.isFeatured),
+    featuredMovies: allMovies.slice(0, 10),
     latestReleases: allMovies,
   });
 };
@@ -159,8 +163,6 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
 export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
   await dbUpdateMovie(id, updatedMovie);
   
-  // To get the title for the log, we can either use the updated title or fetch the current one.
-  // Using the updated title if available is simpler.
   const movieTitle = updatedMovie.title || useMovieStore.getState().featuredMovies.find(m => m.id === id)?.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
   
   if (Object.keys(updatedMovie).length === 1 && updatedMovie.posterUrl) {
@@ -171,7 +173,7 @@ export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Pro
   
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
-    featuredMovies: allMovies.filter((m) => m.isFeatured),
+    featuredMovies: allMovies.slice(0, 10),
     latestReleases: allMovies,
   });
 };
@@ -187,7 +189,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
     await addSecurityLog(`Deleted Movie: "${movie.title}"`);
     const allMovies = await dbFetchMovies();
     useMovieStore.setState({
-      featuredMovies: allMovies.filter((m) => m.isFeatured),
+      featuredMovies: allMovies.slice(0, 10),
       latestReleases: allMovies,
     });
   }

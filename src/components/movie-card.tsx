@@ -13,6 +13,8 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
+  const qualityToDisplay = movie.downloadLinks?.[0]?.quality;
+
   if (variant === 'featured') {
     return (
       <div className="group">
@@ -60,9 +62,9 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="movie poster"
           />
-           {movie.quality && (
+           {qualityToDisplay && (
             <Badge className="absolute top-2 right-2 rounded-sm border-amber-400/80 bg-gold-metallic text-primary-foreground text-xs font-bold">
-              {movie.quality === '4K' ? '4K/HD' : movie.quality}
+              {qualityToDisplay}
             </Badge>
           )}
         </div>

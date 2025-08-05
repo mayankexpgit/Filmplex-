@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,8 @@ import { useMovieStore, addMovie, updateMovie, deleteMovie } from '@/store/movie
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Edit, Loader2 } from 'lucide-react';
-import { Checkbox } from '../ui/checkbox';
+import { Trash2, Edit, Loader2, PlusCircle, XCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,19 +26,17 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
 
+type DownloadLink = {
+  quality: string;
+  url: string;
+};
+
+const qualityOptions = ['4K/HD', 'HD', '720p', '480p'];
+
 export default function UploadMovie() {
   const { toast } = useToast();
-  // Data is now fetched by the AdminLayout. This component just displays it.
-  const { latestReleases, featuredMovies } = useMovieStore();
+  const movies = useMovieStore((state) => state.latestReleases);
   const [isPending, startTransition] = useTransition();
-
-  const movies = useMemo(() => {
-    const all = [...latestReleases, ...featuredMovies];
-    const unique = all.filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-    );
-    return unique.sort((a, b) => (a.title > b.title ? 1 : -1));
-  }, [latestReleases, featuredMovies]);
 
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
@@ -46,10 +44,9 @@ export default function UploadMovie() {
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear());
   const [posterUrl, setPosterUrl] = useState('');
-  const [quality, setQuality] = useState('HD');
   const [tags, setTags] = useState('');
-  const [isFeatured, setIsFeatured] = useState(false);
   const [genre, setGenre] = useState('');
+  const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([{ quality: 'HD', url: '' }]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -58,10 +55,9 @@ export default function UploadMovie() {
       setTitle(editingMovie.title);
       setYear(editingMovie.year);
       setPosterUrl(editingMovie.posterUrl);
-      setQuality(editingMovie.quality || 'HD');
       setTags(editingMovie.tags ? editingMovie.tags.join(', ') : '');
-      setIsFeatured(editingMovie.isFeatured);
       setGenre(editingMovie.genre);
+      setDownloadLinks(editingMovie.downloadLinks && editingMovie.downloadLinks.length > 0 ? editingMovie.downloadLinks : [{ quality: 'HD', url: '' }]);
     } else {
       resetForm();
     }
@@ -72,11 +68,25 @@ export default function UploadMovie() {
     setTitle('');
     setYear(new Date().getFullYear());
     setPosterUrl('');
-    setQuality('HD');
     setTags('');
-    setIsFeatured(false);
     setGenre('');
+    setDownloadLinks([{ quality: 'HD', url: '' }]);
     setEditingMovie(null);
+  };
+
+  const handleLinkChange = (index: number, field: keyof DownloadLink, value: string) => {
+    const newLinks = [...downloadLinks];
+    newLinks[index][field] = value;
+    setDownloadLinks(newLinks);
+  };
+
+  const addLink = () => {
+    setDownloadLinks([...downloadLinks, { quality: 'HD', url: '' }]);
+  };
+
+  const removeLink = (index: number) => {
+    const newLinks = downloadLinks.filter((_, i) => i !== index);
+    setDownloadLinks(newLinks);
   };
 
   const handleSubmit = () => {
@@ -94,10 +104,9 @@ export default function UploadMovie() {
         title,
         year,
         posterUrl,
-        quality,
         tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        isFeatured,
         genre,
+        downloadLinks: downloadLinks.filter(link => link.url.trim() !== ''),
       };
 
       try {
@@ -187,20 +196,45 @@ export default function UploadMovie() {
             <Input id="movie-poster" value={posterUrl} onChange={(e) => setPosterUrl(e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="movie-quality">Quality (e.g., 4K, HD)</Label>
-            <Input id="movie-quality" value={quality} onChange={(e) => setQuality(e.target.value)} disabled={isPending} />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
             <Input id="movie-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Action, New Release" disabled={isPending} />
           </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="isFeatured" checked={isFeatured} onCheckedChange={(checked) => setIsFeatured(Boolean(checked))} disabled={isPending} />
-            <label htmlFor="isFeatured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Featured Movie
-            </label>
+
+          <div className="space-y-4 pt-2">
+            <Label>Download Links</Label>
+            {downloadLinks.map((link, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Select
+                  value={link.quality}
+                  onValueChange={(value) => handleLinkChange(index, 'quality', value)}
+                  disabled={isPending}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Quality" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {qualityOptions.map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input
+                  className="flex-1"
+                  placeholder="https://example.com/download"
+                  value={link.url}
+                  onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                  disabled={isPending}
+                />
+                <Button variant="ghost" size="icon" onClick={() => removeLink(index)} disabled={isPending || downloadLinks.length === 1}>
+                  <XCircle className="h-5 w-5 text-destructive" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={addLink} disabled={isPending}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add more link
+            </Button>
           </div>
-          <div className="flex gap-2">
+          
+          <div className="flex gap-2 pt-4">
             <Button onClick={handleSubmit} disabled={isPending}>
               {isPending ? (
                 <>
