@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 const StreamingLogos = () => {
   const logos = [
-    { name: 'Netflix', url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWM5zaDQOxZJ_pNp3NeSqydxXg30flK-0rzD0fcVY27UcWNb3iaxnApbtk&s=10' },
+    { name: 'Netflix', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/2560px-Netflix_2015_logo.svg.png' },
     { name: 'Prime Video', url: 'https://cdn.jim-nielsen.com/macos/512/amazon-prime-video-2022-07-27.png' },
     { name: 'Crunchyroll', url: 'https://cdn.jim-nielsen.com/macos/512/crunchyroll-2023-02-06.png' },
     { name: 'SonyLIV', url: 'https://upload.wikimedia.org/wikipedia/en/thumb/9/91/SonyLIV_2020.svg/2560px-SonyLIV_2020.svg.png' },
