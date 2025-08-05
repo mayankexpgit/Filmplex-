@@ -41,20 +41,20 @@ function GridSkeleton() {
 }
 
 export function HomePageClient() {
-  useHydratedMovieStore(); // This hook triggers rehydration on the client
+  const isHydrated = useHydratedMovieStore();
   const fetchHomepageData = useMovieStore((state) => state.fetchHomepageData);
   const isLoading = useMovieStore((state) => state.isLoadingFeatured || state.isLoadingLatest);
   const searchQuery = useMovieStore((state) => state.searchQuery);
   const setSearchQuery = useMovieStore((state) => state.setSearchQuery);
-  const isInitialized = useMovieStore((state) => state.isInitialized);
-
 
   useEffect(() => {
-    fetchHomepageData();
-  }, [fetchHomepageData]);
+    if (isHydrated) {
+      fetchHomepageData();
+    }
+  }, [isHydrated, fetchHomepageData]);
 
-  // We should wait until the store is rehydrated from localStorage
-  if (!isInitialized) {
+  // We must wait until the store is rehydrated from localStorage
+  if (!isHydrated) {
     return (
       <div className="container mx-auto py-8 md:py-12 space-y-12">
         <CarouselSkeleton />

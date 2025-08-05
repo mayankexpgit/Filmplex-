@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { featuredMovies as initialFeatured, latestReleases as initialLatest, type Movie } from '@/lib/data';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // --- Types ---
 interface ContactInfo {
@@ -63,7 +63,6 @@ interface AdminState {
   updateMovie: (id: string, updatedMovie: Partial<Movie>) => void;
   deleteMovie: (id: string) => void;
   fetchHomepageData: () => void;
-  isInitialized: boolean;
   _hasHydrated: boolean;
   setHasHydrated: (hydrated: boolean) => void;
 
@@ -84,12 +83,11 @@ export const useMovieStore = create<AdminState>()(
   persist(
     (set, get) => ({
       // --- Initial State ---
-      featuredMovies: [],
-      latestReleases: [],
+      featuredMovies: initialFeatured,
+      latestReleases: initialLatest,
       isLoadingFeatured: true,
       isLoadingLatest: true,
       searchQuery: '',
-      isInitialized: false,
       _hasHydrated: false,
       setHasHydrated: (hydrated) => {
         set({ _hasHydrated: hydrated });
@@ -136,19 +134,9 @@ export const useMovieStore = create<AdminState>()(
       },
 
       fetchHomepageData: () => {
-        const state = get();
-        // Only initialize with default data if the store isn't already rehydrated
-        // and has no data
-        if (!state.isInitialized && state.featuredMovies.length === 0 && state.latestReleases.length === 0) {
-            set({
-                featuredMovies: initialFeatured,
-                latestReleases: initialLatest,
-            });
-        }
         set({
             isLoadingFeatured: false,
             isLoadingLatest: false,
-            isInitialized: true,
         });
       },
 
@@ -181,28 +169,38 @@ export const useMovieStore = create<AdminState>()(
     {
       name: 'admin-storage', // unique name for the localStorage key
       storage: createJSONStorage(() => storage),
-      onRehydrate: (state) => {
+      onRehydrateStorage: () => (state) => {
         if (state) {
-            state.isInitialized = true;
+          state.setHasHydrated(true);
         }
       },
-      // Skip hydration on server
-      skipHydration: true,
     }
   )
 );
 
+/**
+ * Custom hook to ensure Zustand store is hydrated on the client-side
+ * before rendering the component. This prevents hydration mismatches.
+ */
 export const useHydratedMovieStore = () => {
-  const store = useMovieStore();
-  
+  const [isHydrated, setIsHydrated] = useState(useMovieStore.getState()._hasHydrated);
+
   useEffect(() => {
-    useMovieStore.persist.rehydrate();
+    // A listener to update the local state when the store is rehydrated.
+    const unsub = useMovieStore.persist.onRehydrate(() => {
+      setIsHydrated(true);
+    });
+
+    // If the store is already hydrated, update the state immediately.
+    if (useMovieStore.getState()._hasHydrated) {
+      setIsHydrated(true);
+    }
+    
+    // Cleanup the listener on unmount.
+    return () => {
+      unsub();
+    };
   }, []);
 
-  return store;
+  return isHydrated;
 };
-
-// Trigger the initial fetch/hydration check only on the client
-if (!isServer) {
-    useMovieStore.getState().fetchHomepageData();
-}
