@@ -6,13 +6,13 @@ import { Button } from './ui/button';
 
 interface MovieCardProps {
   movie: Movie;
-  variant?: 'default' | 'featured';
+  variant?: 'small' | 'large';
 }
 
-export default function MovieCard({ movie, variant = 'default' }: MovieCardProps) {
+export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
   return (
     <div className="flex flex-col group">
-      <div className="relative block overflow-hidden rounded-md">
+      <div className="relative block overflow-hidden rounded-sm">
         <Image
           src={movie.posterUrl}
           alt={`Poster for ${movie.title}`}

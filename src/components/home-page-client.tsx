@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
-import FeaturedCarousel from '@/components/featured-carousel';
-import LatestReleasesGrid from '@/components/latest-releases-grid';
+import MovieCardSmall from '@/components/movie-card-small';
+import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -50,7 +50,7 @@ export function HomePageClient() {
   return (
     <div className="container mx-auto py-8 md:py-12 space-y-12">
       <section>
-        {isLoadingFeatured ? <CarouselSkeleton /> : <FeaturedCarousel />}
+        {isLoadingFeatured ? <CarouselSkeleton /> : <MovieCardSmall />}
       </section>
       <section className="space-y-6">
         <div className="flex items-center gap-4">
@@ -66,7 +66,7 @@ export function HomePageClient() {
             <span className="sr-only">Open menu</span>
           </Button>
         </div>
-        {isLoadingLatest ? <GridSkeleton /> : <LatestReleasesGrid />}
+        {isLoadingLatest ? <GridSkeleton /> : <MovieCardLarge />}
       </section>
     </div>
   );
