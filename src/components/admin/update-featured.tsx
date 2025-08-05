@@ -157,7 +157,7 @@ export default function UpdateFeatured() {
             <Button asChild variant="outline">
                 <Link href="/admin/movie-list">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add More Movies
+                    Add from Movie List
                 </Link>
             </Button>
         )}
