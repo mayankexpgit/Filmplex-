@@ -7,13 +7,28 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface MovieCardProps {
   movie: Movie;
-  variant?: 'small' | 'large';
+  variant?: 'small' | 'large' | 'featured';
 }
 
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
-  const isSmall = variant === 'small';
+  if (variant === 'featured') {
+    return (
+      <div className="group">
+        <div className="relative block overflow-hidden rounded-md">
+          <Image
+            src={movie.posterUrl}
+            alt={`Poster for ${movie.title}`}
+            width={380}
+            height={570}
+            className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
+            data-ai-hint="movie poster"
+          />
+        </div>
+      </div>
+    );
+  }
 
-  if (isSmall) {
+  if (variant === 'small') {
     return (
       <div className="group">
         <div className="relative block overflow-hidden rounded-md">
