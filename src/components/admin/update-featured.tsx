@@ -8,25 +8,23 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore } from '@/store/movieStore';
-import type { Movie } from '@/lib/data';
 
 export default function UpdateFeatured() {
   const { toast } = useToast();
   const featuredMovies = useMovieStore((state) => state.featuredMovies);
-  const updateFeaturedMovie = useMovieStore((state) => state.updateFeaturedMovie);
+  const updateMovie = useMovieStore((state) => state.updateMovie);
   
   const [posters, setPosters] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Only set initial posters if the posters state is empty
-    if (featuredMovies.length > 0 && Object.keys(posters).length === 0) {
+    if (featuredMovies.length > 0) {
       const initialPosters = featuredMovies.reduce((acc, movie) => {
         acc[movie.id] = movie.posterUrl;
         return acc;
       }, {} as Record<string, string>);
       setPosters(initialPosters);
     }
-  }, [featuredMovies, posters]);
+  }, [featuredMovies]);
 
   const handlePosterChange = (id: string, value: string) => {
     setPosters(prev => ({ ...prev, [id]: value }));
@@ -36,7 +34,8 @@ export default function UpdateFeatured() {
     Object.entries(posters).forEach(([id, posterUrl]) => {
       const originalMovie = featuredMovies.find(m => m.id === id);
       if (originalMovie && originalMovie.posterUrl !== posterUrl) {
-        updateFeaturedMovie(id, posterUrl);
+        // Use the more general updateMovie to ensure consistency everywhere
+        updateMovie(id, { ...originalMovie, posterUrl });
       }
     });
 
