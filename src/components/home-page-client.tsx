@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, useHydratedMovieStore } from '@/store/movieStore';
 import MovieCardSmall from '@/components/movie-card-small';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
@@ -41,6 +41,7 @@ function GridSkeleton() {
 }
 
 export function HomePageClient() {
+  useHydratedMovieStore(); // This hook triggers rehydration on the client
   const fetchHomepageData = useMovieStore((state) => state.fetchHomepageData);
   const isLoading = useMovieStore((state) => state.isLoadingFeatured || state.isLoadingLatest);
   const searchQuery = useMovieStore((state) => state.searchQuery);

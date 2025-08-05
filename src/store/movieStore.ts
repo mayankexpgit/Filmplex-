@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { featuredMovies as initialFeatured, latestReleases as initialLatest, type Movie } from '@/lib/data';
+import { useEffect } from 'react';
 
 // --- Types ---
 interface ContactInfo {
@@ -63,6 +64,8 @@ interface AdminState {
   deleteMovie: (id: string) => void;
   fetchHomepageData: () => void;
   isInitialized: boolean;
+  _hasHydrated: boolean;
+  setHasHydrated: (hydrated: boolean) => void;
 
   // Contact Info
   contactInfo: ContactInfo;
@@ -87,6 +90,10 @@ export const useMovieStore = create<AdminState>()(
       isLoadingLatest: true,
       searchQuery: '',
       isInitialized: false,
+      _hasHydrated: false,
+      setHasHydrated: (hydrated) => {
+        set({ _hasHydrated: hydrated });
+      },
       contactInfo: {
         email: 'admin@filmplex.com',
         message: 'For any queries, please reach out to us.',
@@ -129,20 +136,20 @@ export const useMovieStore = create<AdminState>()(
       },
 
       fetchHomepageData: () => {
+        const state = get();
         // Only initialize with default data if the store isn't already rehydrated
-        if (!get().isInitialized) {
+        // and has no data
+        if (!state.isInitialized && state.featuredMovies.length === 0 && state.latestReleases.length === 0) {
             set({
                 featuredMovies: initialFeatured,
                 latestReleases: initialLatest,
-                isLoadingFeatured: false,
-                isLoadingLatest: false,
-            });
-        } else {
-             set({
-                isLoadingFeatured: false,
-                isLoadingLatest: false,
             });
         }
+        set({
+            isLoadingFeatured: false,
+            isLoadingLatest: false,
+            isInitialized: true,
+        });
       },
 
       updateContactInfo: (info: ContactInfo) => {
@@ -174,17 +181,28 @@ export const useMovieStore = create<AdminState>()(
     {
       name: 'admin-storage', // unique name for the localStorage key
       storage: createJSONStorage(() => storage),
-      onRehydrate: () => {
-        // This is called when the state is rehydrated from storage.
-        useMovieStore.setState({ isInitialized: true });
+      onRehydrate: (state) => {
+        if (state) {
+            state.isInitialized = true;
+        }
       },
       // Skip hydration on server
-      skipHydration: isServer,
+      skipHydration: true,
     }
   )
 );
 
+export const useHydratedMovieStore = () => {
+  const store = useMovieStore();
+  
+  useEffect(() => {
+    useMovieStore.persist.rehydrate();
+  }, []);
+
+  return store;
+};
+
 // Trigger the initial fetch/hydration check only on the client
 if (!isServer) {
-  useMovieStore.getState().fetchHomepageData();
+    useMovieStore.getState().fetchHomepageData();
 }
