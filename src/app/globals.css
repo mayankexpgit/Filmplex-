@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
+    --background: 0 0% 8%;
     --foreground: 0 0% 98%;
     --card: 0 0% 8%;
     --card-foreground: 0 0% 98%;
@@ -20,7 +20,7 @@ body {
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 60% 40%;
+    --accent: 51 100% 50%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -43,7 +43,7 @@ body {
     --sidebar-ring: 51 100% 50%;
   }
   .dark {
-    --background: 0 0% 0%;
+    --background: 0 0% 8%;
     --foreground: 0 0% 98%;
     --card: 0 0% 8%;
     --card-foreground: 0 0% 98%;
@@ -55,7 +55,7 @@ body {
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 60% 40%;
+    --accent: 51 100% 50%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
