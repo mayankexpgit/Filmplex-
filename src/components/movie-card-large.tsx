@@ -4,8 +4,8 @@
 import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
 import { Button } from './ui/button';
-import { Flame } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Flame, Loader2 } from 'lucide-react';
+import { useMemo, useState, useTransition } from 'react';
 
 const MOVIES_PER_PAGE = 12;
 
@@ -13,6 +13,7 @@ export default function MovieCardLarge() {
   const latestReleases = useMovieStore((state) => state.latestReleases);
   const searchQuery = useMovieStore((state) => state.searchQuery);
   const [visibleMoviesCount, setVisibleMoviesCount] = useState(MOVIES_PER_PAGE);
+  const [isPending, startTransition] = useTransition();
 
   const filteredMovies = useMemo(() => {
     if (!searchQuery) {
@@ -28,7 +29,9 @@ export default function MovieCardLarge() {
   }, [filteredMovies, visibleMoviesCount]);
 
   const handleMoreMovies = () => {
-    setVisibleMoviesCount(prevCount => prevCount + MOVIES_PER_PAGE);
+    startTransition(() => {
+        setVisibleMoviesCount(prevCount => prevCount + MOVIES_PER_PAGE);
+    });
   };
 
   return (
@@ -46,8 +49,15 @@ export default function MovieCardLarge() {
       </div>
       {visibleMoviesCount < filteredMovies.length && (
         <div className="mt-8 flex justify-center">
-          <Button onClick={handleMoreMovies}>
-            Load more
+          <Button onClick={handleMoreMovies} variant="secondary" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              'Load more'
+            )}
           </Button>
         </div>
       )}
