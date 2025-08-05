@@ -26,9 +26,9 @@ const MovieCardSmall: FC = () => {
         onMouseEnter={plugin.current.stop}
         onMouseLeave={plugin.current.reset}
       >
-        <CarouselContent className="-ml-2">
+        <CarouselContent className="-ml-1">
           {featuredMovies.map((movie) => (
-            <CarouselItem key={movie.id} className="pl-2 basis-1/5">
+            <CarouselItem key={movie.id} className="pl-1 basis-1/5">
               <MovieCard movie={movie} variant="small"/>
             </CarouselItem>
           ))}
