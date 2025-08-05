@@ -16,6 +16,10 @@ const FeaturedCarousel: FC = () => {
 
   return (
     <div className="space-y-4">
+       <h2 className="text-xl font-bold flex items-center gap-2 text-primary">
+        <Flame className="w-6 h-6" />
+        Featured Today
+      </h2>
       <Carousel
         opts={{
           align: 'start',
@@ -28,7 +32,7 @@ const FeaturedCarousel: FC = () => {
       >
         <CarouselContent className="-ml-4">
           {featuredMovies.map((movie) => (
-            <CarouselItem key={movie.id} className="pl-4 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
+            <CarouselItem key={movie.id} className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
               <MovieCard movie={movie} variant="featured"/>
             </CarouselItem>
           ))}
