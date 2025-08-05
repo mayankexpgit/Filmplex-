@@ -2,13 +2,14 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, updateMovie as storeUpdateMovie } from '@/store/movieStore';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle } from 'lucide-react';
 import type { Movie } from '@/lib/data';
 
 type EditableMovie = Pick<Movie, 'id' | 'title' | 'posterUrl'>;
@@ -147,11 +148,19 @@ export default function UpdateFeatured() {
           </div>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex justify-between">
         <Button onClick={handleSaveChanges} disabled={isPending}>
           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {isPending ? 'Saving...' : 'Save All Changes'}
         </Button>
+        {featuredMovies.length < 20 && (
+            <Button asChild variant="outline">
+                <Link href="/admin/movie-list">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add More Movies
+                </Link>
+            </Button>
+        )}
       </CardFooter>
     </Card>
   );
