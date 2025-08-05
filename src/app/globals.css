@@ -82,3 +82,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .text-gold-metallic {
+    @apply bg-clip-text text-transparent bg-gradient-to-b from-yellow-300 via-yellow-500 to-yellow-600;
+  }
+}
