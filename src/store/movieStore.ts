@@ -78,7 +78,8 @@ export const useMovieStore = create<MovieState>((set) => ({
 
 let isFetchingMovies = false;
 export const fetchMovieData = async (): Promise<void> => {
-  if (useMovieStore.getState().isInitialized || isFetchingMovies) {
+  const { isInitialized } = useMovieStore.getState();
+  if (isInitialized || isFetchingMovies) {
     return;
   }
   isFetchingMovies = true;
@@ -91,6 +92,7 @@ export const fetchMovieData = async (): Promise<void> => {
     });
   } catch (error) {
     console.error("Failed to fetch movie data:", error);
+    // Even if it fails, set initialized to true to prevent infinite loading state.
     useMovieStore.setState({ isInitialized: true });
   } finally {
     isFetchingMovies = false;
@@ -100,29 +102,24 @@ export const fetchMovieData = async (): Promise<void> => {
 
 let isFetchingAdmin = false;
 export const fetchAdminData = async (): Promise<void> => {
-  if (useMovieStore.getState().isInitialized || isFetchingAdmin) {
+   if (isFetchingAdmin) {
     return;
   }
   isFetchingAdmin = true;
   try {
-     const [allMovies, contactInfo, suggestions, securityLogs] = await Promise.all([
-      dbFetchMovies(),
+     const [contactInfo, suggestions, securityLogs] = await Promise.all([
       dbFetchContactInfo(),
       dbFetchSuggestions(),
       dbFetchSecurityLogs(),
     ]);
 
     useMovieStore.setState({
-      featuredMovies: allMovies.filter((m) => m.isFeatured),
-      latestReleases: allMovies.filter((m) => !m.isFeatured),
       contactInfo,
       suggestions,
       securityLogs,
-      isInitialized: true,
     });
   } catch (error) {
     console.error("Failed to fetch admin data:", error);
-     useMovieStore.setState({ isInitialized: true });
   } finally {
     isFetchingAdmin = false;
   }
@@ -138,9 +135,9 @@ const addSecurityLog = async (action: string): Promise<void> => {
         timestamp: new Date().toLocaleString(),
     };
     const id = await dbAddSecurityLog(newLog);
-    useMovieStore.setState((state) => ({
-        securityLogs: [{ id, ...newLog }, ...state.securityLogs],
-    }));
+    // Directly update the store without reading previous state in a complex way
+    const existingLogs = useMovieStore.getState().securityLogs;
+    useMovieStore.setState({ securityLogs: [{ id, ...newLog }, ...existingLogs] });
 };
 
 /**
@@ -160,10 +157,13 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
  * Updates an existing movie in the database and refreshes the movie list.
  */
 export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
-  const movieTitle = updatedMovie.title || [...useMovieStore.getState().featuredMovies, ...useMovieStore.getState().latestReleases].find(m => m.id === id)?.title || 'Unknown Movie';
   await dbUpdateMovie(id, updatedMovie);
   
-  if (updatedMovie.posterUrl) {
+  // To get the title for the log, we can either use the updated title or fetch the current one.
+  // Using the updated title if available is simpler.
+  const movieTitle = updatedMovie.title || useMovieStore.getState().featuredMovies.find(m => m.id === id)?.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
+  
+  if (Object.keys(updatedMovie).length === 1 && updatedMovie.posterUrl) {
     await addSecurityLog(`Updated Movie poster for: "${movieTitle}"`);
   } else {
     await addSecurityLog(`Updated Movie: "${movieTitle}"`);
