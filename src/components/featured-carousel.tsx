@@ -15,9 +15,6 @@ const FeaturedCarousel: FC = () => {
 
   return (
     <div className="space-y-4">
-       <h2 className="text-2xl font-bold text-foreground">
-        Featured
-      </h2>
       <Carousel
         opts={{
           align: 'start',
