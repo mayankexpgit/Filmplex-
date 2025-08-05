@@ -26,9 +26,9 @@ const FeaturedCarousel: FC = () => {
         onMouseLeave={plugin.current.play}
         className="w-full"
       >
-        <CarouselContent className="-ml-4">
+        <CarouselContent className="-ml-2">
           {featuredMovies.map((movie) => (
-            <CarouselItem key={movie.id} className="pl-4 basis-1/5">
+            <CarouselItem key={movie.id} className="pl-2 basis-1/5">
               <MovieCard movie={movie} variant="featured"/>
             </CarouselItem>
           ))}

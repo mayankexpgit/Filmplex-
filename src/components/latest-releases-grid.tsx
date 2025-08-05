@@ -11,7 +11,7 @@ export default function LatestReleasesGrid() {
       <h2 className="text-2xl font-bold text-foreground">
         Latest Releases
       </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-4">
         {latestReleases.map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
         ))}
