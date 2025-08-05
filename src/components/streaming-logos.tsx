@@ -7,6 +7,7 @@ const StreamingLogos = () => {
     { name: 'Prime Video', url: 'https://logos-world.net/wp-content/uploads/2021/04/Amazon-Prime-Video-Logo-2022.png' },
     { name: 'Crunchyroll', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Crunchyroll_2024_stacked.svg/1200px-Crunchyroll_2024_stacked.svg.png' },
     { name: 'Apple TV', url: 'https://www.edigitalagency.com.au/wp-content/uploads/Apple-TV-logo-white-PNG-large-size.png' },
+    { name: 'Disney+', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Disney%2B_logo.svg/2560px-Disney%2B_logo.svg.png' },
   ];
 
   return (
@@ -15,7 +16,7 @@ const StreamingLogos = () => {
         {logos.map((logo) => (
           <div key={logo.name} className="transition-all duration-300 ease-in-out transform hover:scale-105 h-14 w-auto flex items-center justify-center">
             {logo.name === 'Apple TV' ? (
-              <div className="flex items-center gap-1 h-14 w-40 relative">
+              <div className="flex items-center gap-1 h-14 w-40 relative -ml-4">
                  <div className="relative h-12 w-32">
                     <Image
                       src={logo.url}
