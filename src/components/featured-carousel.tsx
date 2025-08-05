@@ -10,11 +10,12 @@ import React from 'react';
 const FeaturedCarousel: FC = () => {
   const featuredMovies = useMovieStore((state) => state.featuredMovies);
   const plugin = React.useRef(
-    Autoplay({ delay: 2000, stopOnInteraction: true })
+    Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true })
   )
 
   return (
     <div className="space-y-4">
+       <h2 className="text-2xl font-bold text-foreground">Featured Today</h2>
       <Carousel
         opts={{
           align: 'start',
@@ -22,7 +23,7 @@ const FeaturedCarousel: FC = () => {
         }}
         plugins={[plugin.current]}
         onMouseEnter={plugin.current.stop}
-        onMouseLeave={plugin.current.reset}
+        onMouseLeave={plugin.current.play}
         className="w-full"
       >
         <CarouselContent className="-ml-4">
