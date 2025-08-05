@@ -65,7 +65,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             </Badge>
           )}
         </div>
-        <div className="p-3 bg-black flex-grow flex flex-col justify-between">
+        <div className="p-3 flex-grow flex flex-col justify-between">
           <div>
             <h3 className="font-bold text-foreground text-base leading-tight truncate">
               {movie.title}
