@@ -19,8 +19,8 @@ const StreamingLogos = () => {
             <Image
               src={logo.url}
               alt={`${logo.name} logo`}
-              layout="fill"
-              objectFit="contain"
+              fill
+              className="object-contain"
             />
           </div>
         ))}
