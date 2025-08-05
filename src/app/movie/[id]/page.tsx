@@ -34,9 +34,6 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
     );
   }
 
-  const trailerUrl = movie.trailerUrl ? `${movie.trailerUrl}?autoplay=1&mute=1&loop=1&playlist=${movie.trailerUrl.split('/').pop()}` : null;
-
-
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
@@ -116,28 +113,6 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
               </div>
             </section>
           )}
-          
-          {/* Trailer */}
-           <section className="mb-12">
-             <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Watch Trailer</h2>
-             <div className="aspect-video relative bg-secondary rounded-lg overflow-hidden">
-                {trailerUrl ? (
-                    <iframe
-                        src={trailerUrl}
-                        title={`Trailer for ${movie.title}`}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full"
-                    ></iframe>
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <PlayCircle className="h-16 w-16" />
-                        <p className="ml-4">Trailer not available</p>
-                    </div>
-                )}
-             </div>
-           </section>
            
           {/* Synopsis */}
           {movie.synopsis && (

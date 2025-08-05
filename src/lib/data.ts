@@ -9,7 +9,6 @@ export interface Movie {
   downloadLinks?: { quality: string; url: string }[];
   synopsis?: string;
   screenshots?: string[];
-  trailerUrl?: string;
 }
 
 // This data is now used for initial database seeding.
@@ -31,7 +30,6 @@ export const initialMovies: Movie[] = [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
     ],
-    trailerUrl: 'https://www.youtube.com/embed/YoHD9XEInc0',
   },
   {
     id: '2',
@@ -50,7 +48,6 @@ export const initialMovies: Movie[] = [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
     ],
-    trailerUrl: 'https://www.youtube.com/embed/EXeTwQWrcwY',
   },
   {
     id: '3',
@@ -68,7 +65,6 @@ export const initialMovies: Movie[] = [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
     ],
-     trailerUrl: 'https://www.youtube.com/embed/zSWdZVtXT7E',
   },
   {
     id: '4',
