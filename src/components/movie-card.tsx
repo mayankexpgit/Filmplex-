@@ -48,7 +48,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   // Large variant with dark section for details
   return (
-    <Card className="overflow-hidden bg-card border-0 group rounded-lg flex flex-col">
+    <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col">
        <CardContent className="p-0 flex flex-col h-full">
         <div className="relative block overflow-hidden">
           <Image
