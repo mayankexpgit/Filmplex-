@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,9 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem>Admin panel</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin">Admin panel</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Contact</DropdownMenuItem>
             <DropdownMenuItem>Suggestion</DropdownMenuItem>
           </DropdownMenuContent>
