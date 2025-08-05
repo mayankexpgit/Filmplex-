@@ -101,7 +101,8 @@ export default function UpdateFeatured() {
       <CardHeader>
         <CardTitle>Update Featured Movies</CardTitle>
         <CardDescription>
-          Edit titles, poster URLs, or remove movies from the homepage carousel. 
+          Edit titles and poster URLs for movies in the homepage carousel.
+          To add or remove movies from this list, go to the "Movie List" page and toggle the star icon.
           You must maintain between 10 and 20 featured movies. 
           Currently: {featuredMovies.length}
         </CardDescription>
