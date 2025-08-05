@@ -29,7 +29,7 @@ export default function UploadMovie() {
     const unique = all.filter(
       (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
     );
-    return unique;
+    return unique.sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
   }, [latestReleases, featuredMovies]);
 
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
@@ -65,51 +65,42 @@ export default function UploadMovie() {
   };
 
   const handleSubmit = () => {
-    if (!title || !posterUrl) {
+    if (!title) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please fill out title and poster URL fields.',
+        description: 'Please fill out the title field.',
       });
       return;
     }
 
     startTransition(() => {
+      const movieData: Partial<Movie> = {
+        title,
+        year,
+        posterUrl,
+        quality,
+        tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+      };
+
       if (id) {
-        // This is an update to an existing movie.
-        const originalMovie = movies.find(m => m.id === id);
-
-        // Construct the updated movie data, taking the new values from the form.
-        // For fields not in the form (isFeatured, genre), keep the original values.
-        const movieData: Movie = {
-          id: id,
-          title,
-          year,
-          posterUrl,
-          quality,
-          tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-          isFeatured: originalMovie?.isFeatured ?? false,
-          genre: originalMovie?.genre ?? 'Misc',
-        };
-
         updateMovie(id, movieData);
         toast({
           title: 'Success!',
           description: `Movie "${title}" has been updated.`,
         });
       } else {
-        // This is a new movie.
-        const movieData: Movie = {
+        const newMovie: Movie = {
           id: new Date().toISOString(),
           title,
           year,
           posterUrl,
           quality,
           tags: tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-          isFeatured: false, // Default for new movie
-          genre: 'Misc', // Default for new movie
+          isFeatured: false,
+          genre: 'Misc',
         };
-        addMovie(movieData);
+        addMovie(newMovie);
         toast({
           title: 'Success!',
           description: `Movie "${title}" has been added.`,
@@ -135,11 +126,10 @@ export default function UploadMovie() {
   }
 
   const filteredMovies = useMemo(() => {
-    const sortedMovies = [...movies].sort((a, b) => new Date(b.id).getTime() - new Date(a.id).getTime());
     if (!searchQuery) {
-      return sortedMovies;
+      return movies;
     }
-    return sortedMovies.filter((movie) =>
+    return movies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
   }, [movies, searchQuery]);

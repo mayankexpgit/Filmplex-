@@ -32,12 +32,11 @@ export default function UpdateFeatured() {
 
   const handleSaveChanges = () => {
     Object.entries(posters).forEach(([id, posterUrl]) => {
+      // Find the original movie to see if the poster URL has actually changed.
       const originalMovie = featuredMovies.find(m => m.id === id);
-      // Ensure we have a movie to update, and the poster URL has actually changed.
       if (originalMovie && originalMovie.posterUrl !== posterUrl) {
         // Use the global updateMovie function to ensure data consistency everywhere.
-        // This will update the movie in both featuredMovies and latestReleases lists.
-        updateMovie(id, { ...originalMovie, posterUrl });
+        updateMovie(id, { posterUrl });
       }
     });
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -41,20 +42,30 @@ function GridSkeleton() {
 
 export function HomePageClient() {
   const fetchHomepageData = useMovieStore((state) => state.fetchHomepageData);
-  const isLoadingFeatured = useMovieStore((state) => state.isLoadingFeatured);
-  const isLoadingLatest = useMovieStore((state) => state.isLoadingLatest);
+  const isLoading = useMovieStore((state) => state.isLoadingFeatured || state.isLoadingLatest);
   const searchQuery = useMovieStore((state) => state.searchQuery);
   const setSearchQuery = useMovieStore((state) => state.setSearchQuery);
+  const isInitialized = useMovieStore((state) => state.isInitialized);
 
 
   useEffect(() => {
     fetchHomepageData();
   }, [fetchHomepageData]);
 
+  // We should wait until the store is rehydrated from localStorage
+  if (!isInitialized) {
+    return (
+      <div className="container mx-auto py-8 md:py-12 space-y-12">
+        <CarouselSkeleton />
+        <GridSkeleton />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-8 md:py-12 space-y-12">
       <section>
-        {isLoadingFeatured ? <CarouselSkeleton /> : <MovieCardSmall />}
+        {isLoading ? <CarouselSkeleton /> : <MovieCardSmall />}
       </section>
 
       <section className="space-y-6">
@@ -84,7 +95,7 @@ export function HomePageClient() {
         
         <StreamingLogos />
 
-        {isLoadingLatest ? <GridSkeleton /> : <MovieCardLarge />}
+        {isLoading ? <GridSkeleton /> : <MovieCardLarge />}
       </section>
     </div>
   );
