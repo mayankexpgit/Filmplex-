@@ -18,12 +18,15 @@ export default function UpdateFeatured() {
   const [posters, setPosters] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const initialPosters = featuredMovies.reduce((acc, movie) => {
-      acc[movie.id] = movie.posterUrl;
-      return acc;
-    }, {} as Record<string, string>);
-    setPosters(initialPosters);
-  }, [featuredMovies]);
+    // Only set initial posters if the posters state is empty
+    if (featuredMovies.length > 0 && Object.keys(posters).length === 0) {
+      const initialPosters = featuredMovies.reduce((acc, movie) => {
+        acc[movie.id] = movie.posterUrl;
+        return acc;
+      }, {} as Record<string, string>);
+      setPosters(initialPosters);
+    }
+  }, [featuredMovies, posters]);
 
   const handlePosterChange = (id: string, value: string) => {
     setPosters(prev => ({ ...prev, [id]: value }));
