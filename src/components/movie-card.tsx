@@ -106,7 +106,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
       </div>
   );
 
-  if (variant === 'featured' || variant === 'small') {
+  if (variant === 'small' || variant === 'featured') {
      return (
        <Link href={`/movie/${movie.id}`} passHref>
          {smallVariantContent}

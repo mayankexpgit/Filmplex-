@@ -39,7 +39,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
             <Image
               src={posterSrc}
-              alt={`Poster for ${movie.title}`}
+              alt={`Poster for ${movie?.title}`}
               fill
               className="object-cover"
               data-ai-hint="movie poster"
@@ -152,6 +152,15 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               </div>
             </section>
           )}
+
+            {movie.synopsis && (
+                <section className="mb-8 w-full">
+                <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Synopsis</h2>
+                <p className="text-center text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                    {movie.synopsis}
+                </p>
+                </section>
+            )}
 
            {movie.description && (
             <section className="mb-8 w-full">
