@@ -47,7 +47,7 @@ const initialFormState: FormData = {
   imdbRating: 0,
   streamingChannel: '',
   isFeatured: false,
-  synopsis: '',
+  description: '',
   screenshots: ['', '', ''],
   stars: '',
   creator: '',
@@ -369,20 +369,20 @@ export default function UploadMovie() {
 
               <Separator />
 
-              {/* Synopsis */}
+              {/* Description */}
                <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                    <Label htmlFor="movie-synopsis">Synopsis / Storyline</Label>
+                    <Label htmlFor="movie-description">Description</Label>
                 </div>
                 <div className="p-2 border rounded-md">
                    <Textarea 
-                      id="movie-synopsis" 
-                      value={formData.synopsis || ''} 
-                      onChange={(e) => handleInputChange('synopsis', e.target.value)} 
+                      id="movie-description" 
+                      value={formData.description || ''} 
+                      onChange={(e) => handleInputChange('description', e.target.value)} 
                       disabled={isFormDisabled} 
                       rows={10}
                       className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                      placeholder="Provide a brief plot summary here..."
+                      placeholder="Provide a description here..."
                   />
                 </div>
               </div>

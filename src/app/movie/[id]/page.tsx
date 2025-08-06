@@ -36,7 +36,7 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
   }
 
   const InfoRow = ({ label, value }: { label: string, value?: string | number | null }) => {
-    if (!value) return null;
+    if (!value && typeof value !== 'number') return null;
     return (
       <p className="text-base text-foreground">
         <span className="font-semibold">{label}: </span>
@@ -178,12 +178,13 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
             </section>
           )}
 
-          {/* Synopsis */}
-          {movie.synopsis && (
+          {/* Description */}
+          {movie.description && (
             <section className="mb-8 w-full">
+              <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Description</h2>
               <div 
-                className="prose prose-invert max-w-none leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
+                className="prose prose-lg prose-invert max-w-none leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: movie.description.replace(/\n/g, '<br />') }}
               />
             </section>
           )}

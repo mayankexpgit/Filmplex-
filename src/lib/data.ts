@@ -21,7 +21,7 @@ export interface Movie {
   imdbRating?: number;
   streamingChannel?: string;
   tags?: string[];
-  synopsis?: string;
+  description?: string;
   screenshots?: string[];
   isFeatured?: boolean;
   stars?: string;
@@ -60,7 +60,7 @@ export const initialMovies: Movie[] = [
       { quality: '1080p', url: 'https://example.com/inception-4k', size: '2.5GB' },
       { quality: '720p', url: 'https://example.com/inception-hd', size: '1.2GB' },
     ],
-    synopsis: `
+    description: `
       <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
       <br>
       <h4>DESCRIPTION:</h4>
@@ -97,7 +97,7 @@ export const initialMovies: Movie[] = [
       { quality: '1080p', url: 'https://example.com/dk-hd', size: '1.5GB' },
       { quality: '720p', url: 'https://example.com/dk-720p', size: '800MB' },
     ],
-    synopsis: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+    description: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
      screenshots: [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
