@@ -10,13 +10,12 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Bold, Italic, Underline } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from './movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Bold, Italic, Underline } from 'lucide-react';
 
 type DownloadLink = {
   quality: string;
@@ -241,6 +240,11 @@ export default function UploadMovie() {
               <div className="space-y-2">
                 <Label htmlFor="movie-synopsis">Synopsis / Storyline</Label>
                 <div className="p-2 border rounded-md">
+                   <ToggleGroup type="multiple" className="flex-wrap justify-start">
+                     <ToggleGroupItem value="bold" aria-label="Toggle bold"><Bold className="h-4 w-4" /></ToggleGroupItem>
+                     <ToggleGroupItem value="italic" aria-label="Toggle italic"><Italic className="h-4 w-4" /></ToggleGroupItem>
+                     <ToggleGroupItem value="underline" aria-label="Toggle underline"><Underline className="h-4 w-4" /></ToggleGroupItem>
+                   </ToggleGroup>
                    <Textarea 
                       id="movie-synopsis" 
                       value={formData.synopsis || ''} 
