@@ -99,12 +99,12 @@ export function HomePageClient() {
   }
 
   return (
-    <div className="container mx-auto py-8 md:py-12 space-y-12">
+    <div className="container mx-auto py-8 md:py-12 space-y-8">
       <section>
         <MovieCardSmall />
       </section>
-
-      <div className="text-center text-lg font-bold text-foreground">
+      
+      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-lg font-bold text-foreground">
         💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
 
