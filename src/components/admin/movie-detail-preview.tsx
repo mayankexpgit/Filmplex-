@@ -53,7 +53,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
             <InfoRow label="Genre" value={movie.genre} />
             <InfoRow label="Stars" value={movie.stars} />
             <InfoRow label="Creator" value={movie.creator} />
-            <InfoRow label="No. of Episodes" value={movie.episodes} />
+            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.episodes?.length} />}
             <InfoRow label="Language" value={movie.language} />
             <InfoRow label="Quality" value={movie.quality} />
           </div>
