@@ -71,7 +71,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
 
           {movie.screenshots && movie.screenshots.length > 0 && movie.screenshots[0] && (
             <section className="w-full mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-center text-red-500">: Screen-Shots :</h2>
+              <h2 className="text-2xl font-bold mb-4 text-center">: Screen-Shots :</h2>
               <div className="flex flex-col items-center gap-4">
                 {movie.screenshots.map((src, index) => (
                   src && <div key={index} className="relative w-full max-w-2xl aspect-video overflow-hidden rounded-lg">
@@ -88,13 +88,65 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
             </section>
           )}
 
-          {movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
+          {movie.contentType === 'movie' && movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
             <section className="w-full mb-12">
               <h2 className="text-2xl font-bold mb-4 text-center">Download Links</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
+                  link?.url && <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
                     <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
+                      <div className="flex items-center gap-4">
+                        <Download />
+                        <span>{link.quality} {link.size && `(${link.size})`}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>Download</span>
+                        <Zap className="h-4 w-4" />
+                      </div>
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {movie.contentType === 'series' && movie.episodes && movie.episodes.length > 0 && (
+            <section className="w-full mb-8">
+                <h2 className="text-2xl font-bold mb-4 text-center">Episodes</h2>
+                <div className="space-y-6 w-full max-w-2xl mx-auto">
+                    {movie.episodes.map((ep, epIndex) => (
+                       ep.downloadLinks && ep.downloadLinks.length > 0 && ep.downloadLinks[0].url &&
+                        <div key={epIndex} className="p-4 border rounded-lg bg-card">
+                            <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}: {ep.title}</h3>
+                            <div className="space-y-3 flex flex-col items-center">
+                                {ep.downloadLinks.map((link, linkIndex) => (
+                                     link?.url && <Button key={linkIndex} asChild variant="secondary" size="lg" className="justify-between hover:brightness-110 w-full">
+                                        <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                            <div className="flex items-center gap-4">
+                                                <Download />
+                                                <span>{link.quality} {link.size && `(${link.size})`}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span>Download</span>
+                                                <Zap className="h-4 w-4" />
+                                            </div>
+                                        </a>
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+          )}
+
+          {movie.contentType === 'series' && movie.seasonDownloadLinks && movie.seasonDownloadLinks.length > 0 && movie.seasonDownloadLinks[0]?.url && (
+             <section className="w-full mb-12">
+              <h2 className="text-2xl font-bold mb-4 text-center">Download Full Season</h2>
+              <div className="space-y-3 flex flex-col items-center">
+                {movie.seasonDownloadLinks.map((link, index) => (
+                  link?.url && <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
                         <Download />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
