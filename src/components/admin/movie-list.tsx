@@ -141,7 +141,7 @@ export default function MovieList() {
                     <TableCell>{movie.year}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
-                        {movie.isFeatured ? <Star className="h-4 w-4 text-primary" /> : <Star className="h-4 w-4 text-muted-foreground" />}
+                        {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
                         <Edit className="h-4 w-4" />

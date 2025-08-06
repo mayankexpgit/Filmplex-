@@ -3,7 +3,7 @@ import { fetchMovies } from '@/services/movieService';
 import type { Movie } from '@/lib/data';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download, PlayCircle, Share2, MessageSquare, ThumbsUp, Star } from 'lucide-react';
+import { Download, PlayCircle, Share2, MessageSquare, ThumbsUp, Star, Zap } from 'lucide-react';
 import Link from 'next/link';
 import MovieCardSmall from '@/components/movie-card-small';
 import { Separator } from '@/components/ui/separator';
@@ -124,7 +124,10 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
                         <Download />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
-                      <span>Download Now</span>
+                      <div className="flex items-center gap-2">
+                          <span>Download</span>
+                          <Zap className="h-4 w-4" />
+                      </div>
                     </a>
                   </Button>
                 ))}

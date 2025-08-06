@@ -4,7 +4,7 @@
 import type { Movie } from '@/lib/data';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Zap } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 
@@ -97,9 +97,12 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
                     <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
                         <Download />
-                        <span>{link.quality}</span>
+                        <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
-                      <span>Download Now</span>
+                      <div className="flex items-center gap-2">
+                        <span>Download</span>
+                        <Zap className="h-4 w-4" />
+                      </div>
                     </a>
                   </Button>
                 ))}
