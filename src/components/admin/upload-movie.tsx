@@ -10,13 +10,12 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
-import { generateMovieDescription } from '@/ai/flows/generate-movie-description-flow';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 type FormData = Partial<Movie> & {
@@ -52,7 +51,6 @@ export default function UploadMovie() {
   const { toast } = useToast();
   const movies = useMovieStore((state) => state.latestReleases);
   const [isPending, startTransition] = useTransition();
-  const [isGenerating, setIsGenerating] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -142,41 +140,18 @@ export default function UploadMovie() {
 
   const removeMovieLink = (index: number) => handleInputChange('downloadLinks', removeListItem(formData.downloadLinks, index));
   const removeSeasonLink = (index: number) => handleInputChange('seasonDownloadLinks', removeListItem(formData.seasonDownloadLinks, index));
-  const removeEpisode = (index: number) => handleInputChange('episodes', removeListItem(formData.episodes, index));
+  const removeEpisode = (index: number) => {
+    const newEpisodes = (formData.episodes || [])
+        .filter((_, i) => i !== index)
+        .map((ep, i) => ({ ...ep, episodeNumber: i + 1 })); // Re-number subsequent episodes
+    handleInputChange('episodes', newEpisodes);
+  };
   const removeScreenshot = (index: number) => handleInputChange('screenshots', removeListItem(formData.screenshots, index));
   const removeEpisodeLink = (epIndex: number, linkIndex: number) => {
       const newEpisodes = [...(formData.episodes || [])];
       newEpisodes[epIndex].downloadLinks = removeListItem(newEpisodes[epIndex].downloadLinks, linkIndex);
       handleInputChange('episodes', newEpisodes);
   }
-
-
-  const handleGenerateDescription = async () => {
-    if (!formData.title) {
-      toast({ variant: 'destructive', title: 'Input Required', description: 'Please provide at least a title before generating.' });
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const generatedHtml = await generateMovieDescription({
-        title: formData.title,
-        year: formData.year || new Date().getFullYear(),
-        genre: formData.genre,
-        stars: formData.stars,
-        language: formData.language,
-        quality: formData.quality,
-        synopsis: formData.synopsis, // Pass the basic synopsis to expand upon
-      });
-      handleInputChange('synopsis', generatedHtml);
-      toast({ title: 'Success!', description: 'AI-generated description has been populated.' });
-    } catch (error) {
-      console.error('AI generation failed:', error);
-      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not generate the description. Please try again.' });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
 
   const handleSubmit = () => {
     if (!formData.title || !formData.genre) {
@@ -219,7 +194,7 @@ export default function UploadMovie() {
     });
   };
 
-  const isFormDisabled = isPending || isGenerating;
+  const isFormDisabled = isPending;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -381,10 +356,6 @@ export default function UploadMovie() {
                <div className="space-y-2">
                 <div className="flex justify-between items-center">
                     <Label htmlFor="movie-synopsis">Synopsis / Storyline</Label>
-                    <Button onClick={handleGenerateDescription} variant="outline" size="sm" disabled={isFormDisabled}>
-                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-primary" />}
-                        Generate with AI
-                    </Button>
                 </div>
                 <div className="p-2 border rounded-md">
                    <Textarea 
@@ -394,7 +365,7 @@ export default function UploadMovie() {
                       disabled={isFormDisabled} 
                       rows={10}
                       className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                      placeholder="Provide a brief plot summary here, or click 'Generate with AI' to create a full description."
+                      placeholder="Provide a brief plot summary here..."
                   />
                 </div>
               </div>
@@ -487,9 +458,9 @@ interface EpisodeEditorProps {
 
 function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled}: EpisodeEditorProps) {
     
-    const handleTitleChange = (value: string) => {
+    const handleEpisodeFieldChange = (field: keyof Episode, value: any) => {
         const newEpisodes = [...currentEpisodes];
-        newEpisodes[epIndex].title = value;
+        newEpisodes[epIndex] = { ...newEpisodes[epIndex], [field]: value };
         onEpisodeChange('episodes', newEpisodes);
     };
 
@@ -504,7 +475,7 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
             <Input
                 placeholder="Episode Title (optional)"
                 value={episode.title || ''}
-                onChange={(e) => handleTitleChange(e.target.value)}
+                onChange={(e) => handleEpisodeFieldChange('title', e.target.value)}
                 disabled={disabled}
             />
             <div className="space-y-2 pl-2 border-l-2 ml-2">
