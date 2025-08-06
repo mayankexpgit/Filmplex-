@@ -1,5 +1,4 @@
 
-
 export interface DownloadLink {
   quality: string;
   url: string;
@@ -45,6 +44,7 @@ export interface Movie {
   stars?: string;
   creator?: string;
   quality?: string;
+  qualityBadge?: 'HD' | '4K' | 'none';
   
   contentType: 'movie' | 'series';
   
@@ -79,6 +79,7 @@ export const initialMovies: Movie[] = [
     creator: 'Christopher Nolan',
     quality: 'BluRay 1080p, 720p',
     contentType: 'movie',
+    qualityBadge: 'HD',
     downloadLinks: [
       { quality: '1080p', url: 'https://example.com/inception-4k', size: '2.5GB' },
       { quality: '720p', url: 'https://example.com/inception-hd', size: '1.2GB' },
@@ -116,6 +117,7 @@ export const initialMovies: Movie[] = [
     creator: 'Christopher Nolan',
     quality: 'BluRay 1080p, 720p',
     contentType: 'movie',
+    qualityBadge: 'HD',
     downloadLinks: [
       { quality: '1080p', url: 'https://example.com/dk-hd', size: '1.5GB' },
       { quality: '720p', url: 'https://example.com/dk-720p', size: '800MB' },
@@ -142,6 +144,7 @@ export const initialMovies: Movie[] = [
     creator: 'Yuto Suzuki',
     quality: 'WEB-DL 1080p, 720p',
     contentType: 'series',
+    qualityBadge: 'HD',
     episodes: [
       {
         episodeNumber: 1,
@@ -164,4 +167,3 @@ export const initialMovies: Movie[] = [
     ]
   }
 ];
-

@@ -52,6 +52,7 @@ const initialFormState: FormData = {
   stars: '',
   creator: '',
   quality: '',
+  qualityBadge: 'none',
   contentType: 'movie',
   downloadLinks: [{ quality: '1080p', url: '', size: '' }],
   episodes: [],
@@ -79,6 +80,7 @@ export default function UploadMovie() {
             downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: '1080p', url: '', size: '' }],
             screenshots: movieToEdit.screenshots && movieToEdit.screenshots.length > 0 ? movieToEdit.screenshots : ['', '', ''],
             episodes: movieToEdit.episodes && movieToEdit.episodes.length > 0 ? movieToEdit.episodes : [],
+            qualityBadge: movieToEdit.qualityBadge || 'none',
         });
       }
     } else {
@@ -226,7 +228,7 @@ export default function UploadMovie() {
               
               <div className="space-y-2">
                 <Label>Content Type</Label>
-                 <RadioGroup defaultValue="movie" value={formData.contentType} onValueChange={(val) => handleInputChange('contentType', val)} className="flex gap-4">
+                 <RadioGroup value={formData.contentType} onValueChange={(val) => handleInputChange('contentType', val)} className="flex gap-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="movie" id="r-movie" />
                     <Label htmlFor="r-movie">Movie</Label>
@@ -286,6 +288,26 @@ export default function UploadMovie() {
               <div className="space-y-2">
                 <Label htmlFor="movie-poster">Poster URL</Label>
                 <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isFormDisabled} />
+              </div>
+
+               <Separator />
+               
+              <div className="space-y-2">
+                <Label>Quality Badge</Label>
+                 <RadioGroup value={formData.qualityBadge || 'none'} onValueChange={(val) => handleInputChange('qualityBadge', val as Movie['qualityBadge'])} className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="none" id="q-none" />
+                    <Label htmlFor="q-none">None</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="HD" id="q-hd" />
+                    <Label htmlFor="q-hd">HD</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="4K" id="q-4k" />
+                    <Label htmlFor="q-4k">4K</Label>
+                  </div>
+                </RadioGroup>
               </div>
 
               <Separator />

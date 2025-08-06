@@ -15,11 +15,23 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
-  const getQualityBadge = () => {
-    if (!movie.downloadLinks || movie.downloadLinks.length === 0) {
-      return null;
+  const getQualityBadge = (): '4K' | 'HD' | null => {
+    // Manual badge override takes precedence
+    if (movie.qualityBadge && movie.qualityBadge !== 'none') {
+        return movie.qualityBadge;
     }
-    const qualities = movie.downloadLinks.map(link => link.quality.toLowerCase());
+    if (movie.qualityBadge === 'none') {
+        return null;
+    }
+
+    // Automatic detection from links
+    let qualities: string[] = [];
+    if (movie.contentType === 'movie' && movie.downloadLinks) {
+        qualities = movie.downloadLinks.map(link => link.quality.toLowerCase());
+    } else if (movie.contentType === 'series' && movie.episodes) {
+        qualities = movie.episodes.flatMap(ep => ep.downloadLinks.map(link => link.quality.toLowerCase()));
+    }
+    
     if (qualities.includes('4k') || qualities.includes('2160p')) {
       return '4K';
     }
