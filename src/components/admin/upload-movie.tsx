@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles, Wand2 } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -54,7 +54,6 @@ export default function UploadMovie() {
   const movies = useMovieStore((state) => state.latestReleases);
   const [isPending, startTransition] = useTransition();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isFetchingMeta, setIsFetchingMeta] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -146,38 +145,6 @@ export default function UploadMovie() {
   }
 
 
-  const handleFetchMetadata = async () => {
-    if (!formData.title) {
-        toast({ variant: 'destructive', title: 'Title Required', description: 'Please enter a movie title to fetch metadata.' });
-        return;
-    }
-    setIsFetchingMeta(true);
-    try {
-        const metadata = await fetchMovieMetadata({ title: formData.title, type: formData.contentType || 'movie' });
-        if (metadata) {
-            setFormData(prev => ({
-                ...prev,
-                year: metadata.year || prev.year,
-                genre: metadata.genres.join(', ') || prev.genre,
-                stars: metadata.cast.slice(0, 3).join(', ') || prev.stars,
-                creator: metadata.directors.join(', ') || prev.creator,
-                synopsis: metadata.synopsis || prev.synopsis,
-                tagsString: metadata.tags?.join(', ') || prev.tagsString,
-                posterUrl: metadata.posterUrl || prev.posterUrl
-            }));
-            toast({ title: 'Success!', description: 'Movie metadata has been fetched and populated.' });
-        } else {
-             toast({ variant: 'destructive', title: 'Not Found', description: 'Could not find metadata for this title.' });
-        }
-    } catch (error) {
-        console.error("AI metadata fetch failed:", error);
-        toast({ variant: 'destructive', title: 'AI Error', description: 'Could not fetch metadata. Please try again.' });
-    } finally {
-        setIsFetchingMeta(false);
-    }
-  }
-
-
   const handleGenerateDescription = async () => {
     if (!formData.title) {
       toast({ variant: 'destructive', title: 'Input Required', description: 'Please provide at least a title before generating.' });
@@ -246,7 +213,7 @@ export default function UploadMovie() {
     });
   };
 
-  const isFormDisabled = isPending || isGenerating || isFetchingMeta;
+  const isFormDisabled = isPending || isGenerating;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -279,12 +246,7 @@ export default function UploadMovie() {
               {/* Basic Info */}
               <div className="space-y-2">
                 <Label htmlFor="movie-title">Title</Label>
-                <div className="flex gap-2">
-                    <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
-                    <Button onClick={handleFetchMetadata} variant="outline" size="icon" disabled={isFormDisabled || !formData.title} title="Fetch Metadata with AI">
-                        {isFetchingMeta ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                    </Button>
-                </div>
+                <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
