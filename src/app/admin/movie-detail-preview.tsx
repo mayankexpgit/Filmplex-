@@ -120,7 +120,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
                             <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}: {ep.title}</h3>
                             <div className="space-y-3 flex flex-col items-center">
                                 {ep.downloadLinks.map((link, linkIndex) => (
-                                     link?.url && <Button key={linkIndex} asChild variant="secondary" size="lg" className="justify-between hover:brightness-110 w-full">
+                                     link?.url && <Button key={linkIndex} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
                                         <a href={link.url} target="_blank" rel="noopener noreferrer">
                                             <div className="flex items-center gap-4">
                                                 <Download />

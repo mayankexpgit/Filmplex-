@@ -145,7 +145,7 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
                             <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}{ep.title && `: ${ep.title}`}</h3>
                             <div className="space-y-3 flex flex-col items-center">
                                 {ep.downloadLinks.map((link, linkIndex) => (
-                                     <Button key={linkIndex} asChild variant="secondary" size="lg" className="justify-between hover:brightness-110 w-full">
+                                     <Button key={linkIndex} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
                                         <a href={link.url} target="_blank" rel="noopener noreferrer">
                                             <div className="flex items-center gap-4">
                                                 <Download />
