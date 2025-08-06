@@ -18,7 +18,7 @@ const GenerateMovieDescriptionInputSchema = z.object({
 });
 export type GenerateMovieDescriptionInput = z.infer<typeof GenerateMovieDescriptionInputSchema>;
 
-export type GenerateMovieDescriptionOutput = z.infer<typeof z.string()>;
+export type GenerateMovieDescriptionOutput = string;
 
 /**
  * Public-facing wrapper function to call the generateMovieDescriptionFlow.
