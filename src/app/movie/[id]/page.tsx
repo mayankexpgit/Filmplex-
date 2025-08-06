@@ -6,7 +6,7 @@ import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
 import { useMovieStore, fetchMovieData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download, Zap, ThumbsUp, Heart, Smile, Wow, Frown, Angry, Send } from 'lucide-react';
+import { Download, Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -319,7 +319,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
                   <ReactionButton Icon={ThumbsUp} count={movie.reactions?.like ?? 0} onClick={() => handleReactionClick('like')} disabled={hasReacted} />
                   <ReactionButton Icon={Heart} count={movie.reactions?.love ?? 0} onClick={() => handleReactionClick('love')} disabled={hasReacted} />
                   <ReactionButton Icon={Smile} count={movie.reactions?.haha ?? 0} onClick={() => handleReactionClick('haha')} disabled={hasReacted} />
-                  <ReactionButton Icon={Wow} count={movie.reactions?.wow ?? 0} onClick={() => handleReactionClick('wow')} disabled={hasReacted} />
+                  <ReactionButton Icon={SmilePlus} count={movie.reactions?.wow ?? 0} onClick={() => handleReactionClick('wow')} disabled={hasReacted} />
                   <ReactionButton Icon={Frown} count={movie.reactions?.sad ?? 0} onClick={() => handleReactionClick('sad')} disabled={hasReacted} />
                   <ReactionButton Icon={Angry} count={movie.reactions?.angry ?? 0} onClick={() => handleReactionClick('angry')} disabled={hasReacted} />
               </div>
