@@ -30,8 +30,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
           />
           {qualityToDisplay && (
             <Badge
-              variant="destructive"
-              className="absolute top-2 right-2 bg-destructive/80 text-destructive-foreground backdrop-blur-sm border-primary"
+              className="absolute top-2 right-2 bg-gold-metallic text-primary-foreground"
             >
               {qualityToDisplay}
             </Badge>
@@ -79,8 +78,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
           />
           {qualityToDisplay && (
              <Badge
-              variant="destructive"
-              className="absolute top-2 right-2 bg-destructive/80 text-destructive-foreground backdrop-blur-sm border-primary"
+              className="absolute top-2 right-2 bg-gold-metallic text-primary-foreground"
             >
               {qualityToDisplay}
             </Badge>
