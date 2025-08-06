@@ -36,7 +36,7 @@ const adminSections = [
   },
   {
     title: 'Manage Comments',
-    description: 'View and delete user comments.',
+    description: 'View comments and reactions for each movie.',
     href: '/admin/comments',
     icon: MessagesSquare,
   },
