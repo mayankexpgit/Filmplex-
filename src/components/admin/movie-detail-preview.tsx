@@ -48,13 +48,6 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               <Button variant="secondary" size="sm"><ThumbsUp className="mr-2" /> Like</Button>
               <Button variant="secondary" size="sm"><Star className="mr-2" /> Rate</Button>
           </div>
-
-          {/* Ad Placeholder */}
-          <div className="text-center my-8">
-             <div className="w-full h-24 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground">
-                Advertisement
-             </div>
-          </div>
           
           {/* Download Links */}
           {movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
@@ -92,4 +85,3 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
     </div>
   );
 }
-

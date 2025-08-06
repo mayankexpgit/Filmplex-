@@ -67,13 +67,6 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
               <Button variant="secondary" size="sm"><Star className="mr-2" /> Rate</Button>
           </div>
 
-          {/* Ad Placeholder */}
-          <div className="text-center my-8">
-             <div className="w-full h-24 bg-secondary rounded-lg flex items-center justify-center text-muted-foreground">
-                Advertisement
-             </div>
-          </div>
-          
           {/* Screenshots */}
           {movie.screenshots && movie.screenshots.length > 0 && (
             <section className="mb-12">
