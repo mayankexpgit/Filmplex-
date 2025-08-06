@@ -76,13 +76,6 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="movie poster"
           />
-          {qualityToDisplay && (
-             <Badge
-              className="absolute top-2 right-2 bg-gold-metallic text-primary-foreground"
-            >
-              {qualityToDisplay}
-            </Badge>
-          )}
         </div>
       </div>
   );
