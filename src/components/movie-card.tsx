@@ -20,15 +20,22 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   const cardContent = (
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
        <CardContent className="p-0 flex flex-col h-full">
-        <div className="relative block overflow-hidden">
+        <div className="relative block overflow-hidden aspect-[2/3]">
           <Image
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
-            width={380}
-            height={570}
-            className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
+            fill
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="movie poster"
           />
+          {qualityToDisplay && (
+            <Badge
+              variant="default"
+              className="absolute top-2 right-2 bg-black/70 text-white backdrop-blur-sm border-white/20"
+            >
+              {qualityToDisplay}
+            </Badge>
+          )}
         </div>
         <div className="p-2 flex-grow flex flex-col">
           <h3 className="font-bold text-foreground text-sm leading-tight truncate">
@@ -38,11 +45,6 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             {movie.year}
           </p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {qualityToDisplay && (
-                <Badge variant="outline" className="text-xs border-amber-400/80 text-amber-300">
-                  {qualityToDisplay}
-                </Badge>
-              )}
               {movie.language && (
                  <Badge variant="outline" className="text-xs">{movie.language}</Badge>
               )}
@@ -67,28 +69,27 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   const smallVariantContent = (
      <div className="group cursor-pointer">
-        <div className="relative block overflow-hidden">
+        <div className="relative block overflow-hidden aspect-[2/3]">
           <Image
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
-            width={380}
-            height={570}
-            className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
+            fill
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="movie poster"
           />
+          {qualityToDisplay && (
+             <Badge
+              variant="default"
+              className="absolute top-2 right-2 bg-black/70 text-white backdrop-blur-sm border-white/20"
+            >
+              {qualityToDisplay}
+            </Badge>
+          )}
         </div>
       </div>
   );
 
-  if (variant === 'featured') {
-    return (
-       <Link href={`/movie/${movie.id}`} passHref>
-         {smallVariantContent}
-       </Link>
-    );
-  }
-
-  if (variant === 'small') {
+  if (variant === 'featured' || variant === 'small') {
      return (
        <Link href={`/movie/${movie.id}`} passHref>
          {smallVariantContent}
