@@ -34,7 +34,7 @@ export async function generateMovieDescription(
 const prompt = ai.definePrompt({
     name: 'generateMovieDescriptionPrompt',
     input: { schema: GenerateMovieDescriptionInputSchema },
-    output: { schema: z.string() },
+    output: { schema: z.string().nullable() },
     prompt: `
         You are an expert movie blogger for a website called FILMPLEX. Your task is to generate a compelling and well-formatted HTML description for a movie's download page.
 
