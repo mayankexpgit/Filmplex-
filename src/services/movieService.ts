@@ -13,7 +13,7 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore';
-import type { Movie } from '@/lib/data';
+import type { Movie, Notification } from '@/lib/data';
 import { initialMovies } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog } from '@/store/movieStore';
 
@@ -97,6 +97,25 @@ export const addSecurityLog = async (log: Omit<SecurityLog, 'id'>): Promise<stri
     const docRef = await addDoc(logsCollection, log);
     return docRef.id;
 }
+
+// --- Notification Functions ---
+
+export const fetchNotifications = async (): Promise<Notification[]> => {
+    const notificationsCollection = collection(db, 'notifications');
+    const snapshot = await getDocs(notificationsCollection);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+};
+
+export const addNotification = async (notification: Omit<Notification, 'id'>): Promise<string> => {
+    const notificationsCollection = collection(db, 'notifications');
+    const docRef = await addDoc(notificationsCollection, notification);
+    return docRef.id;
+};
+
+export const deleteNotification = async (id: string): Promise<void> => {
+    const notificationDoc = doc(db, 'notifications', id);
+    await deleteDoc(notificationDoc);
+};
 
 
 // --- Database Seeding ---

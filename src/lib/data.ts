@@ -1,4 +1,5 @@
 
+
 export interface DownloadLink {
   quality: string;
   url: string;
@@ -37,6 +38,13 @@ export interface Movie {
   // For series
   episodes?: Episode[];
   seasonDownloadLinks?: DownloadLink[];
+}
+
+export interface Notification {
+  id: string;
+  movieTitle: string;
+  posterUrl: string;
+  releaseDate: string; // e.g. "Jun 9, 2024"
 }
 
 // This data is now used for initial database seeding.

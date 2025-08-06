@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import type { Movie } from '@/lib/data';
+import type { Movie, Notification } from '@/lib/data';
 import {
   addMovie as dbAddMovie,
   updateMovie as dbUpdateMovie,
@@ -12,6 +12,9 @@ import {
   deleteSuggestion as dbDeleteSuggestion,
   fetchSecurityLogs as dbFetchSecurityLogs,
   addSecurityLog as dbAddSecurityLog,
+  fetchNotifications as dbFetchNotifications,
+  addNotification as dbAddNotification,
+  deleteNotification as dbDeleteNotification,
 } from '@/services/movieService';
 
 // --- Types ---
@@ -45,6 +48,7 @@ interface MovieState {
   contactInfo: ContactInfo;
   suggestions: Suggestion[];
   securityLogs: SecurityLog[];
+  notifications: Notification[];
 
   // Initialization
   isInitialized: boolean;
@@ -67,6 +71,7 @@ export const useMovieStore = create<MovieState>((set) => ({
   contactInfo: { email: '', message: '' },
   suggestions: [],
   securityLogs: [],
+  notifications: [],
   isInitialized: false,
 
   // --- Actions ---
@@ -88,10 +93,15 @@ export const fetchMovieData = async (): Promise<void> => {
   }
   isFetchingMovies = true;
   try {
-    const allMovies = await dbFetchMovies();
+    const [allMovies, notifications] = await Promise.all([
+        dbFetchMovies(),
+        dbFetchNotifications(),
+    ]);
+    
     useMovieStore.setState({
       featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
+      notifications,
       isInitialized: true,
     });
   } catch (error) {
@@ -111,17 +121,19 @@ export const fetchAdminData = async (): Promise<void> => {
   }
   isFetchingAdmin = true;
   try {
-     const [contactInfo, suggestions, securityLogs, allMovies] = await Promise.all([
+     const [contactInfo, suggestions, securityLogs, allMovies, notifications] = await Promise.all([
       dbFetchContactInfo(),
       dbFetchSuggestions(),
       dbFetchSecurityLogs(),
       dbFetchMovies(), // Also fetch movies to ensure admin lists are up to date
+      dbFetchNotifications(),
     ]);
 
     useMovieStore.setState({
       contactInfo,
       suggestions,
       securityLogs,
+      notifications,
       featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
       isInitialized: true, // Also set initialized here for admin pages
@@ -218,4 +230,27 @@ export const deleteSuggestion = async (id: string): Promise<void> => {
   useMovieStore.setState((state) => ({
     suggestions: state.suggestions.filter((s) => s.id !== id)
   }));
+};
+
+// --- Notification Actions ---
+/**
+ * Adds a new notification.
+ */
+export const addNotification = async (notificationData: Omit<Notification, 'id'>): Promise<void> => {
+    const id = await dbAddNotification(notificationData);
+    await addSecurityLog(`Added upcoming notification for: "${notificationData.movieTitle}"`);
+    useMovieStore.setState((state) => ({
+        notifications: [{ ...notificationData, id }, ...state.notifications],
+    }));
+};
+
+/**
+ * Deletes a notification.
+ */
+export const deleteNotification = async (id: string): Promise<void> => {
+    await dbDeleteNotification(id);
+    await addSecurityLog(`Deleted Notification ID: ${id}`);
+    useMovieStore.setState((state) => ({
+        notifications: state.notifications.filter((n) => n.id !== id),
+    }));
 };

@@ -1,4 +1,6 @@
 
+'use client';
+
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -7,7 +9,81 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, Bell } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useMovieStore, fetchMovieData } from '@/store/movieStore';
+import { useEffect } from 'react';
+import Image from 'next/image';
+import { ScrollArea } from '../ui/scroll-area';
+import { Separator } from '../ui/separator';
+
+function UpcomingReleasesPanel() {
+  const { notifications, isInitialized } = useMovieStore();
+
+  useEffect(() => {
+    if (!isInitialized) {
+      fetchMovieData(); // This now fetches notifications too
+    }
+  }, [isInitialized]);
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Bell className="h-6 w-6" />
+          <span className="sr-only">Notifications</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>Upcoming Releases</SheetTitle>
+        </SheetHeader>
+        <ScrollArea className="h-[calc(100%-4rem)] pr-4 mt-4">
+            <div className="space-y-4">
+                {notifications.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-16">
+                        <p>No upcoming releases announced yet.</p>
+                        <p className="text-sm">Check back later!</p>
+                    </div>
+                ) : (
+                    notifications.map((notif) => (
+                        <div key={notif.id}>
+                            <div className="flex items-start gap-4 p-2">
+                                <div className="relative w-20 h-28 flex-shrink-0">
+                                    <Image
+                                        src={notif.posterUrl}
+                                        alt={notif.movieTitle}
+                                        fill
+                                        className="rounded-md object-cover"
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h3 className="font-semibold text-base">{notif.movieTitle}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Coming on: <span className="font-medium text-primary">{notif.releaseDate}</span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        Get ready for the release! We'll have it available for you right here.
+                                    </p>
+                                </div>
+                            </div>
+                            <Separator className="mt-4" />
+                        </div>
+                    ))
+                )}
+            </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 
 export function Header() {
   return (
@@ -39,8 +115,9 @@ export function Header() {
           </div>
         </a>
 
-        {/* Empty div for spacing to keep logo centered */}
-        <div className="w-10" />
+        <div className="w-10">
+          <UpcomingReleasesPanel />
+        </div>
       </div>
     </header>
   );
