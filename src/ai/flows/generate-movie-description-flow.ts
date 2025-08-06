@@ -54,7 +54,7 @@ const prompt = ai.definePrompt({
         Generate the content in the following HTML format. Do NOT include any other text, just the HTML. Ensure the tone is enthusiastic but professional. Avoid spammy keywords or mentioning other websites.
 
         1.  **DESCRIPTION Section**: Start with a catchy, professional line about downloading the movie on FILMPLEX. Mention the title, year, and available languages and qualities. Keep it concise and clean.
-        2.  **STORYLINE Section**: If a Base Synopsis is provided, expand on it. Make it engaging and give more detail about the plot, but do not reveal any major spoilers. If no synopsis is provided, write a new, compelling one based on the movie's title, genre, and year.
+        2.  **STORYLINE Section**: If a Base Synopsis is provided (in the 'synopsis' field), expand on it. Make it engaging and give more detail about the plot, but do not reveal any major spoilers. If no synopsis is provided, write a new, compelling one based on the movie's title, genre, and year.
         3.  **REVIEW Section**: Write a short, enthusiastic, and positive review of the movie. Mention what makes it special (e.g., acting by {{stars}}, direction, story). Avoid generic phrases and be specific if possible.
 
         Here is the required HTML structure:
@@ -62,13 +62,13 @@ const prompt = ai.definePrompt({
         <strong>Download {{title}} ({{year}}) {{#if language}}Dual Audio [{{language}}] {{/if}}{{#if quality}}{{quality}} {{/if}}BluRay | Watch Online on FILMPLEX</strong>
         <br>
         <h4>DESCRIPTION:</h4>
-        <p>Experience {{title}} ({{year}}), now available for download on FILMPLEX. This film, presented in {{language}}, is available in {{quality}} qualities. As a standout in the {{genre}} genre, this is a must-watch. Download now and enjoy the show.</p>
+        <p>Experience {{title}} ({{year}}), now available for download on FILMPLEX. This film, presented in {{#if language}}{{language}}{{else}}various languages{{/if}}, is available in {{#if quality}}{{quality}}{{else}}multiple{{/if}} qualities. As a standout in the {{#if genre}}{{genre}}{{else}}cinematic{{/if}} genre, this is a must-watch. Download now and enjoy the show.</p>
         <br>
         <h4>STORYLINE:</h4>
-        <p>[Your generated storyline based on the provided details and synopsis goes here. Make it captivating.]</p>
+        <p>{{#if synopsis}}Expanding on the story, {{{synopsis}}}{{else}}Write a compelling new storyline here based on the movie's title, genre, and year. It should be captivating and give a good sense of the plot without spoilers.{{/if}}</p>
         <br>
         <h4>REVIEW:</h4>
-        <p>[Your generated positive and specific review goes here. Mention the great performances by {{stars}} if available.]</p>
+        <p>This film is a must-see! {{#if stars}}Featuring standout performances by {{stars}}, {{/if}}the movie excels with its engaging plot and brilliant direction. It's a cinematic experience that will stick with you long after the credits roll. Highly recommended for any fan of the {{genre}} genre.</p>
     `,
 });
 
