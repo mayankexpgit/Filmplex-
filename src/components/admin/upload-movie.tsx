@@ -10,13 +10,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Bold, Italic, Underline } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Bold, Italic, Underline, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from './movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '../ui/separator';
+import { generateMovieDescription } from '@/ai/flows/generate-movie-description-flow';
 
 type DownloadLink = {
   quality: string;
@@ -33,10 +34,10 @@ export default function UploadMovie() {
   const { toast } = useToast();
   const movies = useMovieStore((state) => state.latestReleases);
   const [isPending, startTransition] = useTransition();
+  const [isGenerating, setIsGenerating] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     id: undefined,
     title: 'Untitled Movie',
@@ -49,8 +50,8 @@ export default function UploadMovie() {
     streamingChannel: '',
     isFeatured: false,
     downloadLinks: [{ quality: 'HD', url: '' }],
-    synopsis: 'Enter movie synopsis here...',
-    screenshots: ['', '', ''], // Start with 3 empty screenshot slots
+    synopsis: '',
+    screenshots: ['', '', ''],
     stars: '',
     creator: '',
     episodes: undefined,
@@ -87,7 +88,7 @@ export default function UploadMovie() {
       streamingChannel: '',
       isFeatured: false,
       downloadLinks: [{ quality: 'HD', url: '' }],
-      synopsis: 'Enter movie synopsis here...',
+      synopsis: '',
       screenshots: ['', '', ''],
       stars: '',
       creator: '',
@@ -133,6 +134,40 @@ export default function UploadMovie() {
     handleInputChange('screenshots', newScreenshots);
   }
 
+  const handleGenerateDescription = async () => {
+    if (!formData.title || !formData.synopsis) {
+      toast({
+        variant: 'destructive',
+        title: 'Input Required',
+        description: 'Please provide a title and a basic synopsis before generating.',
+      });
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const generatedHtml = await generateMovieDescription({
+        title: formData.title,
+        year: formData.year || new Date().getFullYear(),
+        synopsis: formData.synopsis,
+      });
+      handleInputChange('synopsis', generatedHtml);
+      toast({
+        title: 'Success!',
+        description: 'AI-generated description has been populated.',
+      });
+    } catch (error) {
+      console.error('AI generation failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Error',
+        description: 'Could not generate the description. Please try again.',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+
   const handleSubmit = () => {
     if (!formData.title || !formData.genre) {
       toast({
@@ -144,8 +179,6 @@ export default function UploadMovie() {
     }
 
     startTransition(async () => {
-      setIsUploading(true);
-      
       const movieData: Partial<Movie> = {
         ...formData,
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
@@ -178,8 +211,6 @@ export default function UploadMovie() {
           title: 'Database Error',
           description: 'Could not save the movie. Please try again.',
         });
-      } finally {
-         setIsUploading(false);
       }
     });
   };
@@ -198,56 +229,56 @@ export default function UploadMovie() {
               {/* Basic Info */}
               <div className="space-y-2">
                 <Label htmlFor="movie-title">Title</Label>
-                <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isPending} />
+                <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isPending || isGenerating} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                       <Label htmlFor="movie-genre">Genre</Label>
-                      <Input id="movie-genre" value={formData.genre || ''} onChange={(e) => handleInputChange('genre', e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isPending} />
+                      <Input id="movie-genre" value={formData.genre || ''} onChange={(e) => handleInputChange('genre', e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isPending || isGenerating} />
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="movie-year">Year</Label>
-                      <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isPending} />
+                      <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isPending || isGenerating} />
                   </div>
               </div>
                {/* New Fields */}
                <div className="space-y-2">
                   <Label htmlFor="movie-stars">Stars (comma-separated)</Label>
-                  <Input id="movie-stars" value={formData.stars || ''} onChange={(e) => handleInputChange('stars', e.target.value)} placeholder="e.g. Actor One, Actor Two" disabled={isPending} />
+                  <Input id="movie-stars" value={formData.stars || ''} onChange={(e) => handleInputChange('stars', e.target.value)} placeholder="e.g. Actor One, Actor Two" disabled={isPending || isGenerating} />
               </div>
                <div className="space-y-2">
                   <Label htmlFor="movie-creator">Creator</Label>
-                  <Input id="movie-creator" value={formData.creator || ''} onChange={(e) => handleInputChange('creator', e.target.value)} placeholder="e.g. Director Name" disabled={isPending} />
+                  <Input id="movie-creator" value={formData.creator || ''} onChange={(e) => handleInputChange('creator', e.target.value)} placeholder="e.g. Director Name" disabled={isPending || isGenerating} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                       <Label htmlFor="movie-episodes">No. of Episodes</Label>
-                      <Input id="movie-episodes" type="number" value={formData.episodes || ''} onChange={(e) => handleInputChange('episodes', e.target.value ? Number(e.target.value) : undefined)} placeholder="For TV shows" disabled={isPending} />
+                      <Input id="movie-episodes" type="number" value={formData.episodes || ''} onChange={(e) => handleInputChange('episodes', e.target.value ? Number(e.target.value) : undefined)} placeholder="For TV shows" disabled={isPending || isGenerating} />
                   </div>
                    <div className="space-y-2">
                       <Label htmlFor="movie-quality">Quality Description</Label>
-                      <Input id="movie-quality" value={formData.quality || ''} onChange={(e) => handleInputChange('quality', e.target.value)} placeholder="e.g. BluRay 4K | 1080p" disabled={isPending} />
+                      <Input id="movie-quality" value={formData.quality || ''} onChange={(e) => handleInputChange('quality', e.target.value)} placeholder="e.g. BluRay 4K | 1080p" disabled={isPending || isGenerating} />
                   </div>
               </div>
 
               <div className="space-y-2">
                   <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
-                  <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isPending} />
+                  <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isPending || isGenerating} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                       <Label htmlFor="movie-language">Language</Label>
-                      <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isPending} />
+                      <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isPending || isGenerating} />
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="movie-imdb">IMDb Rating</Label>
-                      <Input id="movie-imdb" type="number" step="0.1" value={formData.imdbRating || ''} onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))} disabled={isPending} />
+                      <Input id="movie-imdb" type="number" step="0.1" value={formData.imdbRating || ''} onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))} disabled={isPending || isGenerating} />
                   </div>
               </div>
               {/* Media Links */}
               <div className="space-y-2">
                 <Label htmlFor="movie-poster">Poster URL</Label>
-                <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
+                <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending || isGenerating} />
               </div>
 
               <Separator />
@@ -262,14 +293,14 @@ export default function UploadMovie() {
                         placeholder={`https://.../screenshot${index+1}.png`}
                         value={ss}
                         onChange={(e) => handleScreenshotChange(index, e.target.value)}
-                        disabled={isPending}
+                        disabled={isPending || isGenerating}
                       />
-                      <Button variant="ghost" size="icon" onClick={() => removeScreenshot(index)} disabled={isPending}>
+                      <Button variant="ghost" size="icon" onClick={() => removeScreenshot(index)} disabled={isPending || isGenerating}>
                         <XCircle className="h-5 w-5 text-destructive" />
                       </Button>
                   </div>
                 ))}
-                <Button variant="outline" size="sm" onClick={addScreenshot} disabled={isPending}>
+                <Button variant="outline" size="sm" onClick={addScreenshot} disabled={isPending || isGenerating}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Screenshot
                 </Button>
@@ -285,7 +316,7 @@ export default function UploadMovie() {
                       <Select
                         value={link.quality}
                         onValueChange={(value) => handleLinkChange(index, 'quality', value)}
-                        disabled={isPending}
+                        disabled={isPending || isGenerating}
                       >
                         <SelectTrigger className="w-[120px]">
                           <SelectValue placeholder="Quality" />
@@ -299,35 +330,36 @@ export default function UploadMovie() {
                         placeholder="https://example.com/download"
                         value={link.url}
                         onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                        disabled={isPending}
+                        disabled={isPending || isGenerating}
                       />
-                      <Button variant="ghost" size="icon" onClick={() => removeLink(index)} disabled={isPending}>
+                      <Button variant="ghost" size="icon" onClick={() => removeLink(index)} disabled={isPending || isGenerating}>
                         <XCircle className="h-5 w-5 text-destructive" />
                       </Button>
                     </div>
                   ))}
-                  <Button variant="outline" size="sm" onClick={addLink} disabled={isPending}>
+                  <Button variant="outline" size="sm" onClick={addLink} disabled={isPending || isGenerating}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add more link
                   </Button>
               </div>
               {/* Synopsis */}
-              <div className="space-y-2">
-                <Label htmlFor="movie-synopsis">Synopsis / Storyline</Label>
+               <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                    <Label htmlFor="movie-synopsis">Synopsis / Storyline</Label>
+                    <Button onClick={handleGenerateDescription} variant="outline" size="sm" disabled={isPending || isGenerating}>
+                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-primary" />}
+                        Generate with AI
+                    </Button>
+                </div>
                 <div className="p-2 border rounded-md">
-                   <ToggleGroup type="multiple" className="flex-wrap justify-start">
-                     <ToggleGroupItem value="bold" aria-label="Toggle bold"><Bold className="h-4 w-4" /></ToggleGroupItem>
-                     <ToggleGroupItem value="italic" aria-label="Toggle italic"><Italic className="h-4 w-4" /></ToggleGroupItem>
-                     <ToggleGroupItem value="underline" aria-label="Toggle underline"><Underline className="h-4 w-4" /></ToggleGroupItem>
-                   </ToggleGroup>
                    <Textarea 
                       id="movie-synopsis" 
                       value={formData.synopsis || ''} 
                       onChange={(e) => handleInputChange('synopsis', e.target.value)} 
-                      disabled={isPending} 
-                      rows={8}
+                      disabled={isPending || isGenerating} 
+                      rows={10}
                       className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                      placeholder="Provide a detailed story of the movie..."
+                      placeholder="Provide a brief plot summary here, then click 'Generate with AI' to create a full description."
                   />
                 </div>
               </div>
@@ -336,9 +368,9 @@ export default function UploadMovie() {
         </CardContent>
         <CardFooter className="justify-between border-t pt-4">
              <div>
-                {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isPending}>Cancel Edit</Button>}
+                {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isPending || isGenerating}>Cancel Edit</Button>}
              </div>
-             <Button onClick={handleSubmit} disabled={isPending}>
+             <Button onClick={handleSubmit} disabled={isPending || isGenerating}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

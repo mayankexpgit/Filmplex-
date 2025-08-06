@@ -60,6 +60,15 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
 
           <Separator className="my-4 w-full" />
           
+           {movie.synopsis && (
+            <section className="mb-8 w-full">
+              <div 
+                className="prose prose-invert max-w-none leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
+              />
+            </section>
+          )}
+
           {movie.screenshots && movie.screenshots.length > 0 && movie.screenshots[0] && (
             <section className="w-full mb-8">
               <h2 className="text-2xl font-bold mb-4 text-center text-red-500">: Screen-Shots :</h2>
@@ -76,16 +85,6 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
                   </div>
                 ))}
               </div>
-            </section>
-          )}
-
-           {movie.synopsis && (
-            <section className="mb-8 w-full">
-              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Storyline</h2>
-              <div 
-                className="leading-relaxed whitespace-pre-wrap"
-                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
-              />
             </section>
           )}
 
