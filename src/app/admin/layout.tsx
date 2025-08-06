@@ -16,7 +16,6 @@ export default function AdminLayout({
   const { isInitialized } = useMovieStore();
 
   useEffect(() => {
-    // Fetch all data required for the admin section when the layout mounts.
     if (!isInitialized) {
       fetchAdminData();
     }
@@ -41,7 +40,6 @@ export default function AdminLayout({
       <main>
         {!isInitialized ? (
           <div className="container mx-auto py-8 md:py-12">
-            {/* A generic loading skeleton for the entire admin section */}
             <div className="space-y-8 max-w-4xl mx-auto">
               <CardSkeleton />
               <CardSkeleton withTable />

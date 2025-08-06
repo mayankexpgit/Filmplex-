@@ -12,6 +12,23 @@ export interface Episode {
   downloadLinks: DownloadLink[];
 }
 
+export interface Reactions {
+  like: number;
+  love: number;
+  haha: number;
+  wow: number;
+  sad: number;
+  angry: number;
+}
+
+export interface Comment {
+  id: string;
+  user: string;
+  text: string;
+  timestamp: string;
+  movieId: string;
+}
+
 export interface Movie {
   id: string;
   title: string;
@@ -29,15 +46,14 @@ export interface Movie {
   creator?: string;
   quality?: string;
   
-  // New fields for Movie vs Series
   contentType: 'movie' | 'series';
   
-  // For movies
   downloadLinks?: DownloadLink[];
   
-  // For series
   episodes?: Episode[];
   seasonDownloadLinks?: DownloadLink[];
+  
+  reactions?: Reactions;
 }
 
 export interface Notification {
@@ -47,7 +63,6 @@ export interface Notification {
   releaseDate: string; // e.g. "Jun 9, 2024"
 }
 
-// This data is now used for initial database seeding.
 export const initialMovies: Movie[] = [
   {
     id: '1',
@@ -85,8 +100,8 @@ export const initialMovies: Movie[] = [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
     ],
+    reactions: { like: 120, love: 80, haha: 25, wow: 45, sad: 5, angry: 2 },
   },
-  // ... other movies remain the same but need contentType: 'movie'
   {
     id: '2',
     title: 'The Dark Knight',
@@ -111,5 +126,6 @@ export const initialMovies: Movie[] = [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
     ],
+    reactions: { like: 250, love: 150, haha: 30, wow: 60, sad: 10, angry: 8 },
   },
 ];

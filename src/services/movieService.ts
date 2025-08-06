@@ -12,8 +12,9 @@ import {
   setDoc,
   query,
   orderBy,
+  increment
 } from 'firebase/firestore';
-import type { Movie, Notification } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions } from '@/lib/data';
 import { initialMovies } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog } from '@/store/movieStore';
 
@@ -23,19 +24,29 @@ import type { ContactInfo, Suggestion, SecurityLog } from '@/store/movieStore';
 export const fetchMovies = async (): Promise<Movie[]> => {
   const moviesCollection = collection(db, 'movies');
   const movieSnapshot = await getDocs(moviesCollection);
-  const movieList = movieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
+  let movieList = movieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
   
-  // If the database is empty, seed it with initial data.
   if (movieList.length === 0) {
-    return await seedDatabase();
+    movieList = await seedDatabase();
   }
+
+  // Ensure every movie has a reactions object
+  movieList.forEach(movie => {
+    if (!movie.reactions) {
+      movie.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+    }
+  });
 
   return movieList;
 };
 
+
 export const addMovie = async (movie: Omit<Movie, 'id'>): Promise<string> => {
   const moviesCollection = collection(db, 'movies');
-  const docRef = await addDoc(moviesCollection, movie);
+  const docRef = await addDoc(moviesCollection, {
+      ...movie,
+      reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 } // Add default reactions
+  });
   return docRef.id;
 };
 
@@ -49,6 +60,52 @@ export const deleteMovie = async (id: string): Promise<void> => {
   await deleteDoc(movieDoc);
 };
 
+// --- Reactions ---
+export const updateReaction = async (movieId: string, reactionType: keyof Reactions): Promise<void> => {
+    const movieDoc = doc(db, 'movies', movieId);
+    const fieldToUpdate = `reactions.${reactionType}`;
+    await updateDoc(movieDoc, {
+        [fieldToUpdate]: increment(1)
+    });
+};
+
+// --- Comments ---
+export const fetchComments = async (movieId: string): Promise<Comment[]> => {
+    const commentsCollection = collection(db, 'movies', movieId, 'comments');
+    const q = query(commentsCollection, orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        movieId: movieId,
+        ...doc.data()
+    } as Comment));
+};
+
+export const fetchAllComments = async (): Promise<Comment[]> => {
+    const movies = await fetchMovies();
+    const allComments: Comment[] = [];
+    for (const movie of movies) {
+        const comments = await fetchComments(movie.id);
+        allComments.push(...comments.map(c => ({...c, movieTitle: movie.title } as any)));
+    }
+    // Sort by date descending
+    allComments.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return allComments;
+}
+
+
+export const addComment = async (movieId: string, comment: Omit<Comment, 'id' | 'movieId'>): Promise<string> => {
+    const commentsCollection = collection(db, 'movies', movieId, 'comments');
+    const docRef = await addDoc(commentsCollection, comment);
+    return docRef.id;
+};
+
+export const deleteComment = async (movieId: string, commentId: string): Promise<void> => {
+    const commentDoc = doc(db, 'movies', movieId, 'comments', commentId);
+    await deleteDoc(commentDoc);
+};
+
+
 // --- Singleton Document Functions (ContactInfo) ---
 
 export const fetchContactInfo = async (): Promise<ContactInfo> => {
@@ -58,7 +115,6 @@ export const fetchContactInfo = async (): Promise<ContactInfo> => {
     if (docSnap.exists()) {
         return docSnap.data() as ContactInfo;
     } else {
-        // Create it if it doesn't exist
         const initialInfo: ContactInfo = { 
             email: 'admin@filmplex.com', 
             telegramUrl: 'https://t.me/filmplex',
@@ -130,13 +186,22 @@ export const seedDatabase = async (): Promise<Movie[]> => {
   const moviesCollection = collection(db, 'movies');
   const batch = writeBatch(db);
   
-  initialMovies.forEach((movie) => {
-    // We can use the old ID for the new document ID to maintain consistency if needed
+  const moviesToSeed = initialMovies.map(movie => {
+    if (!movie.reactions) {
+      return {
+        ...movie,
+        reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
+      };
+    }
+    return movie;
+  });
+
+  moviesToSeed.forEach((movie) => {
     const docRef = doc(db, 'movies', movie.id);
     batch.set(docRef, movie);
   });
   
   await batch.commit();
   console.log('Database seeded successfully!');
-  return initialMovies;
+  return moviesToSeed;
 };

@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy } from 'lucide-react';
+import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare } from 'lucide-react';
 
 const adminSections = [
   {
@@ -33,6 +33,12 @@ const adminSections = [
     description: 'Send notifications to users about new movies.',
     href: '/admin/movie-notification',
     icon: Bell,
+  },
+  {
+    title: 'Manage Comments',
+    description: 'View and delete user comments.',
+    href: '/admin/comments',
+    icon: MessagesSquare,
   },
   {
     title: 'Suggestions Box',
