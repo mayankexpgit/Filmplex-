@@ -35,8 +35,13 @@ function UpcomingReleasesPanel() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-6 w-6" />
+          {notifications.length > 0 && (
+             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+              {notifications.length}
+            </span>
+          )}
           <span className="sr-only">Notifications</span>
         </Button>
       </SheetTrigger>
