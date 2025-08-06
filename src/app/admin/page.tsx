@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Upload, MessageCircle, Bell, User, Shield, Flame, List } from 'lucide-react';
+import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy } from 'lucide-react';
 
 const adminSections = [
   {
@@ -23,10 +23,10 @@ const adminSections = [
     icon: Flame,
   },
   {
-    title: 'Contact Information',
-    description: 'Update the site-wide contact details.',
-    href: '/admin/contact-manager',
-    icon: User,
+    title: 'Help Center',
+    description: 'Update contact links and details.',
+    href: '/admin/help-center',
+    icon: LifeBuoy,
   },
   {
     title: 'Movie Notification',

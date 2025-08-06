@@ -19,8 +19,11 @@ import {
 
 // --- Types ---
 export interface ContactInfo {
+  telegramUrl: string;
+  whatsappUrl: string;
+  instagramUrl: string;
   email: string;
-  message: string;
+  whatsappNumber: string;
 }
 
 export interface Suggestion {
@@ -68,7 +71,7 @@ export const useMovieStore = create<MovieState>((set) => ({
   latestReleases: [],
   searchQuery: '',
   selectedGenre: 'All Genres',
-  contactInfo: { email: '', message: '' },
+  contactInfo: { telegramUrl: '', whatsappUrl: '', instagramUrl: '', email: '', whatsappNumber: '' },
   suggestions: [],
   securityLogs: [],
   notifications: [],
@@ -93,15 +96,17 @@ export const fetchMovieData = async (): Promise<void> => {
   }
   isFetchingMovies = true;
   try {
-    const [allMovies, notifications] = await Promise.all([
+    const [allMovies, notifications, contactInfo] = await Promise.all([
         dbFetchMovies(),
         dbFetchNotifications(),
+        dbFetchContactInfo(),
     ]);
     
     useMovieStore.setState({
       featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
       notifications,
+      contactInfo,
       isInitialized: true,
     });
   } catch (error) {
@@ -218,7 +223,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
 export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   await dbUpdateContactInfo(info);
   useMovieStore.setState({ contactInfo: info });
-  await addSecurityLog('Updated Contact Info');
+  await addSecurityLog('Updated Help Center Info');
 };
 
 /**

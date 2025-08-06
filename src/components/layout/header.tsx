@@ -9,16 +9,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { useMovieStore, fetchMovieData } from '@/store/movieStore';
-import { useEffect } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
@@ -28,7 +29,7 @@ function UpcomingReleasesPanel() {
 
   useEffect(() => {
     if (!isInitialized) {
-      fetchMovieData(); // This now fetches notifications too
+      fetchMovieData();
     }
   }, [isInitialized]);
 
@@ -38,9 +39,9 @@ function UpcomingReleasesPanel() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-6 w-6" />
           {notifications.length > 0 && (
-             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+             <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
               {notifications.length}
-            </span>
+            </div>
           )}
           <span className="sr-only">Notifications</span>
         </Button>
@@ -89,6 +90,70 @@ function UpcomingReleasesPanel() {
   );
 }
 
+const SocialLink = ({ href, Icon, label }: { href: string; Icon: React.ElementType; label: string }) => {
+  if (!href) return null;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="block p-3 rounded-lg hover:bg-secondary transition-colors">
+      <div className="flex items-center gap-4">
+        <Icon className="h-6 w-6 text-primary" />
+        <span className="font-medium">{label}</span>
+      </div>
+    </a>
+  );
+};
+
+const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: string, value: string }) => {
+   if (!value) return null;
+  return (
+     <div className="flex items-center gap-4 p-3">
+        <Icon className="h-6 w-6 text-primary" />
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="font-medium">{value}</p>
+        </div>
+      </div>
+  )
+}
+
+function HelpCenterPanel() {
+  const { contactInfo, isInitialized } = useMovieStore();
+  
+  useEffect(() => {
+    if (!isInitialized) {
+      fetchMovieData();
+    }
+  }, [isInitialized]);
+  
+  return (
+     <Sheet>
+      <SheetTrigger asChild>
+         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            <LifeBuoy className="mr-2 h-4 w-4"/>
+            Help Center
+         </DropdownMenuItem>
+      </SheetTrigger>
+      <SheetContent className="w-[400px]">
+        <SheetHeader>
+          <SheetTitle>Help Center</SheetTitle>
+          <SheetDescription>
+            Have questions or need assistance? Reach out to us through any of these platforms.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-8 space-y-2">
+            <h3 className="px-3 text-sm font-semibold text-muted-foreground">Join our Community</h3>
+            <SocialLink href={contactInfo.telegramUrl} Icon={Send} label="Join on Telegram" />
+            <SocialLink href={contactInfo.whatsappUrl} Icon={MessageCircle} label="Join on WhatsApp" />
+            <SocialLink href={contactInfo.instagramUrl} Icon={Instagram} label="Follow on Instagram" />
+            <Separator className="my-4" />
+            <h3 className="px-3 text-sm font-semibold text-muted-foreground">Direct Contact</h3>
+            <InfoRow Icon={Mail} label="Email Address" value={contactInfo.email} />
+            <InfoRow Icon={MessageCircle} label="WhatsApp Number" value={contactInfo.whatsappNumber} />
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 
 export function Header() {
   return (
@@ -105,7 +170,7 @@ export function Header() {
             <DropdownMenuItem asChild>
               <Link href="/admin">Admin panel</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>Contact</DropdownMenuItem>
+             <HelpCenterPanel />
             <DropdownMenuItem>Suggestion</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

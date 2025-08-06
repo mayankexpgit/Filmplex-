@@ -59,7 +59,13 @@ export const fetchContactInfo = async (): Promise<ContactInfo> => {
         return docSnap.data() as ContactInfo;
     } else {
         // Create it if it doesn't exist
-        const initialInfo = { email: 'admin@filmplex.com', message: 'For any queries, please reach out to us.' };
+        const initialInfo: ContactInfo = { 
+            email: 'admin@filmplex.com', 
+            telegramUrl: 'https://t.me/filmplex',
+            whatsappUrl: 'https://wa.me/1234567890',
+            instagramUrl: 'https://instagram.com/filmplex',
+            whatsappNumber: '+1 234-567-890'
+        };
         await setDoc(docRef, initialInfo);
         return initialInfo;
     }
