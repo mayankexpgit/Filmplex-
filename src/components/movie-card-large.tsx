@@ -4,7 +4,7 @@
 import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
 import { Button } from './ui/button';
-import { List, Loader2 } from 'lucide-react';
+import { Flame, Loader2 } from 'lucide-react';
 import { useMemo, useState, useTransition } from 'react';
 import type { Movie } from '@/lib/data';
 
@@ -61,7 +61,7 @@ export default function MovieCardLarge() {
     <div>
       <div className="bg-secondary rounded-lg border border-border p-4 mb-4">
         <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <List className="h-7 w-7 text-foreground" />
+          <Flame className="h-7 w-7 text-primary" />
           <span>Latest Releases</span>
         </h2>
       </div>
