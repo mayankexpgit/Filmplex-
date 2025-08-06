@@ -4,7 +4,7 @@
 import type { Movie } from '@/lib/data';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download, Zap } from 'lucide-react';
+import { Download, Zap, Tv, Film } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 
@@ -39,23 +39,23 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
             <Image
               src={posterSrc}
-              alt={`Poster for ${movie.title}`}
+              alt={`Poster for ${movie.title || 'Untitled'}`}
               fill
               className="object-cover"
               data-ai-hint="movie poster"
             />
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title || 'Untitled Movie'} ({movie.year || new Date().getFullYear()})</h1>
           
           <div className="flex flex-col items-center text-center space-y-2 mb-6">
             <InfoRow label="iMDB Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
             <InfoRow label="Genre" value={movie.genre} />
             <InfoRow label="Stars" value={movie.stars} />
             <InfoRow label="Creator" value={movie.creator} />
-            <InfoRow label="No. of Episodes" value={movie.episodes} />
             <InfoRow label="Language" value={movie.language} />
             <InfoRow label="Quality" value={movie.quality} />
+            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.episodes?.length} />}
           </div>
 
           <Separator className="my-4 w-full" />
@@ -71,7 +71,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
 
           {movie.screenshots && movie.screenshots.length > 0 && movie.screenshots[0] && (
             <section className="w-full mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-center text-red-500">: Screen-Shots :</h2>
+              <h2 className="text-2xl font-bold mb-4 text-center">: Screen-Shots :</h2>
               <div className="flex flex-col items-center gap-4">
                 {movie.screenshots.map((src, index) => (
                   src && <div key={index} className="relative w-full max-w-2xl aspect-video overflow-hidden rounded-lg">
@@ -87,9 +87,9 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               </div>
             </section>
           )}
-
-          {movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
-            <section className="w-full mb-12">
+          
+          {movie.contentType === 'movie' && movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
+             <section className="w-full mb-12">
               <h2 className="text-2xl font-bold mb-4 text-center">Download Links</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
@@ -109,6 +109,58 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               </div>
             </section>
           )}
+
+          {movie.contentType === 'series' && movie.episodes && movie.episodes.length > 0 && (
+            <section className="w-full mb-8">
+                <h2 className="text-2xl font-bold mb-4 text-center">Episodes</h2>
+                <div className="space-y-6 w-full max-w-2xl mx-auto">
+                    {movie.episodes.map((ep, epIndex) => (
+                        <div key={epIndex} className="p-4 border rounded-lg bg-card">
+                            <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}: {ep.title}</h3>
+                            <div className="space-y-3 flex flex-col items-center">
+                                {ep.downloadLinks.map((link, linkIndex) => (
+                                     <Button key={linkIndex} asChild variant="secondary" size="lg" className="justify-between hover:brightness-110 w-full">
+                                        <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
+                                            <div className="flex items-center gap-4">
+                                                <Download />
+                                                <span>{link.quality} {link.size && `(${link.size})`}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span>Download</span>
+                                                <Zap className="h-4 w-4" />
+                                            </div>
+                                        </a>
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+          )}
+
+           {movie.contentType === 'series' && movie.seasonDownloadLinks && movie.seasonDownloadLinks.length > 0 && movie.seasonDownloadLinks[0]?.url && (
+             <section className="w-full mb-12">
+              <h2 className="text-2xl font-bold mb-4 text-center">Download Full Season</h2>
+              <div className="space-y-3 flex flex-col items-center">
+                {movie.seasonDownloadLinks.map((link, index) => (
+                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
+                    <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
+                      <div className="flex items-center gap-4">
+                        <Download />
+                        <span>{link.quality} {link.size && `(${link.size})`}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>Download</span>
+                        <Zap className="h-4 w-4" />
+                      </div>
+                    </a>
+                  </Button>
+                ))}
+              </div>
+            </section>
+          )}
+
         </div>
       </main>
     </div>
