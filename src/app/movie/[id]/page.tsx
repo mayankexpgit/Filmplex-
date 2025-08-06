@@ -115,22 +115,26 @@ function CommentsSection({ movieId }: { movieId: string }) {
             </form>
             
             <div className="space-y-6">
-                {comments.map((comment: CommentType) => (
-                    <div key={comment.id} className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                            {comment.user.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 bg-secondary p-3 rounded-lg">
-                            <div className="flex items-center justify-between">
-                                <p className="font-semibold text-foreground">@{comment.user}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
-                                </p>
+                {comments.length === 0 ? (
+                    <p className="text-center text-muted-foreground">Be the first to comment!</p>
+                ) : (
+                    comments.slice(0, 4).map((comment: CommentType) => (
+                        <div key={comment.id} className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
+                                {comment.user.charAt(0).toUpperCase()}
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">{comment.text}</p>
+                            <div className="flex-1 bg-secondary p-3 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                    <p className="font-semibold text-foreground">@{comment.user}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                                    </p>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">{comment.text}</p>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </section>
     );
@@ -335,3 +339,5 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
