@@ -55,6 +55,17 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
       <main className="container mx-auto py-8 md:py-12">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
+          {/* Movie Poster */}
+           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
+            <Image
+              src={movie.posterUrl}
+              alt={`Poster for ${movie.title}`}
+              fill
+              className="object-cover"
+              data-ai-hint="movie poster"
+            />
+          </div>
+
           {/* Movie Title */}
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
