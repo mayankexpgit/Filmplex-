@@ -128,4 +128,40 @@ export const initialMovies: Movie[] = [
     ],
     reactions: { like: 250, love: 150, haha: 30, wow: 60, sad: 10, angry: 8 },
   },
+  {
+    id: '3',
+    title: 'Sakamoto Days',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/g8Io_s3fKx3eQdJtgoi4StkWa2f.jpg',
+    year: 2024,
+    genre: 'Anime, Action, Comedy',
+    language: 'Japanese',
+    imdbRating: 9.1,
+    tags: ['Anime', 'New'],
+    isFeatured: true,
+    stars: 'Taro Sakamoto, Shin Asakura, Lu Xiaotang',
+    creator: 'Yuto Suzuki',
+    quality: 'WEB-DL 1080p, 720p',
+    contentType: 'series',
+    episodes: [
+      {
+        episodeNumber: 1,
+        title: "The Legendary Hitman",
+        downloadLinks: [
+          { quality: '1080p', url: 'https://example.com/sakamoto-ep1-1080p', size: '350MB' },
+          { quality: '720p', url: 'https://example.com/sakamoto-ep1-720p', size: '150MB' },
+        ],
+      },
+    ],
+    description: 'Taro Sakamoto was the ultimate assassin, feared by villains and admired by hitmen. But one day... He fell in love! Retirement, marriage, fatherhood and then... Sakamoto gained weight! The chubby guy who runs the neighborhood store is actually a former legendary hitman! Can he protect his family from danger?',
+    screenshots: [
+      'https://placehold.co/1280x720.png',
+      'https://placehold.co/1280x720.png',
+    ],
+    reactions: { like: 500, love: 450, haha: 200, wow: 150, sad: 2, angry: 1 },
+    downloadLinks: [
+      { quality: '1080p', url: 'https://example.com/sakamoto-ep1-1080p', size: '350MB' },
+      { quality: '720p', url: 'https://example.com/sakamoto-ep1-720p', size: '150MB' },
+    ]
+  }
 ];
+
