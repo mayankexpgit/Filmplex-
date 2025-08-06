@@ -151,6 +151,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
+  const movieId = params.id;
 
   useEffect(() => {
     if (!isInitialized) {
@@ -161,11 +162,10 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
   useEffect(() => {
     if (isInitialized) {
       const allMovies = [...latestReleases, ...featuredMovies];
-      const movieId = params.id;
       const foundMovie = allMovies.find(m => m.id === movieId);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, params.id]);
+  }, [isInitialized, latestReleases, featuredMovies, movieId]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
@@ -374,5 +374,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
 
     
