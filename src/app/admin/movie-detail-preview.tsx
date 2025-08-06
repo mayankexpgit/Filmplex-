@@ -90,10 +90,10 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
 
           {movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
             <section className="w-full mb-12">
-              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Download Links</h2>
-              <div className="space-y-3">
+              <h2 className="text-2xl font-bold mb-4 text-center">Download Links</h2>
+              <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="w-full justify-between hover:brightness-110">
+                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
                     <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
                         <Download />
