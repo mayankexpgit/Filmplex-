@@ -39,6 +39,15 @@ const StreamingLogos = () => {
                   className="object-contain"
                 />
                </div>
+            ) : logo.name === 'Viki Rakuten' ? (
+              <div className="relative h-14 w-40 sm:h-16 sm:w-44">
+                <Image
+                  src={logo.url}
+                  alt={`${logo.name} logo`}
+                  fill
+                  className="object-contain"
+                />
+              </div>
             ) : (
               <div className="relative h-14 w-36 sm:h-16 sm:w-40">
                 <Image
