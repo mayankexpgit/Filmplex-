@@ -6,6 +6,7 @@ export interface Movie {
   year: number;
   genre: string;
   language?: string;
+  imdbRating?: number;
   streamingChannel?: string;
   tags?: string[];
   downloadLinks?: { quality: string; url: string }[];
@@ -23,6 +24,7 @@ export const initialMovies: Movie[] = [
     year: 2010,
     genre: 'Sci-Fi, Action',
     language: 'English',
+    imdbRating: 8.8,
     streamingChannel: 'Netflix',
     tags: ['Mind-bending'],
     isFeatured: true,
@@ -44,6 +46,7 @@ export const initialMovies: Movie[] = [
     year: 2008,
     genre: 'Action, Crime, Drama',
     language: 'English',
+    imdbRating: 9.0,
     tags: ['Superhero'],
     isFeatured: true,
     downloadLinks: [
@@ -63,6 +66,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
     year: 2014,
     genre: 'Adventure, Drama, Sci-Fi',
+    language: 'English',
+    imdbRating: 8.6,
     tags: ['Space'],
     isFeatured: true,
     downloadLinks: [
@@ -81,6 +86,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
     year: 2019,
     genre: 'Comedy, Drama, Thriller',
+    language: 'Korean',
+    imdbRating: 8.6,
     tags: ['Award-winning'],
     isFeatured: true,
     downloadLinks: [
@@ -99,6 +106,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg',
     year: 2019,
     genre: 'Crime, Drama, Thriller',
+    language: 'English',
+    imdbRating: 8.4,
     tags: ['Psychological'],
     isFeatured: true,
     downloadLinks: [
@@ -117,6 +126,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIY2VhrhXLon3fCn.jpg',
     year: 2021,
     genre: 'Sci-Fi, Adventure',
+    language: 'English',
+    imdbRating: 8.0,
     tags: ['Epic'],
     isFeatured: true,
      downloadLinks: [
@@ -135,6 +146,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irDe3GPvareA-M0mp.jpg',
     year: 2021,
     genre: 'Action, Adventure, Sci-Fi',
+    language: 'English',
+    imdbRating: 8.2,
     tags: ['Marvel'],
     isFeatured: true,
      downloadLinks: [
@@ -153,6 +166,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9Gz0gSbn0QZfo.jpg',
     year: 1999,
     genre: 'Action, Sci-Fi',
+    language: 'English',
+    imdbRating: 8.7,
     tags: ['Classic'],
     isFeatured: true,
      downloadLinks: [
@@ -171,6 +186,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg',
     year: 1994,
     genre: 'Comedy, Drama, Romance',
+    language: 'English',
+    imdbRating: 8.8,
     tags: ['Heartwarming'],
     isFeatured: true,
      downloadLinks: [
@@ -189,6 +206,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
     year: 1994,
     genre: 'Crime, Drama',
+    language: 'English',
+    imdbRating: 8.9,
     tags: ['Iconic'],
     isFeatured: true,
      downloadLinks: [
@@ -207,6 +226,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
     year: 2023,
     genre: 'Biography, Drama, History',
+    language: 'English',
+    imdbRating: 8.6,
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
@@ -225,6 +246,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg',
     year: 2023,
     genre: 'Comedy, Adventure, Fantasy',
+    language: 'English',
+    imdbRating: 7.4,
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
@@ -243,6 +266,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/w3LxiVYUpllpCmst2stCDsqeRJt.jpg',
     year: 2022,
     genre: 'Action, Adventure, Sci-Fi',
+    language: 'English',
+    imdbRating: 8.1,
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
@@ -261,6 +286,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg',
     year: 2022,
     genre: 'Action, Crime, Drama',
+    language: 'English',
+    imdbRating: 7.8,
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
@@ -279,6 +306,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg',
     year: 2022,
     genre: 'Action, Drama',
+    language: 'English',
+    imdbRating: 8.3,
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
@@ -297,6 +326,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg',
     year: 2022,
     genre: 'Sci-Fi, Adventure, Action',
+    language: 'English',
+    imdbRating: 7.7,
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
@@ -315,6 +346,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/pThyQovXQrw2m0s9x82twY4mrJg.jpg',
     year: 2019,
     genre: 'Comedy, Crime, Mystery',
+    language: 'English',
+    imdbRating: 7.9,
     tags: ['Popular'],
     isFeatured: false,
      downloadLinks: [
@@ -333,6 +366,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/kLuEtcQ9w0iGl2dACcs2eFPq0T5.jpg',
     year: 2017,
     genre: 'Horror, Mystery, Thriller',
+    language: 'English',
+    imdbRating: 7.7,
     tags: ['Critically Acclaimed'],
     isFeatured: false,
      downloadLinks: [
@@ -351,6 +386,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg',
     year: 2015,
     genre: 'Action, Adventure, Sci-Fi',
+    language: 'English',
+    imdbRating: 8.1,
     tags: ['Adrenaline Rush'],
     isFeatured: false,
      downloadLinks: [
@@ -369,6 +406,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/n0ybibhJtQ5icDqNs2BTjpSFbOk.jpg',
     year: 2010,
     genre: 'Drama, History',
+    language: 'English',
+    imdbRating: 7.7,
     tags: ['Biography'],
     isFeatured: false,
      downloadLinks: [
@@ -387,6 +426,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/7fn624j5lj3xTme2SgiLCeuedmO.jpg',
     year: 2014,
     genre: 'Drama, Music',
+    language: 'English',
+    imdbRating: 8.5,
     tags: ['Intense'],
     isFeatured: false,
      downloadLinks: [
@@ -405,6 +446,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg',
     year: 2017,
     genre: 'Sci-Fi, Thriller',
+    language: 'English',
+    imdbRating: 8.0,
     tags: ['Visually Stunning'],
     isFeatured: false,
      downloadLinks: [
@@ -423,6 +466,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdEjzEVX5d6CeJo.jpg',
     year: 2016,
     genre: 'Comedy, Drama, Music',
+    language: 'English',
+    imdbRating: 8.0,
     tags: ['Musical'],
     isFeatured: false,
      downloadLinks: [
@@ -441,6 +486,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg',
     year: 2018,
     genre: 'Horror, Sci-Fi',
+    language: 'English',
+    imdbRating: 7.5,
     tags: ['Suspenseful'],
     isFeatured: false,
      downloadLinks: [
@@ -459,6 +506,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg',
     year: 2014,
     genre: 'Comedy, Drama',
+    language: 'English',
+    imdbRating: 8.1,
     tags: ['Quirky'],
     isFeatured: false,
      downloadLinks: [
@@ -477,6 +526,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/x2FJsf1ElAgr63Y3PNPtJrcmpoe.jpg',
     year: 2016,
     genre: 'Drama, Sci-Fi',
+    language: 'English',
+    imdbRating: 7.9,
     tags: ['Thought-Provoking'],
     isFeatured: false,
      downloadLinks: [
@@ -495,6 +546,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/eCOtqtf5sALt02v9i8uY0Sj32yT.jpg',
     year: 2013,
     genre: 'Romance, Sci-Fi, Drama',
+    language: 'English',
+    imdbRating: 8.0,
     tags: ['Futuristic'],
     isFeatured: false,
      downloadLinks: [
@@ -513,6 +566,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/490v25cK4A4v4KdcK2c7a33a2s.jpg',
     year: 2016,
     genre: 'Drama',
+    language: 'English',
+    imdbRating: 7.4,
     tags: ['Oscar Winner'],
     isFeatured: false,
      downloadLinks: [
@@ -531,6 +586,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/7GsM4fCHb3Y2F7eP2xxlK22r5W3.jpg',
     year: 2019,
     genre: 'Comedy, Drama, War',
+    language: 'English',
+    imdbRating: 7.9,
     tags: ['Satire'],
     isFeatured: false,
      downloadLinks: [
@@ -549,6 +606,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/iZf0KyrE25z1sage4SYFLCCrMi9.jpg',
     year: 2019,
     genre: 'War, Drama',
+    language: 'English',
+    imdbRating: 8.2,
     tags: ['One-Shot'],
     isFeatured: false,
      downloadLinks: [
@@ -567,6 +626,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/ji4FvocS29E0GKS1UNUuQYm7yiu.jpg',
     year: 2015,
     genre: 'Western, Drama, Adventure',
+    language: 'English',
+    imdbRating: 7.8,
     tags: ['Survival'],
     isFeatured: false,
      downloadLinks: [
@@ -585,6 +646,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg',
     year: 2018,
     genre: 'Animation, Action, Adventure',
+    language: 'English',
+    imdbRating: 8.4,
     tags: ['Animated'],
     isFeatured: false,
      downloadLinks: [
@@ -603,6 +666,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/6ApDtO7xaWAfPZfi2wAbjdsSzaX.jpg',
     year: 2019,
     genre: 'Action, Drama',
+    language: 'English',
+    imdbRating: 8.1,
     tags: ['Racing'],
     isFeatured: false,
      downloadLinks: [
@@ -621,6 +686,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/fnbjcRDYn6YviCcePDnGdyAkYsB.jpg',
     year: 2017,
     genre: 'Action, Drama, Sci-Fi',
+    language: 'English',
+    imdbRating: 8.1,
     tags: ['Gritty'],
     isFeatured: false,
      downloadLinks: [
@@ -639,6 +706,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/8j58iEBw9pYFD2L7lqRN4kdDy9e.jpg',
     year: 2019,
     genre: 'Comedy, Drama',
+    language: 'English',
+    imdbRating: 7.6,
     tags: ['Tarantino'],
     isFeatured: false,
      downloadLinks: [
@@ -657,6 +726,8 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/hm58Jw4Lw8I58gUvbwPIup1RTRh.jpg',
     year: 2020,
     genre: 'Animation, Comedy, Drama',
+    language: 'English',
+    imdbRating: 8.1,
     tags: ['Pixar'],
     isFeatured: false,
      downloadLinks: [

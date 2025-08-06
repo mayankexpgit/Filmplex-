@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
+import { Star } from 'lucide-react';
 
 interface MovieCardProps {
   movie: Movie;
@@ -28,23 +29,32 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             className="w-full h-auto object-cover aspect-[2/3] transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="movie poster"
           />
-           {qualityToDisplay && (
-            <Badge className="absolute top-2 right-2 rounded-sm border-amber-400/80 bg-gold-metallic text-primary-foreground text-xs font-bold">
-              {qualityToDisplay}
-            </Badge>
-          )}
         </div>
-        <div className="p-3 flex-grow flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-foreground text-base leading-tight truncate">
-              {movie.title}
-            </h3>
-            <div className="text-muted-foreground text-sm mt-1">
-              <span>{movie.year}</span>
-            </div>
+        <div className="p-2 flex-grow flex flex-col">
+          <h3 className="font-bold text-foreground text-sm leading-tight truncate">
+            {movie.title}
+          </h3>
+          <p className="text-muted-foreground text-xs mt-1">
+            {movie.year}
+          </p>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+              {qualityToDisplay && (
+                <Badge variant="outline" className="text-xs border-amber-400/80 text-amber-300">
+                  {qualityToDisplay}
+                </Badge>
+              )}
+              {movie.language && (
+                 <Badge variant="outline" className="text-xs">{movie.language}</Badge>
+              )}
+               {movie.imdbRating && (
+                <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                  {movie.imdbRating}
+                </Badge>
+              )}
           </div>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {movie.tags?.map((tag) => (
+          <div className="flex flex-wrap gap-1 mt-2 flex-grow items-end">
+            {movie.tags?.slice(0, 2).map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs rounded-sm">
                 {tag}
               </Badge>

@@ -47,6 +47,7 @@ export default function UploadMovie() {
     tagsString: '',
     genre: '',
     language: '',
+    imdbRating: 0,
     streamingChannel: '',
     isFeatured: false,
     downloadLinks: [{ quality: 'HD', url: '' }],
@@ -80,6 +81,7 @@ export default function UploadMovie() {
         tagsString: '',
         genre: '',
         language: '',
+        imdbRating: 0,
         streamingChannel: '',
         isFeatured: false,
         downloadLinks: [{ quality: 'HD', url: '' }],
@@ -221,10 +223,14 @@ export default function UploadMovie() {
                     <Label htmlFor="movie-language">Language</Label>
                     <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isPending} />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="movie-channel">Streaming Channel</Label>
-                    <Input id="movie-channel" value={formData.streamingChannel || ''} onChange={(e) => handleInputChange('streamingChannel', e.target.value)} placeholder="e.g. Netflix, Prime Video" disabled={isPending} />
+                 <div className="space-y-2">
+                    <Label htmlFor="movie-imdb">IMDb Rating</Label>
+                    <Input id="movie-imdb" type="number" step="0.1" value={formData.imdbRating || ''} onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))} disabled={isPending} />
                 </div>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="movie-channel">Streaming Channel</Label>
+                <Input id="movie-channel" value={formData.streamingChannel || ''} onChange={(e) => handleInputChange('streamingChannel', e.target.value)} placeholder="e.g. Netflix, Prime Video" disabled={isPending} />
             </div>
           </div>
         );
