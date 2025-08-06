@@ -160,9 +160,8 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     if (isInitialized) {
-      const movieId = params.id;
       const allMovies = [...latestReleases, ...featuredMovies];
-      const foundMovie = allMovies.find(m => m.id === movieId);
+      const foundMovie = allMovies.find(m => m.id === params.id);
       setMovie(foundMovie);
     }
   }, [isInitialized, latestReleases, featuredMovies, params.id]);
@@ -374,5 +373,3 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-
-    
