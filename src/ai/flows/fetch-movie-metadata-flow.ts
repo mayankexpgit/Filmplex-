@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { search } from '@genkit-ai/googleai';
+import { googleSearch } from '@genkit-ai/googleai';
 
 // Define schemas for input and output
 const FetchMovieMetadataInputSchema = z.object({
@@ -45,7 +45,7 @@ export async function fetchMovieMetadata(
 
 
 // Define the tool for searching
-const movieSearch = search({
+const movieSearch = googleSearch({
     engine: "default",
     options: {
         resultCount: 5,
