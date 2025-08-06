@@ -82,16 +82,6 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
           
           <Separator className="my-4 w-full" />
 
-          {/* Synopsis */}
-          {movie.synopsis && (
-            <section className="mb-8 w-full">
-              <div 
-                className="prose prose-invert max-w-none leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
-              />
-            </section>
-          )}
-
           {/* Screenshots */}
           {movie.screenshots && movie.screenshots.length > 0 && (
             <section className="w-full mb-8">
@@ -185,6 +175,16 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
                   </Button>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Synopsis */}
+          {movie.synopsis && (
+            <section className="mb-8 w-full">
+              <div 
+                className="prose prose-invert max-w-none leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
+              />
             </section>
           )}
 

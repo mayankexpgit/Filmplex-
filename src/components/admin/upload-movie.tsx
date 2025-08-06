@@ -17,6 +17,18 @@ import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 type FormData = Partial<Movie> & {
     tagsString?: string;
@@ -153,12 +165,7 @@ export default function UploadMovie() {
       handleInputChange('episodes', newEpisodes);
   }
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.genre) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      return;
-    }
-
+  const handleSave = () => {
     startTransition(async () => {
       const movieData: Partial<Movie> = {
         ...formData,
@@ -192,6 +199,15 @@ export default function UploadMovie() {
         toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
       }
     });
+  };
+  
+  const triggerSave = (e: React.MouseEvent) => {
+     if (!formData.title || !formData.genre) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
+      // Prevent the dialog from opening if validation fails
+      e.preventDefault();
+    }
+    // If validation passes, the AlertDialogTrigger will open the dialog.
   };
 
   const isFormDisabled = isPending;
@@ -351,6 +367,7 @@ export default function UploadMovie() {
                 </div>
               )}
 
+              <Separator />
 
               {/* Synopsis */}
                <div className="space-y-2">
@@ -376,14 +393,32 @@ export default function UploadMovie() {
              <div>
                 {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isFormDisabled}>Cancel Edit</Button>}
              </div>
-             <Button onClick={handleSubmit} disabled={isFormDisabled}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : formData.id ? 'Update Content' : 'Confirm & Upload'}
-            </Button>
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button onClick={triggerSave} disabled={isFormDisabled}>
+                        {formData.id ? 'Update Content' : 'Confirm & Upload'}
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action will save the current data to the database. Please double-check that all information is correct before proceeding.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSave} disabled={isPending}>
+                        {isPending ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Processing...
+                            </>
+                        ) : 'Confirm'}
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </CardFooter>
       </Card>
 
@@ -489,5 +524,3 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
         </div>
     )
 }
-
-    
