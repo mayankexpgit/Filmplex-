@@ -15,7 +15,21 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
-  const qualityToDisplay = movie.downloadLinks?.[0]?.quality;
+  const getQualityBadge = () => {
+    if (!movie.downloadLinks || movie.downloadLinks.length === 0) {
+      return null;
+    }
+    const qualities = movie.downloadLinks.map(link => link.quality.toLowerCase());
+    if (qualities.includes('4k') || qualities.includes('2160p')) {
+      return '4K';
+    }
+    if (qualities.includes('1080p') || qualities.includes('720p')) {
+      return 'HD';
+    }
+    return null;
+  };
+  
+  const qualityToDisplay = getQualityBadge();
 
   const cardContent = (
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
