@@ -13,6 +13,11 @@ export interface Movie {
   synopsis?: string;
   screenshots?: string[];
   isFeatured?: boolean;
+  // New fields based on user request
+  stars?: string;
+  creator?: string;
+  episodes?: number;
+  quality?: string;
 }
 
 // This data is now used for initial database seeding.
@@ -28,6 +33,9 @@ export const initialMovies: Movie[] = [
     streamingChannel: 'Netflix',
     tags: ['Mind-bending'],
     isFeatured: true,
+    stars: 'Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page',
+    creator: 'Christopher Nolan',
+    quality: 'BluRay 1080p, 720p',
     downloadLinks: [
       { quality: '4K/HD', url: 'https://example.com/inception-4k' },
       { quality: 'HD', url: 'https://example.com/inception-hd' },
@@ -49,6 +57,9 @@ export const initialMovies: Movie[] = [
     imdbRating: 9.0,
     tags: ['Superhero'],
     isFeatured: true,
+    stars: 'Christian Bale, Heath Ledger, Aaron Eckhart',
+    creator: 'Christopher Nolan',
+    quality: 'BluRay 1080p, 720p',
     downloadLinks: [
       { quality: 'HD', url: 'https://example.com/dk-hd' },
       { quality: '720p', url: 'https://example.com/dk-720p' },

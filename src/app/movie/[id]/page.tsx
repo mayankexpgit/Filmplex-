@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Download, PlayCircle, Share2, MessageSquare, ThumbsUp, Star } from 'lucide-react';
 import Link from 'next/link';
 import MovieCardSmall from '@/components/movie-card-small';
+import { Separator } from '@/components/ui/separator';
 
 async function getMovie(id: string): Promise<Movie | undefined> {
   const movies = await fetchMovies();
@@ -34,6 +35,16 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
     );
   }
 
+  const InfoRow = ({ label, value }: { label: string, value?: string | number | null }) => {
+    if (!value) return null;
+    return (
+      <p className="text-base text-foreground">
+        <span className="font-semibold">{label}: </span>
+        {value}
+      </p>
+    )
+  }
+
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
@@ -42,43 +53,36 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
         </div>
       </header>
       <main className="container mx-auto py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto flex flex-col items-center">
           
-          {/* Movie Poster */}
-          <div className="flex justify-center mb-8">
-            <Image
-              src={movie.posterUrl}
-              alt={`Poster for ${movie.title}`}
-              width={300}
-              height={450}
-              className="rounded-lg shadow-lg"
-              data-ai-hint="movie poster"
-            />
-          </div>
-
           {/* Movie Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{movie.title} ({movie.year})</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
-          {/* Share Buttons */}
-           <div className="flex justify-center items-center gap-2 mb-8">
-              <Button variant="secondary" size="sm"><Share2 className="mr-2" /> Share</Button>
-              <Button variant="secondary" size="sm"><MessageSquare className="mr-2" /> Comment</Button>
-              <Button variant="secondary" size="sm"><ThumbsUp className="mr-2" /> Like</Button>
-              <Button variant="secondary" size="sm"><Star className="mr-2" /> Rate</Button>
+          {/* Info Section */}
+          <div className="flex flex-col items-center text-center space-y-2 mb-6">
+            <InfoRow label="iMDB Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
+            <InfoRow label="Genre" value={movie.genre} />
+            <InfoRow label="Stars" value={movie.stars} />
+            <InfoRow label="Creator" value={movie.creator} />
+            <InfoRow label="No. of Episodes" value={movie.episodes} />
+            <InfoRow label="Language" value={movie.language} />
+            <InfoRow label="Quality" value={movie.quality} />
           </div>
+          
+          <Separator className="my-4 w-full" />
 
           {/* Screenshots */}
           {movie.screenshots && movie.screenshots.length > 0 && (
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Screenshots</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <section className="w-full mb-8">
+              <h2 className="text-2xl font-bold mb-4 text-center text-red-500">: Screen-Shots :</h2>
+              <div className="flex flex-col items-center gap-4">
                 {movie.screenshots.map((src, index) => (
-                  <div key={index} className="relative aspect-video overflow-hidden rounded-lg">
+                  <div key={index} className="relative w-full max-w-2xl aspect-video overflow-hidden rounded-lg">
                     <Image
                       src={src}
                       alt={`Screenshot ${index + 1} for ${movie.title}`}
                       fill
-                      className="object-cover transition-transform duration-300 hover:scale-105"
+                      className="object-contain"
                       data-ai-hint="movie screenshot"
                     />
                   </div>
@@ -87,9 +91,19 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
             </section>
           )}
 
+          {/* Synopsis */}
+          {movie.synopsis && (
+            <section className="mb-8 w-full">
+              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Storyline</h2>
+              <p className="leading-relaxed">
+                {movie.synopsis}
+              </p>
+            </section>
+          )}
+
           {/* Download Links */}
           {movie.downloadLinks && movie.downloadLinks.length > 0 && (
-            <section className="mb-12">
+            <section className="w-full mb-12">
               <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Download Links</h2>
               <div className="space-y-3">
                 {movie.downloadLinks.map((link, index) => (
@@ -106,17 +120,6 @@ export default async function MovieDetailPage({ params }: { params: { id:string 
               </div>
             </section>
           )}
-           
-          {/* Synopsis */}
-          {movie.synopsis && (
-            <section>
-              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Storyline</h2>
-              <p className="leading-relaxed">
-                {movie.synopsis}
-              </p>
-            </section>
-          )}
-
         </div>
       </main>
     </div>

@@ -4,54 +4,83 @@
 import type { Movie } from '@/lib/data';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download, Share2, MessageSquare, ThumbsUp, Star } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
+import { Separator } from '../ui/separator';
+
 
 interface PreviewProps {
     movie: Movie
 }
 
 export default function MovieDetailPreview({ movie }: PreviewProps) {
-  // Use a placeholder if posterUrl is empty
   const posterSrc = movie.posterUrl || "https://placehold.co/300x450.png";
+
+  const InfoRow = ({ label, value }: { label: string, value?: string | number | null }) => {
+    if (!value && typeof value !== 'number') return null;
+    return (
+      <p className="text-base text-foreground">
+        <span className="font-semibold">{label}: </span>
+        {value}
+      </p>
+    )
+  }
   
   return (
     <div className="bg-background min-h-full text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
+       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
         <div className="container max-w-screen-2xl">
            <Skeleton className="h-10 w-48" />
         </div>
       </header>
       <main className="container mx-auto py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto flex flex-col items-center">
           
-          {/* Movie Poster */}
-          <div className="flex justify-center mb-8">
-            <div className="relative w-[300px] h-[450px]">
-                 <Image
-                    src={posterSrc}
-                    alt={`Poster for ${movie.title}`}
-                    fill
-                    className="rounded-lg shadow-lg object-cover"
-                    data-ai-hint="movie poster"
-                />
-            </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
+          
+          <div className="flex flex-col items-center text-center space-y-2 mb-6">
+            <InfoRow label="iMDB Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
+            <InfoRow label="Genre" value={movie.genre} />
+            <InfoRow label="Stars" value={movie.stars} />
+            <InfoRow label="Creator" value={movie.creator} />
+            <InfoRow label="No. of Episodes" value={movie.episodes} />
+            <InfoRow label="Language" value={movie.language} />
+            <InfoRow label="Quality" value={movie.quality} />
           </div>
 
-          {/* Movie Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{movie.title} ({movie.year})</h1>
+          <Separator className="my-4 w-full" />
           
-          {/* Share Buttons */}
-           <div className="flex justify-center items-center gap-2 mb-8">
-              <Button variant="secondary" size="sm"><Share2 className="mr-2" /> Share</Button>
-              <Button variant="secondary" size="sm"><MessageSquare className="mr-2" /> Comment</Button>
-              <Button variant="secondary" size="sm"><ThumbsUp className="mr-2" /> Like</Button>
-              <Button variant="secondary" size="sm"><Star className="mr-2" /> Rate</Button>
-          </div>
-          
-          {/* Download Links */}
+          {movie.screenshots && movie.screenshots.length > 0 && movie.screenshots[0] && (
+            <section className="w-full mb-8">
+              <h2 className="text-2xl font-bold mb-4 text-center text-red-500">: Screen-Shots :</h2>
+              <div className="flex flex-col items-center gap-4">
+                {movie.screenshots.map((src, index) => (
+                  src && <div key={index} className="relative w-full max-w-2xl aspect-video overflow-hidden rounded-lg">
+                    <Image
+                      src={src}
+                      alt={`Screenshot ${index + 1} for ${movie.title}`}
+                      fill
+                      className="object-contain"
+                      data-ai-hint="movie screenshot"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+           {movie.synopsis && (
+            <section className="mb-8 w-full">
+              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Storyline</h2>
+              <div 
+                className="leading-relaxed whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
+              />
+            </section>
+          )}
+
           {movie.downloadLinks && movie.downloadLinks.length > 0 && movie.downloadLinks[0]?.url && (
-            <section className="mb-12">
+            <section className="w-full mb-12">
               <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Download Links</h2>
               <div className="space-y-3">
                 {movie.downloadLinks.map((link, index) => (
@@ -68,18 +97,6 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               </div>
             </section>
           )}
-           
-          {/* Synopsis */}
-          {movie.synopsis && (
-            <section>
-              <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-4">Storyline</h2>
-              <div 
-                className="leading-relaxed whitespace-pre-wrap"
-                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
-              />
-            </section>
-          )}
-
         </div>
       </main>
     </div>

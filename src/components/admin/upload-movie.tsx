@@ -16,6 +16,7 @@ import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from './movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Separator } from '../ui/separator';
 
 type DownloadLink = {
   quality: string;
@@ -49,7 +50,11 @@ export default function UploadMovie() {
     isFeatured: false,
     downloadLinks: [{ quality: 'HD', url: '' }],
     synopsis: 'Enter movie synopsis here...',
-    screenshots: [],
+    screenshots: ['', '', ''], // Start with 3 empty screenshot slots
+    stars: '',
+    creator: '',
+    episodes: undefined,
+    quality: '',
   });
   
   useEffect(() => {
@@ -61,6 +66,7 @@ export default function UploadMovie() {
             ...movieToEdit,
             tagsString: movieToEdit.tags ? movieToEdit.tags.join(', ') : '',
             downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: 'HD', url: '' }],
+            screenshots: movieToEdit.screenshots && movieToEdit.screenshots.length > 0 ? movieToEdit.screenshots : ['', '', ''],
         });
       }
     } else {
@@ -82,7 +88,11 @@ export default function UploadMovie() {
       isFeatured: false,
       downloadLinks: [{ quality: 'HD', url: '' }],
       synopsis: 'Enter movie synopsis here...',
-      screenshots: [],
+      screenshots: ['', '', ''],
+      stars: '',
+      creator: '',
+      episodes: undefined,
+      quality: '',
     });
     router.replace('/admin/upload-movie');
   };
@@ -96,16 +106,32 @@ export default function UploadMovie() {
     newLinks[index] = { ...newLinks[index], [field]: value };
     handleInputChange('downloadLinks', newLinks);
   };
+  
+  const handleScreenshotChange = (index: number, value: string) => {
+    const newScreenshots = [...(formData.screenshots || [])];
+    newScreenshots[index] = value;
+    handleInputChange('screenshots', newScreenshots);
+  }
 
   const addLink = () => {
     const newLinks = [...(formData.downloadLinks || []), { quality: 'HD', url: '' }];
     handleInputChange('downloadLinks', newLinks);
   };
+  
+  const addScreenshot = () => {
+    const newScreenshots = [...(formData.screenshots || []), ''];
+    handleInputChange('screenshots', newScreenshots);
+  }
 
   const removeLink = (index: number) => {
     const newLinks = (formData.downloadLinks || []).filter((_, i) => i !== index);
     handleInputChange('downloadLinks', newLinks);
   };
+  
+  const removeScreenshot = (index: number) => {
+    const newScreenshots = (formData.screenshots || []).filter((_,i) => i !== index);
+    handleInputChange('screenshots', newScreenshots);
+  }
 
   const handleSubmit = () => {
     if (!formData.title || !formData.genre) {
@@ -124,6 +150,7 @@ export default function UploadMovie() {
         ...formData,
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
         downloadLinks: (formData.downloadLinks || []).filter(link => link.url.trim() !== ''),
+        screenshots: (formData.screenshots || []).filter(ss => ss.trim() !== ''),
       };
       delete (movieData as any).tagsString;
       
@@ -183,6 +210,26 @@ export default function UploadMovie() {
                       <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isPending} />
                   </div>
               </div>
+               {/* New Fields */}
+               <div className="space-y-2">
+                  <Label htmlFor="movie-stars">Stars (comma-separated)</Label>
+                  <Input id="movie-stars" value={formData.stars || ''} onChange={(e) => handleInputChange('stars', e.target.value)} placeholder="e.g. Actor One, Actor Two" disabled={isPending} />
+              </div>
+               <div className="space-y-2">
+                  <Label htmlFor="movie-creator">Creator</Label>
+                  <Input id="movie-creator" value={formData.creator || ''} onChange={(e) => handleInputChange('creator', e.target.value)} placeholder="e.g. Director Name" disabled={isPending} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="movie-episodes">No. of Episodes</Label>
+                      <Input id="movie-episodes" type="number" value={formData.episodes || ''} onChange={(e) => handleInputChange('episodes', e.target.value ? Number(e.target.value) : undefined)} placeholder="For TV shows" disabled={isPending} />
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="movie-quality">Quality Description</Label>
+                      <Input id="movie-quality" value={formData.quality || ''} onChange={(e) => handleInputChange('quality', e.target.value)} placeholder="e.g. BluRay 4K | 1080p" disabled={isPending} />
+                  </div>
+              </div>
+
               <div className="space-y-2">
                   <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
                   <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isPending} />
@@ -202,6 +249,34 @@ export default function UploadMovie() {
                 <Label htmlFor="movie-poster">Poster URL</Label>
                 <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isPending} />
               </div>
+
+              <Separator />
+
+              {/* Screenshots */}
+              <div className="space-y-4 pt-2">
+                <Label>Screenshots</Label>
+                {(formData.screenshots || []).map((ss, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                     <Input
+                        className="flex-1"
+                        placeholder={`https://.../screenshot${index+1}.png`}
+                        value={ss}
+                        onChange={(e) => handleScreenshotChange(index, e.target.value)}
+                        disabled={isPending}
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => removeScreenshot(index)} disabled={isPending}>
+                        <XCircle className="h-5 w-5 text-destructive" />
+                      </Button>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={addScreenshot} disabled={isPending}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Screenshot
+                </Button>
+              </div>
+
+              <Separator />
+
               {/* Download Links */}
               <div className="space-y-4 pt-2">
                   <Label>Download Links</Label>
