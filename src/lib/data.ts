@@ -40,6 +40,7 @@ export interface Movie {
   tags?: string[];
   description?: string;
   synopsis?: string;
+  trailerUrl?: string;
   screenshots?: string[];
   isFeatured?: boolean;
   stars?: string;
@@ -86,6 +87,7 @@ export const initialMovies: Movie[] = [
       { quality: '720p', url: 'https://example.com/inception-hd', size: '1.2GB' },
     ],
     synopsis: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.',
+    trailerUrl: 'https://www.youtube.com/watch?v=YoHD9XEInc0',
     description: `
       <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
       <br>

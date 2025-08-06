@@ -41,6 +41,7 @@ const initialFormState: FormData = {
   title: '',
   year: new Date().getFullYear(),
   posterUrl: '',
+  trailerUrl: '',
   tagsString: '',
   genre: '',
   language: '',
@@ -76,6 +77,7 @@ export default function UploadMovie() {
       const movieToEdit = movies.find(m => m.id === movieId);
       if (movieToEdit) {
         setFormData({
+            ...initialFormState, // Ensure all fields are present
             ...movieToEdit,
             tagsString: movieToEdit.tags ? movieToEdit.tags.join(', ') : '',
             downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: '1080p', url: '', size: '' }],
@@ -289,6 +291,10 @@ export default function UploadMovie() {
               <div className="space-y-2">
                 <Label htmlFor="movie-poster">Poster URL</Label>
                 <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isFormDisabled} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="trailer-url">Trailer URL</Label>
+                <Input id="trailer-url" value={formData.trailerUrl || ''} onChange={(e) => handleInputChange('trailerUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." disabled={isFormDisabled} />
               </div>
 
                <Separator />

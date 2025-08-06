@@ -140,6 +140,13 @@ function CommentsSection({ movieId }: { movieId: string }) {
     );
 }
 
+function getYouTubeEmbedUrl(url: string | undefined): string | null {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+}
+
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
@@ -180,6 +187,8 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     )
   }
 
+  const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
+
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
@@ -213,6 +222,22 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
           </div>
           
           <Separator className="my-4 w-full" />
+          
+          {trailerEmbedUrl && (
+            <section className="w-full mb-8">
+                <h2 className="text-2xl font-bold mb-4 text-center">: Watch Trailer :</h2>
+                <div className="relative w-full max-w-2xl mx-auto aspect-video overflow-hidden rounded-lg">
+                    <iframe
+                        src={trailerEmbedUrl}
+                        title={`${movie.title} Trailer`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                    ></iframe>
+                </div>
+            </section>
+          )}
 
           {movie.screenshots && movie.screenshots.length > 0 && (
             <section className="w-full mb-8">

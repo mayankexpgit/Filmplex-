@@ -8,6 +8,12 @@ import { Download, Zap } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 
+function getYouTubeEmbedUrl(url: string | undefined): string | null {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+}
 
 interface PreviewProps {
     movie: Movie
@@ -15,6 +21,7 @@ interface PreviewProps {
 
 export default function MovieDetailPreview({ movie }: PreviewProps) {
   const posterSrc = movie.posterUrl || "https://placehold.co/300x450.png";
+  const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
 
   const InfoRow = ({ label, value }: { label: string, value?: string | number | null }) => {
     if (!value && typeof value !== 'number') return null;
@@ -46,7 +53,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
             />
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title || 'Movie Title'} ({movie.year || 'Year'})</h1>
           
           <div className="flex flex-col items-center text-center space-y-2 mb-6">
             <InfoRow label="iMDB Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
@@ -60,6 +67,22 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
 
           <Separator className="my-4 w-full" />
           
+          {trailerEmbedUrl && (
+            <section className="w-full mb-8">
+                <h2 className="text-2xl font-bold mb-4 text-center">: Watch Trailer :</h2>
+                <div className="relative w-full max-w-2xl mx-auto aspect-video overflow-hidden rounded-lg">
+                    <iframe
+                        src={trailerEmbedUrl}
+                        title={`${movie.title} Trailer`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                    ></iframe>
+                </div>
+            </section>
+          )}
+
           {movie.screenshots && movie.screenshots.length > 0 && movie.screenshots[0] && (
             <section className="w-full mb-8">
               <h2 className="text-2xl font-bold mb-4 text-center">: Screen-Shots :</h2>
