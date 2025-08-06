@@ -9,7 +9,7 @@ export interface Movie {
   imdbRating?: number;
   streamingChannel?: string;
   tags?: string[];
-  downloadLinks?: { quality: string; url: string }[];
+  downloadLinks?: { quality: string; url: string; size?: string }[];
   synopsis?: string;
   screenshots?: string[];
   isFeatured?: boolean;
@@ -37,8 +37,8 @@ export const initialMovies: Movie[] = [
     creator: 'Christopher Nolan',
     quality: 'BluRay 1080p, 720p',
     downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/inception-4k' },
-      { quality: 'HD', url: 'https://example.com/inception-hd' },
+      { quality: '4K/HD', url: 'https://example.com/inception-4k', size: '2.5GB' },
+      { quality: 'HD', url: 'https://example.com/inception-hd', size: '1.2GB' },
     ],
     synopsis: `
       <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
@@ -72,8 +72,8 @@ export const initialMovies: Movie[] = [
     creator: 'Christopher Nolan',
     quality: 'BluRay 1080p, 720p',
     downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/dk-hd' },
-      { quality: '720p', url: 'https://example.com/dk-720p' },
+      { quality: 'HD', url: 'https://example.com/dk-hd', size: '1.5GB' },
+      { quality: '720p', url: 'https://example.com/dk-720p', size: '800MB' },
     ],
     synopsis: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
      screenshots: [
@@ -93,7 +93,7 @@ export const initialMovies: Movie[] = [
     tags: ['Space'],
     isFeatured: true,
     downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/interstellar-4k' },
+      { quality: '4K/HD', url: 'https://example.com/interstellar-4k', size: '3GB' },
     ],
     synopsis: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
      screenshots: [
@@ -113,7 +113,7 @@ export const initialMovies: Movie[] = [
     tags: ['Award-winning'],
     isFeatured: true,
     downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/parasite-hd' },
+      { quality: 'HD', url: 'https://example.com/parasite-hd', size: '1.1GB' },
     ],
     synopsis: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.',
      screenshots: [
@@ -133,7 +133,7 @@ export const initialMovies: Movie[] = [
     tags: ['Psychological'],
     isFeatured: true,
     downloadLinks: [
-       { quality: '4K/HD', url: 'https://example.com/joker-4k' },
+       { quality: '4K/HD', url: 'https://example.com/joker-4k', size: '2.2GB' },
     ],
     synopsis: 'A mentally troubled comedian embarks on a downward spiral that leads to the creation of an iconic villain.',
      screenshots: [
@@ -153,7 +153,7 @@ export const initialMovies: Movie[] = [
     tags: ['Epic'],
     isFeatured: true,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/dune-hd' },
+      { quality: 'HD', url: 'https://example.com/dune-hd', size: '1.8GB' },
     ],
     synopsis: 'Feature adaptation of Frank Herbert\'s science fiction novel, about the son of a noble family entrusted with the protection of the most valuable asset and most vital element in the galaxy.',
      screenshots: [
@@ -173,7 +173,7 @@ export const initialMovies: Movie[] = [
     tags: ['Marvel'],
     isFeatured: true,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/sm-nwh-4k' },
+      { quality: '4K/HD', url: 'https://example.com/sm-nwh-4k', size: '2.9GB' },
     ],
      synopsis: 'With Spider-Man\'s identity now revealed, Peter asks Doctor Strange for help. When a spell goes wrong, dangerous foes from other worlds start to appear, forcing Peter to discover what it truly means to be Spider-Man.',
      screenshots: [
@@ -193,7 +193,7 @@ export const initialMovies: Movie[] = [
     tags: ['Classic'],
     isFeatured: true,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/matrix-hd' },
+      { quality: 'HD', url: 'https://example.com/matrix-hd', size: '1.3GB' },
     ],
     synopsis: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.',
      screenshots: [
@@ -213,7 +213,7 @@ export const initialMovies: Movie[] = [
     tags: ['Heartwarming'],
     isFeatured: true,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/fg-4k' },
+      { quality: '4K/HD', url: 'https://example.com/fg-4k', size: '2.1GB' },
     ],
     synopsis: 'The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.',
      screenshots: [
@@ -233,7 +233,7 @@ export const initialMovies: Movie[] = [
     tags: ['Iconic'],
     isFeatured: true,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/pf-hd' },
+      { quality: 'HD', url: 'https://example.com/pf-hd', size: '1.0GB' },
     ],
     synopsis: 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.',
      screenshots: [
@@ -253,7 +253,7 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/oppenheimer-4k' },
+      { quality: '4K/HD', url: 'https://example.com/oppenheimer-4k', size: '3.5GB' },
     ],
     synopsis: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.',
      screenshots: [
@@ -273,7 +273,7 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/barbie-hd' },
+      { quality: 'HD', url: 'https://example.com/barbie-hd', size: '900MB' },
     ],
     synopsis: 'Barbie suffers a crisis that leads her to question her world and her existence.',
      screenshots: [
@@ -293,7 +293,7 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/eeao-4k' },
+      { quality: '4K/HD', url: 'https://example.com/eeao-4k', size: '2.8GB' },
     ],
     synopsis: 'An aging Chinese immigrant is swept up in an insane adventure, where she alone can save the world by exploring other universes connecting with the lives she could have led.',
      screenshots: [
@@ -313,7 +313,7 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/batman-hd' },
+      { quality: 'HD', url: 'https://example.com/batman-hd', size: '1.9GB' },
     ],
     synopsis: 'When the Riddler, a sadistic serial killer, begins murdering key political figures in Gotham, Batman is forced to investigate the city\'s hidden corruption and question his family\'s involvement.',
      screenshots: [
@@ -333,7 +333,7 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/tgm-4k' },
+      { quality: '4K/HD', url: 'https://example.com/tgm-4k', size: '2.4GB' },
     ],
     synopsis: 'After more than thirty years of service as one of the Navy\'s top aviators, Pete Mitchell is where he belongs, pushing the envelope as a courageous test pilot and dodging the advancement in rank that would ground him.',
      screenshots: [
@@ -353,7 +353,7 @@ export const initialMovies: Movie[] = [
     tags: ['New Release'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/avatar2-hd' },
+      { quality: 'HD', url: 'https://example.com/avatar2-hd', size: '3.1GB' },
     ],
     synopsis: 'Jake Sully lives with his newfound family formed on the planet of Pandora. Once a familiar threat returns to finish what was previously started, Jake must work with Neytiri and the army of the Na\'vi race to protect their planet.',
      screenshots: [
@@ -373,7 +373,7 @@ export const initialMovies: Movie[] = [
     tags: ['Popular'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/ko-hd' },
+      { quality: 'HD', url: 'https://example.com/ko-hd', size: '1.4GB' },
     ],
     synopsis: 'A detective investigates the death of a patriarch of an eccentric, combative family.',
      screenshots: [
@@ -393,7 +393,7 @@ export const initialMovies: Movie[] = [
     tags: ['Critically Acclaimed'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/go-4k' },
+      { quality: '4K/HD', url: 'https://example.com/go-4k', size: '2.0GB' },
     ],
     synopsis: 'A young African-American visits his white girlfriend\'s parents for the weekend, where his simmering uneasiness about their reception of him eventually reaches a boiling point.',
      screenshots: [
@@ -413,7 +413,7 @@ export const initialMovies: Movie[] = [
     tags: ['Adrenaline Rush'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/mmfr-hd' },
+      { quality: 'HD', url: 'https://example.com/mmfr-hd', size: '1.6GB' },
     ],
     synopsis: 'In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the help of a group of female prisoners, a psychotic worshiper, and a drifter named Max.',
      screenshots: [
@@ -433,7 +433,7 @@ export const initialMovies: Movie[] = [
     tags: ['Biography'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/tsn-4k' },
+      { quality: '4K/HD', url: 'https://example.com/tsn-4k', size: '2.3GB' },
     ],
     synopsis: 'As Harvard student Mark Zuckerberg creates the social networking site that would become known as Facebook, he is sued by the twins who claimed he stole their idea, and by the co-founder who was later squeezed out of the business.',
      screenshots: [
@@ -453,7 +453,7 @@ export const initialMovies: Movie[] = [
     tags: ['Intense'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/whiplash-hd' },
+      { quality: 'HD', url: 'https://example.com/whiplash-hd', size: '1.1GB' },
     ],
     synopsis: 'A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who will stop at nothing to realize a student\'s potential.',
     screenshots: [
@@ -473,7 +473,7 @@ export const initialMovies: Movie[] = [
     tags: ['Visually Stunning'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/br2049-4k' },
+      { quality: '4K/HD', url: 'https://example.com/br2049-4k', size: '2.9GB' },
     ],
     synopsis: 'Young Blade Runner K\'s discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who\'s been missing for thirty years.',
     screenshots: [
@@ -493,7 +493,7 @@ export const initialMovies: Movie[] = [
     tags: ['Musical'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/lll-hd' },
+      { quality: 'HD', url: 'https://example.com/lll-hd', size: '1.5GB' },
     ],
     synopsis: 'While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations for the future.',
     screenshots: [
@@ -513,7 +513,7 @@ export const initialMovies: Movie[] = [
     tags: ['Suspenseful'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/aqp-4k' },
+      { quality: '4K/HD', url: 'https://example.com/aqp-4k', size: '1.8GB' },
     ],
     synopsis: 'In a post-apocalyptic world, a family is forced to live in silence while hiding from monsters with ultra-sensitive hearing.',
     screenshots: [
@@ -533,7 +533,7 @@ export const initialMovies: Movie[] = [
     tags: ['Quirky'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/gbh-hd' },
+      { quality: 'HD', url: 'https://example.com/gbh-hd', size: '1.2GB' },
     ],
     synopsis: 'The adventures of Gustave H, a legendary concierge at a famous hotel from the fictional Republic of Zubrowka between the first and second World Wars, and Zero Moustafa, the lobby boy who becomes his most trusted friend.',
     screenshots: [
@@ -553,7 +553,7 @@ export const initialMovies: Movie[] = [
     tags: ['Thought-Provoking'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/arrival-4k' },
+      { quality: '4K/HD', url: 'https://example.com/arrival-4k', size: '2.1GB' },
     ],
     synopsis: 'A linguist works with the military to communicate with alien lifeforms after twelve mysterious spacecraft appear around the world.',
     screenshots: [
@@ -573,7 +573,7 @@ export const initialMovies: Movie[] = [
     tags: ['Futuristic'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/her-hd' },
+      { quality: 'HD', url: 'https://example.com/her-hd', size: '1.3GB' },
     ],
     synopsis: 'In a near future, a lonely writer develops an unlikely relationship with an advanced operating system designed to meet his every need.',
     screenshots: [
@@ -593,7 +593,7 @@ export const initialMovies: Movie[] = [
     tags: ['Oscar Winner'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/moonlight-4k' },
+      { quality: '4K/HD', url: 'https://example.com/moonlight-4k', size: '1.9GB' },
     ],
     synopsis: 'A look at three defining chapters in the life of Chiron, a young black man growing up in Miami. His epic journey to manhood is guided by the kindness, support and love of the community that helps raise him.',
     screenshots: [
@@ -613,7 +613,7 @@ export const initialMovies: Movie[] = [
     tags: ['Satire'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/jojo-hd' },
+      { quality: 'HD', url: 'https://example.com/jojo-hd', size: '1.2GB' },
     ],
     synopsis: 'A young boy in Hitler\'s army finds out his mother is hiding a Jewish girl in their home.',
     screenshots: [
@@ -633,7 +633,7 @@ export const initialMovies: Movie[] = [
     tags: ['One-Shot'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/1917-4k' },
+      { quality: '4K/HD', url: 'https://example.com/1917-4k', size: '2.4GB' },
     ],
     synopsis: 'April 6th, 1917. As a regiment assembles to wage war deep in enemy territory, two soldiers are assigned to race against time and deliver a message that will stop 1,600 men from walking straight into a deadly trap.',
     screenshots: [
@@ -653,7 +653,7 @@ export const initialMovies: Movie[] = [
     tags: ['Survival'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/revenant-hd' },
+      { quality: 'HD', url: 'https://example.com/revenant-hd', size: '1.8GB' },
     ],
     synopsis: 'A frontiersman on a fur trading expedition in the 1820s fights for survival after being mauled by a bear and left for dead by members of his own hunting team.',
     screenshots: [
@@ -673,7 +673,7 @@ export const initialMovies: Movie[] = [
     tags: ['Animated'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/sm-itsv-4k' },
+      { quality: '4K/HD', url: 'https://example.com/sm-itsv-4k', size: '2.6GB' },
     ],
     synopsis: 'Teen Miles Morales becomes the Spider-Man of his universe, and must join with five spider-powered individuals from other dimensions to stop a threat for all realities.',
     screenshots: [
@@ -693,7 +693,7 @@ export const initialMovies: Movie[] = [
     tags: ['Racing'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/fvf-hd' },
+      { quality: 'HD', url: 'https://example.com/fvf-hd', size: '1.7GB' },
     ],
     synopsis: 'American car designer Carroll Shelby and driver Ken Miles battle corporate interference and the laws of physics to build a revolutionary race car for Ford in order to defeat Ferrari at the 24 Hours of Le Mans in 1966.',
     screenshots: [
@@ -713,7 +713,7 @@ export const initialMovies: Movie[] = [
     tags: ['Gritty'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/logan-4k' },
+      { quality: '4K/HD', url: 'https://example.com/logan-4k', size: '2.5GB' },
     ],
     synopsis: 'In a future where mutants are nearly extinct, an elderly and weary Logan leads a quiet life. But when Laura, a mutant child pursued by scientists, comes to him for help, he must get her to safety.',
     screenshots: [
@@ -733,7 +733,7 @@ export const initialMovies: Movie[] = [
     tags: ['Tarantino'],
     isFeatured: false,
      downloadLinks: [
-      { quality: 'HD', url: 'https://example.com/ouatih-hd' },
+      { quality: 'HD', url: 'https://example.com/ouatih-hd', size: '1.8GB' },
     ],
     synopsis: 'A faded television actor and his stunt double strive to achieve fame and success in the final years of Hollywood\'s Golden Age in 1969 Los Angeles.',
     screenshots: [
@@ -753,7 +753,7 @@ export const initialMovies: Movie[] = [
     tags: ['Pixar'],
     isFeatured: false,
      downloadLinks: [
-      { quality: '4K/HD', url: 'https://example.com/soul-4k' },
+      { quality: '4K/HD', url: 'https://example.com/soul-4k', size: '1.9GB' },
     ],
     synopsis: 'A musician who has lost his passion for music is transported out of his body and must find his way back with the help of an infant soul learning about herself.',
     screenshots: [

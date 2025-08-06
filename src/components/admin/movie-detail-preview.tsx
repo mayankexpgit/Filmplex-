@@ -97,7 +97,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
                     <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
                         <Download />
-                        <span>{link.quality}</span>
+                        <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
                       <span>Download Now</span>
                     </a>

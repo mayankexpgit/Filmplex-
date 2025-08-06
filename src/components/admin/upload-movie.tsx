@@ -10,18 +10,18 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Bold, Italic, Underline, Sparkles } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from './movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '../ui/separator';
 import { generateMovieDescription } from '@/ai/flows/generate-movie-description-flow';
 
 type DownloadLink = {
   quality: string;
   url: string;
+  size?: string;
 };
 
 type FormData = Partial<Movie> & {
@@ -49,7 +49,7 @@ export default function UploadMovie() {
     imdbRating: 0,
     streamingChannel: '',
     isFeatured: false,
-    downloadLinks: [{ quality: 'HD', url: '' }],
+    downloadLinks: [{ quality: 'HD', url: '', size: '' }],
     synopsis: '',
     screenshots: ['', '', ''],
     stars: '',
@@ -66,7 +66,7 @@ export default function UploadMovie() {
         setFormData({
             ...movieToEdit,
             tagsString: movieToEdit.tags ? movieToEdit.tags.join(', ') : '',
-            downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: 'HD', url: '' }],
+            downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: 'HD', url: '', size: '' }],
             screenshots: movieToEdit.screenshots && movieToEdit.screenshots.length > 0 ? movieToEdit.screenshots : ['', '', ''],
         });
       }
@@ -87,7 +87,7 @@ export default function UploadMovie() {
       imdbRating: 0,
       streamingChannel: '',
       isFeatured: false,
-      downloadLinks: [{ quality: 'HD', url: '' }],
+      downloadLinks: [{ quality: 'HD', url: '', size: '' }],
       synopsis: '',
       screenshots: ['', '', ''],
       stars: '',
@@ -115,7 +115,7 @@ export default function UploadMovie() {
   }
 
   const addLink = () => {
-    const newLinks = [...(formData.downloadLinks || []), { quality: 'HD', url: '' }];
+    const newLinks = [...(formData.downloadLinks || []), { quality: 'HD', url: '', size: '' }];
     handleInputChange('downloadLinks', newLinks);
   };
   
@@ -135,11 +135,11 @@ export default function UploadMovie() {
   }
 
   const handleGenerateDescription = async () => {
-    if (!formData.title || !formData.synopsis) {
+    if (!formData.title) {
       toast({
         variant: 'destructive',
         title: 'Input Required',
-        description: 'Please provide a title and a basic synopsis before generating.',
+        description: 'Please provide at least a title before generating.',
       });
       return;
     }
@@ -148,7 +148,11 @@ export default function UploadMovie() {
       const generatedHtml = await generateMovieDescription({
         title: formData.title,
         year: formData.year || new Date().getFullYear(),
-        synopsis: formData.synopsis,
+        genre: formData.genre,
+        stars: formData.stars,
+        language: formData.language,
+        quality: formData.quality,
+        synopsis: formData.synopsis, // Pass the basic synopsis to expand upon
       });
       handleInputChange('synopsis', generatedHtml);
       toast({
@@ -325,6 +329,13 @@ export default function UploadMovie() {
                           {qualityOptions.map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
                         </SelectContent>
                       </Select>
+                      <Input
+                        className="w-[100px]"
+                        placeholder="e.g. 1.2GB"
+                        value={link.size || ''}
+                        onChange={(e) => handleLinkChange(index, 'size', e.target.value)}
+                        disabled={isPending || isGenerating}
+                      />
                       <Input
                         className="flex-1"
                         placeholder="https://example.com/download"
