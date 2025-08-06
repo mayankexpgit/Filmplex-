@@ -122,7 +122,14 @@ export default function UploadMovie() {
 
   const addMovieLink = () => handleInputChange('downloadLinks', addListItem(formData.downloadLinks, { quality: '1080p', url: '', size: '' }));
   const addSeasonLink = () => handleInputChange('seasonDownloadLinks', addListItem(formData.seasonDownloadLinks, { quality: '1080p', url: '', size: '' }));
-  const addEpisode = () => handleInputChange('episodes', addListItem(formData.episodes, { episodeNumber: (formData.episodes?.length || 0) + 1, title: '', downloadLinks: [{quality: '1080p', url: '', size: ''}] }));
+  const addEpisode = () => {
+    const newEpisode: Episode = {
+        episodeNumber: (formData.episodes?.length || 0) + 1,
+        title: '',
+        downloadLinks: [{ quality: '1080p', url: '', size: '' }]
+    };
+    handleInputChange('episodes', addListItem(formData.episodes, newEpisode));
+  };
   const addEpisodeLink = (epIndex: number) => {
      const newEpisodes = [...(formData.episodes || [])];
      newEpisodes[epIndex].downloadLinks = addListItem(newEpisodes[epIndex].downloadLinks, { quality: '1080p', url: '', size: '' });
@@ -343,9 +350,7 @@ export default function UploadMovie() {
                                     key={epIndex} 
                                     epIndex={epIndex} 
                                     episode={ep} 
-                                    onEpisodeChange={(field, value) => {
-                                      handleInputChange(field, value);
-                                    }}
+                                    onEpisodeChange={handleInputChange}
                                     onLinkChange={handleEpisodeLinkChange} 
                                     onAddLink={addEpisodeLink} 
                                     onRemoveLink={removeEpisodeLink} 
@@ -472,7 +477,7 @@ interface EpisodeEditorProps {
     epIndex: number;
     episode: Episode;
     currentEpisodes: Episode[];
-    onEpisodeChange: (field: string, value: any) => void;
+    onEpisodeChange: (field: 'episodes', value: any) => void;
     onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void;
     onAddLink: (epIndex: number) => void;
     onRemoveLink: (epIndex: number, linkIndex: number) => void;
@@ -491,7 +496,7 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
     return (
         <div className="p-3 border rounded-lg bg-background/30 space-y-3">
             <div className="flex justify-between items-center">
-                 <Label className="font-semibold">Episode {epIndex + 1}</Label>
+                 <Label className="font-semibold">Episode {episode.episodeNumber}</Label>
                  <Button variant="ghost" size="icon" onClick={() => onRemoveEpisode(epIndex)} disabled={disabled}>
                     <XCircle className="h-5 w-5 text-destructive" />
                 </Button>
