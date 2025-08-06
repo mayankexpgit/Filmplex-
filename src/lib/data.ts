@@ -40,7 +40,18 @@ export const initialMovies: Movie[] = [
       { quality: '4K/HD', url: 'https://example.com/inception-4k' },
       { quality: 'HD', url: 'https://example.com/inception-hd' },
     ],
-    synopsis: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.',
+    synopsis: `
+      <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
+      <br>
+      <h4>DESCRIPTION:</h4>
+      <p>Watch Inception (2010) Dual Audio [Hindi-English] Full Movie Online Free. The film is available in 1080p, 720p & 480p qualities. This is a Hindi movie and is available in 1080p, 720p & 480p qualities. This is one of the best movies based on Action, Adventure, Sci-Fi. This movie is now available in Hindi.</p>
+      <br>
+      <h4>STORYLINE:</h4>
+      <p>A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.</p>
+      <br>
+      <h4>REVIEW:</h4>
+      <p>Inception is a true masterpiece from Christopher Nolan. This isn't your typical heist film; it's smart, mysterious, and visually stunning, making every scene absolutely electric. The tension is next-level, and the way the story unfolds keeps you hooked right until the jaw-dropping finale. To top it off, the performances are outstanding. It's a film that genuinely makes you think and leaves you wanting more.</p>
+    `,
     screenshots: [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
