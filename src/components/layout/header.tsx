@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -168,10 +168,16 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem asChild>
-              <Link href="/admin">Admin panel</Link>
+              <Link href="/admin">
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Admin panel
+              </Link>
             </DropdownMenuItem>
              <HelpCenterPanel />
-            <DropdownMenuItem>Suggestion</DropdownMenuItem>
+            <DropdownMenuItem>
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Suggestion
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
