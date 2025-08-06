@@ -39,6 +39,7 @@ export interface Movie {
   streamingChannel?: string;
   tags?: string[];
   description?: string;
+  synopsis?: string;
   screenshots?: string[];
   isFeatured?: boolean;
   stars?: string;
@@ -84,14 +85,9 @@ export const initialMovies: Movie[] = [
       { quality: '1080p', url: 'https://example.com/inception-4k', size: '2.5GB' },
       { quality: '720p', url: 'https://example.com/inception-hd', size: '1.2GB' },
     ],
+    synopsis: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.',
     description: `
       <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
-      <br>
-      <h4>DESCRIPTION:</h4>
-      <p>Experience Inception (2010), now available for download on FILMPLEX. This film, presented in English, is available in 1080p & 720p qualities. As a standout in the Sci-Fi, Action genre, this is a must-watch. Download now and enjoy the show.</p>
-      <br>
-      <h4>STORYLINE:</h4>
-      <p>A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.</p>
       <br>
       <h4>REVIEW:</h4>
       <p>Inception is a true masterpiece from Christopher Nolan. This isn't your typical heist film; it's smart, mysterious, and visually stunning, making every scene absolutely electric. The tension is next-level, and the way the story unfolds keeps you hooked right until the jaw-dropping finale. To top it off, the performances by Leonardo DiCaprio are outstanding. It's a film that genuinely makes you think and leaves you wanting more.</p>
@@ -122,7 +118,8 @@ export const initialMovies: Movie[] = [
       { quality: '1080p', url: 'https://example.com/dk-hd', size: '1.5GB' },
       { quality: '720p', url: 'https://example.com/dk-720p', size: '800MB' },
     ],
-    description: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+    synopsis: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+    description: 'The description for The Dark Knight.',
      screenshots: [
         'https://placehold.co/1280x720.png',
         'https://placehold.co/1280x720.png',
@@ -155,7 +152,8 @@ export const initialMovies: Movie[] = [
         ],
       },
     ],
-    description: 'Taro Sakamoto was the ultimate assassin, feared by villains and admired by hitmen. But one day... He fell in love! Retirement, marriage, fatherhood and then... Sakamoto gained weight! The chubby guy who runs the neighborhood store is actually a former legendary hitman! Can he protect his family from danger?',
+    synopsis: 'Taro Sakamoto was the ultimate assassin, feared by villains and admired by hitmen. But one day... He fell in love! Retirement, marriage, fatherhood and then... Sakamoto gained weight! The chubby guy who runs the neighborhood store is actually a former legendary hitman! Can he protect his family from danger?',
+    description: 'The description for Sakamoto Days.',
     screenshots: [
       'https://placehold.co/1280x720.png',
       'https://placehold.co/1280x720.png',

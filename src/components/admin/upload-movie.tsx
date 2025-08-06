@@ -48,6 +48,7 @@ const initialFormState: FormData = {
   streamingChannel: '',
   isFeatured: false,
   description: '',
+  synopsis: '',
   screenshots: ['', '', ''],
   stars: '',
   creator: '',
@@ -391,11 +392,22 @@ export default function UploadMovie() {
 
               <Separator />
 
+              {/* Synopsis */}
+               <div className="space-y-2">
+                <Label htmlFor="movie-synopsis">Synopsis</Label>
+                <Textarea 
+                  id="movie-synopsis" 
+                  value={formData.synopsis || ''} 
+                  onChange={(e) => handleInputChange('synopsis', e.target.value)} 
+                  disabled={isFormDisabled} 
+                  rows={5}
+                  placeholder="Provide a brief synopsis of the movie/series..."
+                />
+              </div>
+
               {/* Description */}
                <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <Label htmlFor="movie-description">Description</Label>
-                </div>
+                <Label htmlFor="movie-description">Description</Label>
                 <div className="p-2 border rounded-md">
                    <Textarea 
                       id="movie-description" 
@@ -404,7 +416,7 @@ export default function UploadMovie() {
                       disabled={isFormDisabled} 
                       rows={10}
                       className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                      placeholder="Provide a description here..."
+                      placeholder="Provide a longer description or review here..."
                   />
                 </div>
               </div>
