@@ -13,7 +13,7 @@ import type { Movie, DownloadLink, Episode } from '@/lib/data';
 import { Loader2, PlusCircle, XCircle, Sparkles, Wand2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
-import MovieDetailPreview from './movie-detail-preview';
+import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { generateMovieDescription } from '@/ai/flows/generate-movie-description-flow';
@@ -378,7 +378,24 @@ export default function UploadMovie() {
                         </div>
                         <div className="space-y-4">
                             {(formData.episodes || []).map((ep, epIndex) => (
-                                <EpisodeEditor key={epIndex} epIndex={epIndex} episode={ep} onEpisodeChange={handleInputChange} onLinkChange={handleEpisodeLinkChange} onAddLink={addEpisodeLink} onRemoveLink={removeEpisodeLink} onRemoveEpisode={removeEpisode} disabled={isFormDisabled} />
+                                <EpisodeEditor 
+                                    key={epIndex} 
+                                    epIndex={epIndex} 
+                                    episode={ep} 
+                                    onEpisodeChange={(field, value) => {
+                                        const newEpisodes = [...(formData.episodes || [])];
+                                        if (field === 'title') {
+                                            newEpisodes[epIndex].title = value;
+                                        }
+                                        handleInputChange('episodes', newEpisodes);
+                                    }}
+                                    onLinkChange={handleEpisodeLinkChange} 
+                                    onAddLink={addEpisodeLink} 
+                                    onRemoveLink={removeEpisodeLink} 
+                                    onRemoveEpisode={removeEpisode} 
+                                    disabled={isFormDisabled} 
+                                    currentEpisodes={formData.episodes || []}
+                                />
                             ))}
                         </div>
                     </div>
@@ -497,7 +514,8 @@ function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled 
 interface EpisodeEditorProps {
     epIndex: number;
     episode: Episode;
-    onEpisodeChange: (field: keyof FormData, value: any) => void;
+    currentEpisodes: Episode[];
+    onEpisodeChange: (field: string, value: any) => void;
     onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void;
     onAddLink: (epIndex: number) => void;
     onRemoveLink: (epIndex: number, linkIndex: number) => void;
@@ -505,11 +523,10 @@ interface EpisodeEditorProps {
     disabled?: boolean;
 }
 
-function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled}: EpisodeEditorProps) {
+function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled}: EpisodeEditorProps) {
     
     const handleTitleChange = (value: string) => {
-        const episodes = useMovieStore.getState().movies.find(m => m.id === (episode as any).id)?.episodes || [];
-        const newEpisodes = [...episodes];
+        const newEpisodes = [...currentEpisodes];
         newEpisodes[epIndex].title = value;
         onEpisodeChange('episodes', newEpisodes);
     };
@@ -539,3 +556,5 @@ function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddL
         </div>
     )
 }
+
+    
