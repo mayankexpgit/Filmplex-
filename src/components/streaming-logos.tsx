@@ -40,7 +40,7 @@ const StreamingLogos = () => {
                 />
                </div>
             ) : logo.name === 'Viki Rakuten' ? (
-              <div className="relative h-14 w-40 sm:h-16 sm:w-44">
+              <div className="relative h-14 w-48 sm:h-16 sm:w-52">
                 <Image
                   src={logo.url}
                   alt={`${logo.name} logo`}
