@@ -1,3 +1,4 @@
+
 import SuggestionsBox from '@/components/admin/suggestions-box';
 
 export default function SuggestionsBoxPage() {

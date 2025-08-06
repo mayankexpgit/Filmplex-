@@ -136,9 +136,16 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
 
 export const fetchSuggestions = async (): Promise<Suggestion[]> => {
     const suggestionsCollection = collection(db, 'suggestions');
-    const snapshot = await getDocs(suggestionsCollection);
+    const q = query(suggestionsCollection, orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Suggestion));
 }
+
+export const addSuggestion = async (suggestion: Omit<Suggestion, 'id'>): Promise<string> => {
+    const suggestionsCollection = collection(db, 'suggestions');
+    const docRef = await addDoc(suggestionsCollection, suggestion);
+    return docRef.id;
+};
 
 export const deleteSuggestion = async (id: string): Promise<void> => {
     const suggestionDoc = doc(db, 'suggestions', id);

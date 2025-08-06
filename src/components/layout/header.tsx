@@ -23,6 +23,7 @@ import { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
+import SuggestionForm from '../suggestion-form';
 
 function UpcomingReleasesPanel() {
   const { notifications, isInitialized } = useMovieStore();
@@ -154,6 +155,29 @@ function HelpCenterPanel() {
   )
 }
 
+function SuggestionPanel() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Suggestion
+        </DropdownMenuItem>
+      </SheetTrigger>
+      <SheetContent className="w-[400px]">
+        <SheetHeader>
+          <SheetTitle>Make a Suggestion</SheetTitle>
+          <SheetDescription>
+            Want to see a specific movie or series? Let us know!
+          </SheetDescription>
+        </SheetHeader>
+        <SuggestionForm onSubmitted={() => setOpen(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 
 export function Header() {
   return (
@@ -174,10 +198,7 @@ export function Header() {
               </Link>
             </DropdownMenuItem>
              <HelpCenterPanel />
-            <DropdownMenuItem>
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Suggestion
-            </DropdownMenuItem>
+            <SuggestionPanel />
           </DropdownMenuContent>
         </DropdownMenu>
 

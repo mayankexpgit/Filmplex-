@@ -9,6 +9,7 @@ import {
   fetchContactInfo as dbFetchContactInfo,
   updateContactInfo as dbUpdateContactInfo,
   fetchSuggestions as dbFetchSuggestions,
+  addSuggestion as dbAddSuggestion,
   deleteSuggestion as dbDeleteSuggestion,
   fetchSecurityLogs as dbFetchSecurityLogs,
   addSecurityLog as dbAddSecurityLog,
@@ -33,9 +34,9 @@ export interface ContactInfo {
 
 export interface Suggestion {
   id: string;
-  user: string;
-  suggestion: string;
-  date: string;
+  movieName: string;
+  comment: string;
+  timestamp: string;
 }
 
 export interface SecurityLog {
@@ -239,6 +240,19 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   await dbUpdateContactInfo(info);
   useMovieStore.setState({ contactInfo: info });
   await addSecurityLog('Updated Help Center Info');
+};
+
+export const submitSuggestion = async (movieName: string, comment: string): Promise<void> => {
+  const newSuggestionData = {
+    movieName,
+    comment,
+    timestamp: new Date().toISOString(),
+  };
+  const id = await dbAddSuggestion(newSuggestionData);
+  await addSecurityLog(`New suggestion received for: "${movieName}"`);
+  useMovieStore.setState(state => ({
+    suggestions: [{ id, ...newSuggestionData }, ...state.suggestions],
+  }));
 };
 
 export const deleteSuggestion = async (id: string): Promise<void> => {
