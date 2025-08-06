@@ -344,11 +344,7 @@ export default function UploadMovie() {
                                     epIndex={epIndex} 
                                     episode={ep} 
                                     onEpisodeChange={(field, value) => {
-                                        const newEpisodes = [...(formData.episodes || [])];
-                                        if (field === 'title') {
-                                            newEpisodes[epIndex].title = value;
-                                        }
-                                        handleInputChange('episodes', newEpisodes);
+                                      handleInputChange(field, value);
                                     }}
                                     onLinkChange={handleEpisodeLinkChange} 
                                     onAddLink={addEpisodeLink} 
