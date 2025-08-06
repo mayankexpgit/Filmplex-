@@ -4,15 +4,9 @@
 import { useState, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useMovieStore, addNotification, deleteNotification } from '@/store/movieStore';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Loader2, PlusCircle, Trash2 } from 'lucide-react';
@@ -24,33 +18,23 @@ import Image from 'next/image';
 export default function MovieNotification() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const movies = useMovieStore((state) => state.latestReleases);
   const notifications = useMovieStore((state) => state.notifications);
 
-  const [selectedMovieId, setSelectedMovieId] = useState<string | undefined>();
+  const [movieTitle, setMovieTitle] = useState('');
+  const [posterUrl, setPosterUrl] = useState('');
   const [releaseDate, setReleaseDate] = useState<Date | undefined>();
 
   const handleAddNotification = () => {
-    if (!selectedMovieId || !releaseDate) {
+    if (!movieTitle || !posterUrl || !releaseDate) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please select a movie and a release date.',
-      });
-      return;
-    }
-
-    const movie = movies.find((m) => m.id === selectedMovieId);
-    if (!movie) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Selected movie not found.',
+        description: 'Please fill in the movie title, poster URL, and release date.',
       });
       return;
     }
     
-    if (notifications.some(n => n.movieTitle === movie.title)) {
+    if (notifications.some(n => n.movieTitle === movieTitle)) {
        toast({
         variant: 'destructive',
         title: 'Already Exists',
@@ -62,15 +46,16 @@ export default function MovieNotification() {
     startTransition(async () => {
       try {
         await addNotification({
-          movieTitle: movie.title,
-          posterUrl: movie.posterUrl,
+          movieTitle,
+          posterUrl,
           releaseDate: format(releaseDate, 'PPP'), // e.g., Jun 9, 2024
         });
         toast({
           title: 'Success!',
-          description: `Notification for "${movie.title}" has been added.`,
+          description: `Notification for "${movieTitle}" has been added.`,
         });
-        setSelectedMovieId(undefined);
+        setMovieTitle('');
+        setPosterUrl('');
         setReleaseDate(undefined);
       } catch (error) {
         toast({
@@ -106,24 +91,29 @@ export default function MovieNotification() {
         <CardHeader>
           <CardTitle>Add Upcoming Release Notification</CardTitle>
           <CardDescription>
-            Select a movie and set a future release date to notify users.
+            Add a movie title, poster URL, and a future release date to notify users.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Movie</Label>
-            <Select value={selectedMovieId} onValueChange={setSelectedMovieId} disabled={isPending}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a movie to feature" />
-              </SelectTrigger>
-              <SelectContent>
-                {movies.map((movie) => (
-                  <SelectItem key={movie.id} value={movie.id}>
-                    {movie.title} ({movie.year})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="notif-title">Movie Title</Label>
+            <Input
+              id="notif-title"
+              value={movieTitle}
+              onChange={(e) => setMovieTitle(e.target.value)}
+              placeholder="e.g. Dune: Part Three"
+              disabled={isPending}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notif-poster">Poster URL</Label>
+            <Input
+              id="notif-poster"
+              value={posterUrl}
+              onChange={(e) => setPosterUrl(e.target.value)}
+              placeholder="https://image.tmdb.org/..."
+              disabled={isPending}
+            />
           </div>
           <div className="space-y-2">
             <Label>Upcoming Release Date</Label>
