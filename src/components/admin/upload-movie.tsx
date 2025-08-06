@@ -17,7 +17,6 @@ import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { generateMovieDescription } from '@/ai/flows/generate-movie-description-flow';
-import { fetchMovieMetadata } from '@/ai/flows/fetch-movie-metadata-flow';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 type FormData = Partial<Movie> & {
@@ -394,7 +393,7 @@ export default function UploadMovie() {
                       disabled={isFormDisabled} 
                       rows={10}
                       className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                      placeholder="Provide a brief plot summary here, or use 'Fetch Details with AI' then click 'Generate with AI' to create a full description."
+                      placeholder="Provide a brief plot summary here, or click 'Generate with AI' to create a full description."
                   />
                 </div>
               </div>

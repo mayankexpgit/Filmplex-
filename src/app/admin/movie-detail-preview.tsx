@@ -93,8 +93,8 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               <h2 className="text-2xl font-bold mb-4 text-center">Download Links</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
-                    <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
+                  link?.url && <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
                         <Download />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
@@ -115,12 +115,13 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
                 <h2 className="text-2xl font-bold mb-4 text-center">Episodes</h2>
                 <div className="space-y-6 w-full max-w-2xl mx-auto">
                     {movie.episodes.map((ep, epIndex) => (
+                       ep.downloadLinks && ep.downloadLinks.length > 0 && ep.downloadLinks[0].url &&
                         <div key={epIndex} className="p-4 border rounded-lg bg-card">
                             <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}: {ep.title}</h3>
                             <div className="space-y-3 flex flex-col items-center">
                                 {ep.downloadLinks.map((link, linkIndex) => (
-                                     <Button key={linkIndex} asChild variant="secondary" size="lg" className="justify-between hover:brightness-110 w-full">
-                                        <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
+                                     link?.url && <Button key={linkIndex} asChild variant="secondary" size="lg" className="justify-between hover:brightness-110 w-full">
+                                        <a href={link.url} target="_blank" rel="noopener noreferrer">
                                             <div className="flex items-center gap-4">
                                                 <Download />
                                                 <span>{link.quality} {link.size && `(${link.size})`}</span>
@@ -144,8 +145,8 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               <h2 className="text-2xl font-bold mb-4 text-center">Download Full Season</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.seasonDownloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
-                    <a href={link.url || '#'} target="_blank" rel="noopener noreferrer">
+                  link?.url && <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
                         <Download />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
