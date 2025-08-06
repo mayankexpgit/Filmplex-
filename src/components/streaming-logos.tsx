@@ -10,6 +10,7 @@ const StreamingLogos = () => {
     { name: 'Crunchyroll', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Crunchyroll_2024_stacked.svg/1200px-Crunchyroll_2024_stacked.svg.png' },
     { name: 'Apple TV', url: 'https://www.edigitalagency.com.au/wp-content/uploads/Apple-TV-logo-white-PNG-large-size.png' },
     { name: 'Disney+', url: 'https://upload.wikimedia.org/wikipedia/commons/7/77/Disney_Plus_logo.svg' },
+    { name: 'Viki Rakuten', url: 'https://premiumbangladesh.com/wp-content/uploads/2023/10/picture.png' },
   ];
 
   return (
@@ -29,6 +30,15 @@ const StreamingLogos = () => {
                  </div>
                 <span className="text-5xl font-normal text-white -ml-4">+</span>
               </div>
+            ) : logo.name === 'Disney+' ? (
+               <div className="relative h-14 w-28 sm:h-16 sm:w-32">
+                 <Image
+                  src={logo.url}
+                  alt={`${logo.name} logo`}
+                  fill
+                  className="object-contain"
+                />
+               </div>
             ) : (
               <div className="relative h-14 w-36 sm:h-16 sm:w-40">
                 <Image
