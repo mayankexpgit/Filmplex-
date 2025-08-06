@@ -104,6 +104,10 @@ export function HomePageClient() {
         <MovieCardSmall />
       </section>
 
+      <div className="text-center text-lg font-bold text-foreground">
+        💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
+      </div>
+
       <section className="space-y-6">
         <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
           <div className="relative flex-1">
