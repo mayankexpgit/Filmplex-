@@ -29,7 +29,7 @@ export interface Comment {
 }
 
 export interface Movie {
-  id: string;
+  id:string;
   title: string;
   posterUrl: string;
   year: number;
@@ -121,6 +121,7 @@ export const initialMovies: Movie[] = [
       { quality: '720p', url: 'https://example.com/dk-720p', size: '800MB' },
     ],
     synopsis: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
+    trailerUrl: 'https://www.youtube.com/watch?v=EXeTwQWrcwY',
     description: 'The description for The Dark Knight.',
      screenshots: [
         'https://placehold.co/1280x720.png',
@@ -155,6 +156,7 @@ export const initialMovies: Movie[] = [
       },
     ],
     synopsis: 'Taro Sakamoto was the ultimate assassin, feared by villains and admired by hitmen. But one day... He fell in love! Retirement, marriage, fatherhood and then... Sakamoto gained weight! The chubby guy who runs the neighborhood store is actually a former legendary hitman! Can he protect his family from danger?',
+    trailerUrl: 'https://www.youtube.com/watch?v=Yf1eH-fOOrY',
     description: 'The description for Sakamoto Days.',
     screenshots: [
       'https://placehold.co/1280x720.png',

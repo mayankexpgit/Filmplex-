@@ -261,6 +261,10 @@ export default function UploadMovie() {
                   </div>
               </div>
                <div className="space-y-2">
+                  <Label htmlFor="movie-language">Language</Label>
+                  <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isFormDisabled} />
+              </div>
+               <div className="space-y-2">
                   <Label htmlFor="movie-stars">Stars (comma-separated)</Label>
                   <Input id="movie-stars" value={formData.stars || ''} onChange={(e) => handleInputChange('stars', e.target.value)} placeholder="e.g. Actor One, Actor Two" disabled={isFormDisabled} />
               </div>
@@ -282,10 +286,6 @@ export default function UploadMovie() {
               <div className="space-y-2">
                   <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
                   <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isFormDisabled} />
-              </div>
-               <div className="space-y-2">
-                      <Label htmlFor="movie-language">Language</Label>
-                      <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isFormDisabled} />
               </div>
               {/* Media Links */}
               <div className="space-y-2">
