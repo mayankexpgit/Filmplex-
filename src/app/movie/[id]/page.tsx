@@ -208,6 +208,9 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
             />
           </div>
 
+          {movie.cardInfoText && (
+            <p className="text-2xl font-bold text-center mb-2 text-gold-glow">{movie.cardInfoText}</p>
+          )}
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
           <div className="flex flex-col items-center text-center space-y-2 mb-6">
@@ -373,3 +376,5 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
