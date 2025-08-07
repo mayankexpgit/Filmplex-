@@ -16,7 +16,6 @@ interface MovieCardProps {
 
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
   const getQualityBadge = (): '4K' | 'HD' | null => {
-    // Manual badge override takes precedence
     if (movie.qualityBadge && movie.qualityBadge !== 'none') {
         return movie.qualityBadge;
     }
@@ -24,7 +23,6 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
         return null;
     }
 
-    // Automatic detection from links
     let qualities: string[] = [];
     if (movie.contentType === 'movie' && movie.downloadLinks) {
         qualities = movie.downloadLinks.map(link => link.quality.toLowerCase());
@@ -66,27 +64,11 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
           <h3 className="font-bold text-foreground text-sm leading-tight truncate">
             {movie.title}
           </h3>
-          <p className="text-muted-foreground text-xs mt-1">
-            {movie.year}
-          </p>
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {movie.language && (
-                 <Badge variant="outline" className="text-xs">{movie.language}</Badge>
-              )}
-               {movie.imdbRating && (
-                <Badge variant="outline" className="flex items-center gap-1 text-xs">
-                  <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                  {movie.imdbRating}
-                </Badge>
-              )}
-          </div>
-          <div className="flex flex-wrap gap-1 mt-2 flex-grow items-end">
-            {movie.tags?.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs rounded-sm">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {movie.cardInfoText && (
+            <p className="text-muted-foreground text-xs mt-1 truncate">
+              {movie.cardInfoText}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

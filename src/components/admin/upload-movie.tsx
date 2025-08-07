@@ -41,6 +41,7 @@ const initialFormState: FormData = {
   title: '',
   year: new Date().getFullYear(),
   posterUrl: '',
+  cardInfoText: '',
   trailerUrl: '',
   tagsString: '',
   genre: '',
@@ -249,6 +250,10 @@ export default function UploadMovie() {
               <div className="space-y-2">
                 <Label htmlFor="movie-title">Title</Label>
                 <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="card-info-text">Card Info Text</Label>
+                <Input id="card-info-text" value={formData.cardInfoText || ''} onChange={(e) => handleInputChange('cardInfoText', e.target.value)} disabled={isFormDisabled} placeholder="e.g. 2024 • Hindi • IMDb 8.5" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">

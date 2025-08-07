@@ -33,6 +33,7 @@ export interface Movie {
   title: string;
   posterUrl: string;
   year: number;
+  cardInfoText?: string;
   genre: string;
   language?: string;
   imdbRating?: number;
@@ -71,6 +72,7 @@ export const initialMovies: Movie[] = [
     title: 'Inception',
     posterUrl: 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq27gApcjBveAabcF.jpg',
     year: 2010,
+    cardInfoText: '2010 • English • IMDb 8.8',
     genre: 'Sci-Fi, Action',
     language: 'English',
     imdbRating: 8.8,
@@ -106,6 +108,7 @@ export const initialMovies: Movie[] = [
     title: 'The Dark Knight',
     posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
     year: 2008,
+    cardInfoText: '2008 • English • IMDb 9.0',
     genre: 'Action, Crime, Drama',
     language: 'English',
     imdbRating: 9.0,
@@ -135,6 +138,7 @@ export const initialMovies: Movie[] = [
     title: 'Sakamoto Days',
     posterUrl: 'https://image.tmdb.org/t/p/w500/g8Io_s3fKx3eQdJtgoi4StkWa2f.jpg',
     year: 2024,
+    cardInfoText: '2024 • Anime • New Episodes',
     genre: 'Anime, Action, Comedy',
     language: 'Japanese',
     imdbRating: 9.1,
