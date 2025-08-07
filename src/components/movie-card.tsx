@@ -65,7 +65,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             {movie.title}
           </h3>
           {movie.cardInfoText ? (
-            <p className="text-muted-foreground text-xs mt-1 truncate">
+             <p className="font-bold text-muted-foreground text-xs mt-1 truncate">
               {movie.cardInfoText}
             </p>
           ) : (
@@ -91,7 +91,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   const smallVariantContent = (
      <div className="group cursor-pointer">
-        <div className="relative block overflow-hidden aspect-[2/3]">
+        <div className="relative block overflow-hidden aspect-[2/3] rounded-lg">
           <Image
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
