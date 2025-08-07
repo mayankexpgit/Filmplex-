@@ -93,7 +93,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   const smallVariantContent = (
      <div className="group cursor-pointer">
-        <div className="relative block overflow-hidden aspect-[2/3] rounded-lg">
+        <div className="relative block overflow-hidden aspect-[2/3]">
           <Image
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
