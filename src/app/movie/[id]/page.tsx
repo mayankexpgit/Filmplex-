@@ -147,7 +147,7 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
-export default function MovieDetailPage({ params }: { params: { id: string } }) {
+export default function MovieDetailPage({ params: { id } }: { params: { id: string } }) {
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
@@ -161,10 +161,10 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
   useEffect(() => {
     if (isInitialized) {
       const allMovies = [...latestReleases, ...featuredMovies];
-      const foundMovie = allMovies.find(m => m.id === params.id);
+      const foundMovie = allMovies.find(m => m.id === id);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, params.id]);
+  }, [isInitialized, latestReleases, featuredMovies, id]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
@@ -391,3 +391,5 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
