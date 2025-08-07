@@ -199,7 +199,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
           {movie.cardInfoText && (
-            <p className="text-2xl font-bold text-center mb-2 text-gold-glow">{movie.cardInfoText}</p>
+            <p className="text-2xl font-bold text-center mb-2 text-foreground">{movie.cardInfoText}</p>
           )}
 
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
