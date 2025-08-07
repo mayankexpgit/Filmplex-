@@ -372,6 +372,20 @@ export default function MovieDetailPage({ params: { id } }: { params: { id: stri
           
           <CommentsSection movieId={movie.id} />
 
+          <Separator className="my-8 w-full" />
+
+          <section className="w-full max-w-3xl mx-auto text-muted-foreground text-sm text-center space-y-4">
+              <p>
+                  Filmplex is one of India's emerging platforms for watching and downloading a wide range of movies and web series, including Bollywood, Hollywood, South Indian, Hindi-dubbed, and more. From the latest blockbusters to timeless classics, Filmplex brings you content directly from original sources — ensuring quality and authenticity across every genre.
+              </p>
+              <p>
+                  Filmplex offers high-quality movies across multiple resolutions like HD, 1080p, 4K, and more. One of its standout features is early movie notifications and scheduled release date alerts, so you never miss a new drop. Whether you're a fan of drama, action, romance, or thrillers — Filmplex has something for everyone.
+              </p>
+              <p>
+                  The platform is 100% free to use, and while currently focused on downloads, streaming options may be available in the near future.
+              </p>
+          </section>
+
         </div>
       </main>
     </div>
