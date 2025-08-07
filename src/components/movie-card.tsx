@@ -64,10 +64,25 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
           <h3 className="font-bold text-foreground text-sm leading-tight truncate">
             {movie.title}
           </h3>
-          {movie.cardInfoText && (
+          {movie.cardInfoText ? (
             <p className="text-muted-foreground text-xs mt-1 truncate">
               {movie.cardInfoText}
             </p>
+          ) : (
+            <div className="text-muted-foreground text-xs mt-1 flex items-center gap-2 truncate">
+              <span>{movie.year}</span>
+              {movie.language && <span>&bull;</span>}
+              <span>{movie.language}</span>
+              {movie.imdbRating ? (
+                <>
+                  <span>&bull;</span>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-3 h-3 text-primary" />
+                    <span>{movie.imdbRating}</span>
+                  </div>
+                </>
+              ) : null}
+            </div>
           )}
         </div>
       </CardContent>
