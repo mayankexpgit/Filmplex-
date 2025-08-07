@@ -199,7 +199,7 @@ export default function MovieDetailPage({ params: { id } }: { params: { id: stri
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
           {movie.cardInfoText && (
-            <p className="text-2xl font-bold text-center mb-2 text-gold-glow">{movie.cardInfoText}</p>
+            <p className="text-2xl font-bold text-center mb-2 text-foreground">{movie.cardInfoText}</p>
           )}
 
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
@@ -374,7 +374,7 @@ export default function MovieDetailPage({ params: { id } }: { params: { id: stri
 
           <Separator className="my-8 w-full" />
 
-          <section className="w-full max-w-3xl mx-auto text-gold-glow text-sm text-center space-y-4">
+          <section className="w-full max-w-3xl mx-auto text-primary text-sm text-center space-y-4">
               <p>
                   Filmplex is one of India's emerging platforms for watching and downloading a wide range of movies and web series, including Bollywood, Hollywood, South Indian, Hindi-dubbed, and more. From the latest blockbusters to timeless classics, Filmplex brings you content directly from original sources — ensuring quality and authenticity across every genre.
               </p>
