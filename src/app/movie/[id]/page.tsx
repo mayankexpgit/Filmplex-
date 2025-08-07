@@ -198,6 +198,10 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
       <main className="container mx-auto py-8 md:py-12">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
+          {movie.cardInfoText && (
+            <p className="text-2xl font-bold text-center mb-2 text-gold-glow">{movie.cardInfoText}</p>
+          )}
+
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
             <Image
               src={movie.posterUrl}
@@ -208,9 +212,6 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
             />
           </div>
 
-          {movie.cardInfoText && (
-            <p className="text-2xl font-bold text-center mb-2 text-gold-glow">{movie.cardInfoText}</p>
-          )}
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
           <div className="flex flex-col items-center text-center space-y-2 mb-6">
@@ -376,5 +377,3 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-
-    
