@@ -61,28 +61,30 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
           )}
         </div>
         <div className="p-2 flex-grow flex flex-col">
-          <h3 className="font-bold text-foreground text-sm leading-tight truncate">
-            {movie.title}
-          </h3>
           {movie.cardInfoText ? (
-             <p className="font-bold text-muted-foreground text-xs mt-1 truncate">
+             <p className="font-bold text-foreground text-sm leading-tight">
               {movie.cardInfoText}
             </p>
           ) : (
-            <div className="text-muted-foreground text-xs mt-1 flex items-center gap-2 truncate">
-              <span>{movie.year}</span>
-              {movie.language && <span>&bull;</span>}
-              <span>{movie.language}</span>
-              {movie.imdbRating ? (
-                <>
-                  <span>&bull;</span>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3 text-primary" />
-                    <span>{movie.imdbRating}</span>
-                  </div>
-                </>
-              ) : null}
-            </div>
+            <>
+              <h3 className="font-bold text-foreground text-sm leading-tight truncate">
+                {movie.title}
+              </h3>
+              <div className="text-muted-foreground text-xs mt-1 flex items-center gap-2 truncate">
+                <span>{movie.year}</span>
+                {movie.language && <span>&bull;</span>}
+                <span>{movie.language}</span>
+                {movie.imdbRating ? (
+                  <>
+                    <span>&bull;</span>
+                    <div className="flex items-center gap-1">
+                      <Star className="w-3 h-3 text-primary" />
+                      <span>{movie.imdbRating}</span>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </>
           )}
         </div>
       </CardContent>
