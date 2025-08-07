@@ -60,7 +60,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             </Badge>
           )}
         </div>
-        <div className="p-2 flex-grow flex flex-col">
+        <div className="p-2 flex-grow flex flex-col justify-center h-12 overflow-hidden">
           {movie.cardInfoText ? (
              <p className="font-bold text-foreground text-sm leading-tight">
               {movie.cardInfoText}
