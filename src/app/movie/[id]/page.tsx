@@ -147,7 +147,8 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
-export default function MovieDetailPage({ params: { id } }: { params: { id: string } }) {
+export default function MovieDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
@@ -374,7 +375,7 @@ export default function MovieDetailPage({ params: { id } }: { params: { id: stri
 
           <Separator className="my-8 w-full" />
 
-          <section className="w-full max-w-3xl mx-auto text-primary text-sm text-center space-y-4">
+          <section className="w-full max-w-3xl mx-auto text-muted-foreground text-sm text-center space-y-4">
               <p>
                   Filmplex is one of India's emerging platforms for watching and downloading a wide range of movies and web series, including Bollywood, Hollywood, South Indian, Hindi-dubbed, and more. From the latest blockbusters to timeless classics, Filmplex brings you content directly from original sources — ensuring quality and authenticity across every genre.
               </p>
