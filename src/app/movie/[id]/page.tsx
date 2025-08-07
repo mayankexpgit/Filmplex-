@@ -147,8 +147,7 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
-export default function MovieDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function MovieDetailPage({ params: { id } }: { params: { id: string } }) {
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
