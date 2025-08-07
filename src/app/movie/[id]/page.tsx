@@ -164,7 +164,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
       const foundMovie = allMovies.find(m => m.id === params.id);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, params.id]);
+  }, [isInitialized, latestReleases, featuredMovies, params]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
