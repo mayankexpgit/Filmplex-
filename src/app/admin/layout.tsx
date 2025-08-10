@@ -8,7 +8,7 @@ import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
 import { useMovieStore, fetchAdminData } from '@/store/movieStore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function AdminLayout({
   children,
@@ -18,18 +18,25 @@ export default function AdminLayout({
   const { isInitialized } = useMovieStore();
   const { isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
       router.push('/admin/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
   useEffect(() => {
     if (isAuthenticated && !isInitialized) {
       fetchAdminData();
     }
   }, [isAuthenticated, isInitialized]);
+  
+  // If we are on the login page, let it render without the layout shell
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
 
   if (isLoading || !isAuthenticated) {
     return (
