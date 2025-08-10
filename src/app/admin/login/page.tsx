@@ -27,8 +27,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    startTransition(() => {
-      const success = login(username, password);
+    startTransition(async () => {
+      const success = await login(username, password);
       if (success) {
         toast({
           title: 'Login Successful',

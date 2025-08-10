@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchAdminCredentials } from '@/services/movieService';
 
 const AUTH_TOKEN_KEY = 'filmplex_admin_auth_token';
 
@@ -27,24 +28,22 @@ export function useAuth() {
     }
   }, []);
 
-  const login = useCallback((username, password) => {
-    // These are the credentials the user requested
-    const validUsername = 'adminfilmplex@90';
-    const validPassword = 'admin2189movie';
-
-    if (username === validUsername && password === validPassword) {
-      try {
+  const login = useCallback(async (username, password) => {
+    try {
+      const { validUsername, validPassword } = await fetchAdminCredentials();
+      
+      if (username === validUsername && password === validPassword) {
         // Create a simple token. In a real app, this would come from a server.
         const token = btoa(`${username}:${password}:${new Date().getTime()}`);
         localStorage.setItem(AUTH_TOKEN_KEY, token);
         setIsAuthenticated(true);
         return true;
-      } catch (error) {
-        console.error("Could not access localStorage:", error);
-        return false;
       }
+      return false;
+    } catch (error) {
+      console.error("Login failed:", error);
+      return false;
     }
-    return false;
   }, []);
 
   const logout = useCallback(() => {
@@ -65,5 +64,3 @@ export function useAuth() {
     logout,
   };
 }
-
-    

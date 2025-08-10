@@ -16,7 +16,28 @@ import {
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions } from '@/lib/data';
 import { initialMovies } from '@/lib/data';
-import type { ContactInfo, Suggestion, SecurityLog } from '@/store/movieStore';
+import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
+
+
+// --- Admin Credentials ---
+
+export const fetchAdminCredentials = async (): Promise<AdminCredentials> => {
+    const docRef = doc(db, 'singletons', 'adminCredentials');
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        return docSnap.data() as AdminCredentials;
+    } else {
+        // If credentials don't exist, create them with the user's requested defaults.
+        const defaultCredentials: AdminCredentials = { 
+            validUsername: 'adminfilmplex@90',
+            validPassword: 'admin2189movie'
+        };
+        await setDoc(docRef, defaultCredentials);
+        console.log("Default admin credentials created in Firestore.");
+        return defaultCredentials;
+    }
+}
 
 
 // --- Movie Functions ---
