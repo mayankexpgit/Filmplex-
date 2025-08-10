@@ -19,10 +19,13 @@ export default function UpdateFeatured() {
   const { featuredMovies } = useMovieStore();
   const [isPending, startTransition] = useTransition();
   
-  const [editableMovies, setEditableMovies] = useState<EditableMovie[]>([]);
+  // Initialize local state directly from the store state
+  const [editableMovies, setEditableMovies] = useState<EditableMovie[]>(
+    featuredMovies.map(({ id, title, posterUrl }) => ({ id, title, posterUrl }))
+  );
 
+  // Sync with store state when it changes
   useEffect(() => {
-    // Sync local state when store changes
     setEditableMovies(featuredMovies.map(({ id, title, posterUrl }) => ({ id, title, posterUrl })));
   }, [featuredMovies]);
 
