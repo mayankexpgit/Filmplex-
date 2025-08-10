@@ -54,7 +54,7 @@ export function useAuth() {
        console.error("Could not access localStorage:", error);
     } finally {
        setIsAuthenticated(false);
-       router.push('/admin/login');
+       router.replace('/admin/login');
     }
   }, [router]);
 
@@ -65,3 +65,5 @@ export function useAuth() {
     logout,
   };
 }
+
+    

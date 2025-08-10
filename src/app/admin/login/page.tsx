@@ -33,7 +33,7 @@ export default function LoginPage() {
           title: 'Login Successful',
           description: 'Welcome back to the admin dashboard.',
         });
-        router.push('/admin');
+        router.replace('/admin');
       } else {
         setError('Invalid username or password. Please try again.');
       }
@@ -92,3 +92,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
