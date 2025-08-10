@@ -4,9 +4,11 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
 import { useMovieStore, fetchAdminData } from '@/store/movieStore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({
   children,
@@ -14,12 +16,32 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isInitialized } = useMovieStore();
+  const { isAuthenticated, isLoading, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!isInitialized) {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/admin/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    if (isAuthenticated && !isInitialized) {
       fetchAdminData();
     }
-  }, [isInitialized]);
+  }, [isAuthenticated, isInitialized]);
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="bg-background min-h-screen text-foreground flex items-center justify-center">
+        <div className="space-y-8 max-w-4xl w-full p-4">
+          <CardSkeleton />
+          <CardSkeleton withTable />
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="bg-background min-h-screen text-foreground">
@@ -29,12 +51,18 @@ export default function AdminLayout({
              <LayoutDashboard className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
-          <Button variant="outline" asChild>
-            <Link href="/">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Site
-            </Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" asChild>
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Site
+              </Link>
+            </Button>
+             <Button variant="destructive" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
       <main>
