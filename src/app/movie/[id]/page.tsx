@@ -147,25 +147,32 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
-export default function MovieDetailPage({ params }: { params: { id: string } }) {
+export default function MovieDetailPage() {
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
+  const [movieId, setMovieId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Get ID from URL path
+    const path = window.location.pathname;
+    const id = path.split('/').pop();
+    if (id) {
+        setMovieId(id);
+    }
+
     if (!isInitialized) {
       fetchMovieData();
     }
   }, [isInitialized]);
 
   useEffect(() => {
-    const id = params.id;
-    if (isInitialized) {
+    if (isInitialized && movieId) {
       const allMovies = [...latestReleases, ...featuredMovies];
-      const foundMovie = allMovies.find(m => m.id === id);
+      const foundMovie = allMovies.find(m => m.id === movieId);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, params]);
+  }, [isInitialized, latestReleases, featuredMovies, movieId]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
