@@ -60,9 +60,9 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
             </Badge>
           )}
         </div>
-        <div className="p-2 flex-grow flex flex-col justify-start h-32 overflow-hidden">
+        <div className="p-2 flex-grow flex flex-col justify-start h-36 overflow-hidden">
           {movie.cardInfoText ? (
-             <p className="font-bold text-foreground text-sm leading-tight [display:-webkit-box] [-webkit-line-clamp:6] [-webkit-box-orient:vertical] overflow-hidden">
+             <p className="font-bold text-foreground text-sm leading-tight [display:-webkit-box] [-webkit-line-clamp:7] [-webkit-box-orient:vertical] overflow-hidden">
               {movie.cardInfoText}
             </p>
           ) : (
