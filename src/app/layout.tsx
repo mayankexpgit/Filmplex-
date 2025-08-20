@@ -15,7 +15,7 @@ export default function RootLayout({
       <head>
         <link
           rel="icon"
-          href="https://beeimg.com/images/g50294930983.ico"
+          href="https://beeimg.com/images/n28494179391.ico"
           type="image/x-icon"
           sizes="any"
         />
