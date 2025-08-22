@@ -13,10 +13,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        {/* Favicon from internal public folder */}
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-
+        <link
+          rel="icon"
+          href="https://beeimg.com/images/n28494179391.ico"
+          type="image/x-icon"
+          sizes="any"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
