@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -187,7 +186,6 @@ export default function UploadMovie() {
         const spellingResult = await correctSpelling({ text: formData.title });
         const correctedTitle = spellingResult.correctedText;
         
-        // Update form with corrected title immediately
         handleInputChange('title', correctedTitle);
 
         toast({
@@ -195,12 +193,16 @@ export default function UploadMovie() {
             description: `Searching for "${correctedTitle}"...`,
         });
 
-        // Step 2: Fetch details with the corrected title
-        const result = await getMovieDetails({ title: correctedTitle });
+        // Step 2: Fetch details with the corrected title and year
+        const result = await getMovieDetails({ 
+            title: correctedTitle,
+            year: formData.year 
+        });
         setFormData(prev => ({
             ...prev,
-            title: correctedTitle, // Ensure corrected title is set
+            title: result.title,
             year: result.year,
+            posterUrl: result.posterUrl,
             genre: result.genre,
             imdbRating: result.imdbRating,
             stars: result.stars,
@@ -214,12 +216,12 @@ export default function UploadMovie() {
             title: 'Success!',
             description: 'Movie details have been auto-filled.',
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error("AI auto-fill failed:", error);
         toast({
             variant: 'destructive',
-            title: 'AI Error',
-            description: 'Could not fetch movie details. Please try again or fill manually.',
+            title: 'API Error',
+            description: error.message || 'Could not fetch movie details. Please check the title/year or fill manually.',
         });
     } finally {
         setIsFetchingAI(false);
