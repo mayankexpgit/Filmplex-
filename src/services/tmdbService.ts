@@ -25,11 +25,16 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
 
   try {
     // 1. Search for the content (movie or TV) to get its ID and media type
-    const searchParams = {
+    const searchParams: { api_key: string, query: string, year?: number, first_air_date_year?: number } = {
       api_key: API_KEY,
       query: title,
-      ...(year && { first_air_date_year: year }),
     };
+    // TMDb uses 'year' for movies and 'first_air_date_year' for TV shows. We can include both.
+    if (year) {
+      searchParams.year = year;
+      searchParams.first_air_date_year = year;
+    }
+    
     const searchResponse = await axios.get(`${API_BASE_URL}/search/multi`, { params: searchParams });
 
     if (searchResponse.data.results.length === 0) {
@@ -55,10 +60,12 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
 
     const getTrailerUrl = (videos: any): string | undefined => {
         if (videos?.results) {
-            const trailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
-            if (trailer) {
-                return `https://www.youtube.com/watch?v=${trailer.key}`;
-            }
+            // Prioritize "Official Trailer", then any "Trailer"
+            const officialTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer' && video.official);
+            if (officialTrailer) return `https://www.youtube.com/watch?v=${officialTrailer.key}`;
+
+            const anyTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
+            if (anyTrailer) return `https://www.youtube.com/watch?v=${anyTrailer.key}`;
         }
         return undefined;
     };
