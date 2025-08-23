@@ -113,7 +113,7 @@
   }
    .ai-glow-button::after {
     content: '';
-    @apply absolute inset-px rounded-md z-20;
+    @apply absolute inset-px rounded-md z-0;
     background: radial-gradient(hsl(var(--background)), hsl(var(--background)/0.9));
   }
 }
