@@ -345,9 +345,10 @@ export default function MovieDetailPage() {
           {movie.synopsis && (
             <section className="mb-8 w-full">
               <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Synopsis</h2>
-              <p className="text-center text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                {movie.synopsis}
-              </p>
+              <div 
+                className="prose prose-invert text-center text-muted-foreground leading-relaxed max-w-2xl mx-auto"
+                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
+              />
             </section>
           )}
 
@@ -399,5 +400,3 @@ export default function MovieDetailPage() {
     </div>
   );
 }
-
-    

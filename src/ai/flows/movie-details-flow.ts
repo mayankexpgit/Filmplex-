@@ -24,7 +24,7 @@ const MovieDetailsOutputSchema = z.object({
   creator: z.string().describe('The director or creator of the movie.'),
   tags: z.array(z.string()).describe('An array of relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").'),
   synopsis: z.string().describe('A brief, one-paragraph synopsis of the movie plot.'),
-  description: z.string().describe('A longer, more detailed description or review of the movie. This should be suitable for an HTML display.'),
+  description: z.string().describe('A longer, more detailed description or review of the movie. This should be suitable for an HTML display with colorful text, headings, and paragraphs.'),
 });
 export type MovieDetailsOutput = z.infer<typeof MovieDetailsOutputSchema>;
 
@@ -45,7 +45,7 @@ const prompt = ai.definePrompt({
   - Creator/Director
   - Relevant tags (as an array of strings)
   - A concise, one-paragraph synopsis
-  - A detailed description or review.`,
+  - A detailed description or review. For the description, use HTML to make it visually appealing. Use headings (like <h4>), paragraphs (<p>), and bold (<strong>) tags to structure the content. For example, create a "REVIEW:" heading.`,
 });
 
 const getMovieDetailsFlow = ai.defineFlow(
