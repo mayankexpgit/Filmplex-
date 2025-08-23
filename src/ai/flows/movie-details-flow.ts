@@ -24,7 +24,7 @@ const MovieDetailsOutputSchema = z.object({
   creator: z.string().describe('The director or creator of the movie.'),
   tags: z.array(z.string()).describe('An array of relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").'),
   synopsis: z.string().describe('A brief, one-paragraph synopsis of the movie plot.'),
-  description: z.string().describe('A longer, more detailed description or review of the movie. This should be suitable for an HTML display with colorful text, headings, and paragraphs.'),
+  description: z.string().describe('A longer, more detailed description of the movie, formatted in HTML.'),
 });
 export type MovieDetailsOutput = z.infer<typeof MovieDetailsOutputSchema>;
 
@@ -45,7 +45,10 @@ const prompt = ai.definePrompt({
   - Creator/Director
   - Relevant tags (as an array of strings)
   - A concise, one-paragraph synopsis
-  - A detailed description or review. For the description, use HTML to make it visually appealing. Use headings (like <h4>), paragraphs (<p>), and bold (<strong>) tags to structure the content. For example, create a "REVIEW:" heading.`,
+  - A detailed description formatted as HTML. The description MUST follow this exact template:
+  
+  <p>✅ Download {{title}} ({{year}}) WEB-DL Full Movie<br>(Hindi-English)<br>480p, 720p & 1080p qualities.<br>This is a Japanese anime masterpiece,<br>blending romance, fantasy, and emotional drama,<br>now available in Hindi dubbed.</p><br><br><p>🎬 Your Ultimate Destination for Fast, Secure Anime Downloads! 🎬</p><p>At FilmPlex, dive into the world of<br>high-speed anime and movie downloads<br>with direct Google Drive (G-Drive) links.<br>Enjoy blazing-fast access,<br>rock-solid security,<br>and zero waiting time!</p>
+  `,
 });
 
 const getMovieDetailsFlow = ai.defineFlow(
