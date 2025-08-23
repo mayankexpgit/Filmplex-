@@ -18,6 +18,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
+import { correctSpelling } from '@/ai/flows/spell-check-flow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -182,9 +183,23 @@ export default function UploadMovie() {
     }
     setIsFetchingAI(true);
     try {
-        const result = await getMovieDetails({ title: formData.title });
+        // Step 1: Correct spelling
+        const spellingResult = await correctSpelling({ text: formData.title });
+        const correctedTitle = spellingResult.correctedText;
+        
+        // Update form with corrected title immediately
+        handleInputChange('title', correctedTitle);
+
+        toast({
+            title: 'Fetching Details...',
+            description: `Searching for "${correctedTitle}"...`,
+        });
+
+        // Step 2: Fetch details with the corrected title
+        const result = await getMovieDetails({ title: correctedTitle });
         setFormData(prev => ({
             ...prev,
+            title: correctedTitle, // Ensure corrected title is set
             year: result.year,
             genre: result.genre,
             imdbRating: result.imdbRating,
@@ -292,7 +307,7 @@ export default function UploadMovie() {
                 <Label htmlFor="movie-title">Title</Label>
                  <div className="flex items-center gap-2">
                     <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
-                     <Button variant="outline" size="icon" onClick={handleAutoFill} disabled={isFormDisabled}>
+                     <Button variant="outline" size="icon" onClick={handleAutoFill} disabled={isFormDisabled} className="ai-glow-button">
                         {isFetchingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                         <span className="sr-only">Auto-fill with AI</span>
                     </Button>
