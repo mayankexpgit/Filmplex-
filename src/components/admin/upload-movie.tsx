@@ -193,6 +193,7 @@ export default function UploadMovie() {
             tagsString: result.tags.join(', '),
             synopsis: result.synopsis,
             description: result.description,
+            cardInfoText: result.cardInfoText,
         }));
         toast({
             title: 'Success!',

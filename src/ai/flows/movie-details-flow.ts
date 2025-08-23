@@ -25,6 +25,7 @@ const MovieDetailsOutputSchema = z.object({
   tags: z.array(z.string()).describe('An array of relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").'),
   synopsis: z.string().describe('A brief, one-paragraph synopsis of the movie plot.'),
   description: z.string().describe('A longer, more detailed description of the movie, formatted in HTML.'),
+  cardInfoText: z.string().describe("A detailed info string for the movie card. It must follow this exact format and include as much detail as possible: 'Filmplex – {{title}} ({{year}}) [Source (e.g. BluRay)] [Audio Languages (e.g., Hindi + English)] [Available Qualities (e.g., 1080p, 720p)] | [Extra details like Dual Audio, x264, 10Bit HEVC] | [Content Type, e.g., Movie, Anime Movie, Series]'. The string should be long and descriptive."),
 });
 export type MovieDetailsOutput = z.infer<typeof MovieDetailsOutputSchema>;
 
@@ -45,6 +46,7 @@ const prompt = ai.definePrompt({
   - Creator/Director
   - Relevant tags (as an array of strings)
   - A concise, one-paragraph synopsis
+  - A detailed card info text, following the specified format.
   - A detailed description formatted as HTML. The description MUST follow this exact template, including all colors and tags:
   
   <p><span style="color:#ff4d4d;">✅ <b>Download {{title}} ({{year}}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a Japanese anime masterpiece</span>,<br><span style="color:#ff66b3;">blending romance, fantasy, and emotional drama</span>,<br>now <span style="color:#00cccc;">available in Hindi dubbed</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>
