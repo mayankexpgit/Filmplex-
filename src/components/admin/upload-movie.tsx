@@ -17,7 +17,6 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
-import { correctSpelling } from '@/ai/flows/spell-check-flow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -182,22 +181,20 @@ export default function UploadMovie() {
     }
     setIsFetchingAI(true);
     try {
-        // Step 1: Correct spelling
-        const spellingResult = await correctSpelling({ text: formData.title });
-        const correctedTitle = spellingResult.correctedText;
-        
-        handleInputChange('title', correctedTitle);
-
         toast({
             title: 'Fetching Details...',
-            description: `Searching for "${correctedTitle}"...`,
+            description: `Searching for "${formData.title}"...`,
         });
 
-        // Step 2: Fetch details with the corrected title and year
+        // The flow now handles spelling correction internally
         const result = await getMovieDetails({ 
-            title: correctedTitle,
+            title: formData.title,
             year: formData.year 
         });
+
+        // Update title in form in case it was corrected
+        handleInputChange('title', result.title);
+
         setFormData(prev => ({
             ...prev,
             title: result.title,
@@ -212,6 +209,7 @@ export default function UploadMovie() {
             description: result.description,
             cardInfoText: result.cardInfoText,
         }));
+
         toast({
             title: 'Success!',
             description: 'Movie details have been auto-filled.',

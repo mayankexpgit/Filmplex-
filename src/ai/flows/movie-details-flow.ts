@@ -12,6 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { fetchMovieDetailsFromOMDb } from '@/services/omdbService';
 import 'dotenv/config'
+import { correctSpelling } from './spell-check-flow';
 
 const MovieDetailsInputSchema = z.object({
   title: z.string().describe('The title of the movie to search for.'),
@@ -66,8 +67,13 @@ const getMovieDetailsFlow = ai.defineFlow(
     outputSchema: MovieDetailsOutputSchema,
   },
   async (input) => {
-    // Step 1: Get factual data from OMDb API
-    const omdbData = await fetchMovieDetailsFromOMDb(input.title, input.year);
+    
+    // Step 0: Correct spelling of the title first.
+    const spellingResult = await correctSpelling({ text: input.title });
+    const correctedTitle = spellingResult.correctedText;
+
+    // Step 1: Get factual data from OMDb API using the corrected title
+    const omdbData = await fetchMovieDetailsFromOMDb(correctedTitle, input.year);
 
     // Step 2: Use the factual data to generate creative content with the LLM
     const creativeInput = {
