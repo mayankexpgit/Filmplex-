@@ -17,6 +17,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
+import { correctSpelling } from '@/ai/flows/spell-check-flow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -186,9 +187,11 @@ export default function UploadMovie() {
             description: `Searching for "${formData.title}"...`,
         });
 
-        // The flow now handles spelling correction internally
+        const spellingResult = await correctSpelling({ text: formData.title! });
+        const correctedTitle = spellingResult?.correctedText || formData.title;
+
         const result = await getMovieDetails({ 
-            title: formData.title,
+            title: correctedTitle,
             year: formData.year 
         });
 
