@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview An AI flow to fetch movie details.
- * This flow uses the OMDb API to get factual data and then uses an LLM to generate creative text.
+ * This flow uses the TMDb API to get factual data and then uses an LLM to generate creative text.
  *
  * - getMovieDetails - A function that fetches movie details based on the title and year.
  * - MovieDetailsInput - The input type for the getMovieDetails function.
@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { fetchMovieDetailsFromOMDb } from '@/services/omdbService';
+import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
 import 'dotenv/config'
 import { correctSpelling } from './spell-check-flow';
 
@@ -40,7 +40,7 @@ const creativePrompt = ai.definePrompt({
   name: 'movieCreativeContentPrompt',
   input: { schema: MovieDetailsOutputSchema.pick({ title: true, year: true, genre: true, stars: true, creator: true, synopsis: true }) },
   output: { schema: MovieDetailsOutputSchema.pick({ synopsis: true, description: true, tags: true, cardInfoText: true }) },
-  prompt: `You are an expert movie database. Based on the following ACCURATE movie data, generate the creative fields.
+  prompt: `You are an expert movie database. Based on the following ACCURATE movie data, generate the creative fields. You MUST use the provided data as the source of truth.
 
 Movie Title: {{title}}
 Year: {{year}}
@@ -50,7 +50,7 @@ Actors: {{stars}}
 Original Plot: {{synopsis}}
 
 Your tasks:
-1.  **Synopsis**: Refine the provided plot into a compelling one-paragraph synopsis.
+1.  **Synopsis**: Refine the provided plot into a compelling one-paragraph synopsis. Do not make up facts.
 2.  **Tags**: Generate an array of 3-5 relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").
 3.  **Card Info Text**: Create a detailed info string for the movie card. It must be long and descriptive, following this exact format: 'Filmplex – {{title}} ({{year}}) [Source (e.g. BluRay)] [Audio Languages (e.g., Hindi + English)] [Available Qualities (e.g., 1080p, 720p)] | [Extra details like Dual Audio, x264, 10Bit HEVC] | [Content Type, e.g., Movie, Anime Movie, Series]'.
 4.  **Description**: Generate a detailed, colorful HTML description. It MUST follow this exact template:
@@ -72,17 +72,17 @@ const getMovieDetailsFlow = ai.defineFlow(
     const spellingResult = await correctSpelling({ text: input.title });
     const correctedTitle = spellingResult.correctedText;
 
-    // Step 1: Get factual data from OMDb API using the corrected title
-    const omdbData = await fetchMovieDetailsFromOMDb(correctedTitle, input.year);
+    // Step 1: Get factual data from TMDb API using the corrected title
+    const tmdbData = await fetchMovieDetailsFromTMDb(correctedTitle, input.year);
 
     // Step 2: Use the factual data to generate creative content with the LLM
     const creativeInput = {
-      title: omdbData.title,
-      year: omdbData.year,
-      genre: omdbData.genre,
-      stars: omdbData.stars,
-      creator: omdbData.creator,
-      synopsis: omdbData.synopsis, // Use plot from OMDb as base
+      title: tmdbData.title,
+      year: tmdbData.year,
+      genre: tmdbData.genre,
+      stars: tmdbData.stars,
+      creator: tmdbData.creator,
+      synopsis: tmdbData.synopsis, // Use plot from TMDb as base
     };
 
     const { output: creativeOutput } = await creativePrompt(creativeInput);
@@ -93,13 +93,13 @@ const getMovieDetailsFlow = ai.defineFlow(
 
     // Step 3: Combine factual and creative data into the final output
     return {
-      title: omdbData.title,
-      year: omdbData.year,
-      genre: omdbData.genre,
-      imdbRating: omdbData.imdbRating,
-      stars: omdbData.stars,
-      creator: omdbData.creator,
-      posterUrl: omdbData.posterUrl,
+      title: tmdbData.title,
+      year: tmdbData.year,
+      genre: tmdbData.genre,
+      imdbRating: tmdbData.imdbRating,
+      stars: tmdbData.stars,
+      creator: tmdbData.creator,
+      posterUrl: tmdbData.posterUrl,
       // From AI
       synopsis: creativeOutput.synopsis,
       description: creativeOutput.description,

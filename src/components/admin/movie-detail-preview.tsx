@@ -56,7 +56,7 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title || 'Movie Title'} ({movie.year || 'Year'})</h1>
           
           <div className="flex flex-col items-center text-center space-y-2 mb-6">
-            <InfoRow label="iMDB Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
+            <InfoRow label="TMDb Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
             <InfoRow label="Genre" value={movie.genre} />
             <InfoRow label="Stars" value={movie.stars} />
             <InfoRow label="Creator" value={movie.creator} />

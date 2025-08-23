@@ -186,16 +186,13 @@ export default function UploadMovie() {
             title: 'Fetching Details...',
             description: `Searching for "${formData.title}"...`,
         });
-
-        const spellingResult = await correctSpelling({ text: formData.title! });
-        const correctedTitle = spellingResult?.correctedText || formData.title;
-
+        
         const result = await getMovieDetails({ 
-            title: correctedTitle,
+            title: formData.title,
             year: formData.year 
         });
 
-        // Update title in form in case it was corrected
+        // Update title in form in case it was corrected by the API's search
         handleInputChange('title', result.title);
 
         setFormData(prev => ({
@@ -348,7 +345,7 @@ export default function UploadMovie() {
                       <Input id="movie-quality" value={formData.quality || ''} onChange={(e) => handleInputChange('quality', e.target.value)} placeholder="e.g. BluRay 4K | 1080p" disabled={isFormDisabled} />
                   </div>
                   <div className="space-y-2">
-                      <Label htmlFor="movie-imdb">IMDb Rating</Label>
+                      <Label htmlFor="movie-imdb">TMDb Rating</Label>
                       <Input id="movie-imdb" type="number" step="0.1" value={formData.imdbRating || ''} onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))} disabled={isFormDisabled} />
                   </div>
               </div>
