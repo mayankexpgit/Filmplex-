@@ -11,12 +11,12 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const MovieDetailsInputSchema = z.object({
+const MovieDetailsInputSchema = z.object({
   title: z.string().describe('The title of the movie to search for.'),
 });
 export type MovieDetailsInput = z.infer<typeof MovieDetailsInputSchema>;
 
-export const MovieDetailsOutputSchema = z.object({
+const MovieDetailsOutputSchema = z.object({
   year: z.number().describe('The release year of the movie.'),
   genre: z.string().describe('A comma-separated string of genres for the movie.'),
   imdbRating: z.number().describe('The IMDb rating of the movie, out of 10.'),
