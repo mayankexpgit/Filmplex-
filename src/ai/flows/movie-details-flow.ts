@@ -9,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit/zod';
+import { z } from 'zod';
 
 export const MovieDetailsInputSchema = z.object({
   title: z.string().describe('The title of the movie to search for.'),
