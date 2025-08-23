@@ -31,7 +31,8 @@ const MovieDetailsOutputSchema = z.object({
   synopsis: z.string().describe('A brief, one-paragraph synopsis of the movie plot.'),
   description: z.string().describe('A longer, more detailed description of the movie, formatted in HTML.'),
   cardInfoText: z.string().describe("A detailed info string for the movie card. It must follow this exact format and include as much detail as possible: 'Filmplex – {{title}} ({{year}}) [Source (e.g. BluRay)] [Audio Languages (e.g., Hindi + English)] [Available Qualities (e.g., 1080p, 720p)] | [Extra details like Dual Audio, x264, 10Bit HEVC] | [Content Type, e.g., Movie, Anime Movie, Series]'. The string should be long and descriptive."),
-  posterUrl: z.string().describe("The URL of the movie poster.")
+  posterUrl: z.string().describe("The URL of the movie poster."),
+  trailerUrl: z.string().optional().describe("The URL of the movie trailer.")
 });
 export type MovieDetailsOutput = z.infer<typeof MovieDetailsOutputSchema>;
 
@@ -100,6 +101,7 @@ const getMovieDetailsFlow = ai.defineFlow(
       stars: tmdbData.stars,
       creator: tmdbData.creator,
       posterUrl: tmdbData.posterUrl,
+      trailerUrl: tmdbData.trailerUrl,
       // From AI
       synopsis: creativeOutput.synopsis,
       description: creativeOutput.description,

@@ -15,6 +15,7 @@ export interface FormattedTMDbData {
   synopsis: string;
   imdbRating: number;
   posterUrl: string;
+  trailerUrl?: string;
 }
 
 export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): Promise<FormattedTMDbData> => {
@@ -47,15 +48,26 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
 
     const detailParams = {
       api_key: API_KEY,
-      append_to_response: 'credits'
+      append_to_response: 'credits,videos'
     };
     
-    let details, credits;
+    let details, credits, videos;
+
+    const getTrailerUrl = (videos: any): string | undefined => {
+        if (videos?.results) {
+            const trailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
+            if (trailer) {
+                return `https://www.youtube.com/watch?v=${trailer.key}`;
+            }
+        }
+        return undefined;
+    };
 
     if (mediaType === 'movie') {
         const movieResponse = await axios.get(`${API_BASE_URL}/movie/${contentId}`, { params: detailParams });
         details = movieResponse.data;
         credits = details.credits;
+        videos = details.videos;
 
         const director = credits.crew.find((member: any) => member.job === 'Director');
         const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
@@ -69,12 +81,14 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
             synopsis: details.overview,
             imdbRating: parseFloat(details.vote_average.toFixed(1)) || 0,
             posterUrl: details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : '',
+            trailerUrl: getTrailerUrl(videos),
         };
 
     } else if (mediaType === 'tv') {
         const tvResponse = await axios.get(`${API_BASE_URL}/tv/${contentId}`, { params: detailParams });
         details = tvResponse.data;
         credits = details.credits;
+        videos = details.videos;
         
         const creators = details.created_by.map((c: any) => c.name);
         const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
@@ -88,6 +102,7 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
             synopsis: details.overview,
             imdbRating: parseFloat(details.vote_average.toFixed(1)) || 0,
             posterUrl: details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : '',
+            trailerUrl: getTrailerUrl(videos),
         };
     } else {
          throw new Error('Unsupported media type found.');
