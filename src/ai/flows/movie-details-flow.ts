@@ -52,7 +52,7 @@ Original Plot: {{synopsis}}
 TMDb Trailer URL (if available): {{trailerUrl}}
 
 Your tasks:
-1.  **Trailer URL**: Search YouTube for the official trailer for "{{title}} ({{year}})". If the TMDb trailer URL is provided and seems correct, use it. Otherwise, find the best official trailer link on YouTube. Return only the URL. If no official trailer is found, leave it blank.
+1.  **Trailer URL**: Use the "TMDb Trailer URL" if it is provided and seems correct. If it is not provided or is invalid, you MUST search YouTube for the official trailer for "{{title}} ({{year}})" and return the most relevant and official YouTube video URL. If no official trailer is found, leave it blank.
 2.  **Synopsis**: Refine the provided plot into a compelling one-paragraph synopsis. Do not make up facts.
 3.  **Tags**: Generate an array of 3-5 relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").
 4.  **Card Info Text**: Create a detailed info string for the movie card. It must be long and descriptive, following this exact format: 'Filmplex – {{title}} ({{year}}) [Source (e.g. BluRay)] [Audio Languages (e.g., Hindi + English)] [Available Qualities (e.g., 1080p, 720p)] | [Extra details like Dual Audio, x264, 10Bit HEVC] | [Content Type, e.g., Movie, Anime Movie, Series]'.
