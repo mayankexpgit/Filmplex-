@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 const API_KEY = process.env.TMDB_API_KEY;
@@ -22,47 +23,76 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
   }
 
   try {
-    // 1. Search for the movie to get its ID
+    // 1. Search for the content (movie or TV) to get its ID and media type
     const searchParams = {
       api_key: API_KEY,
       query: title,
-      ...(year && { year: year }),
+      ...(year && { first_air_date_year: year }),
     };
-    const searchResponse = await axios.get(`${API_BASE_URL}/search/movie`, { params: searchParams });
+    const searchResponse = await axios.get(`${API_BASE_URL}/search/multi`, { params: searchParams });
 
     if (searchResponse.data.results.length === 0) {
-      throw new Error('Movie not found in TMDb.');
+      throw new Error('Content not found in TMDb.');
     }
-    const movieResult = searchResponse.data.results[0];
-    const movieId = movieResult.id;
+    
+    // Filter out people from search results and take the first movie or TV show
+    const searchResult = searchResponse.data.results.find((r: any) => r.media_type === 'movie' || r.media_type === 'tv');
 
-    // 2. Fetch movie details by ID
+    if (!searchResult) {
+        throw new Error('Movie or TV show not found in TMDb.');
+    }
+    
+    const contentId = searchResult.id;
+    const mediaType = searchResult.media_type;
+
     const detailParams = {
       api_key: API_KEY,
+      append_to_response: 'credits'
     };
-    const detailsResponse = await axios.get(`${API_BASE_URL}/movie/${movieId}`, { params: detailParams });
-    const movieDetails = detailsResponse.data;
+    
+    let details, credits;
 
-    // 3. Fetch credits (cast and crew) by ID
-    const creditsResponse = await axios.get(`${API_BASE_URL}/movie/${movieId}/credits`, { params: detailParams });
-    const credits = creditsResponse.data;
+    if (mediaType === 'movie') {
+        const movieResponse = await axios.get(`${API_BASE_URL}/movie/${contentId}`, { params: detailParams });
+        details = movieResponse.data;
+        credits = details.credits;
 
-    // 4. Find the director from the crew
-    const director = credits.crew.find((member: any) => member.job === 'Director');
+        const director = credits.crew.find((member: any) => member.job === 'Director');
+        const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
 
-    // 5. Get top 3 actors
-    const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
+        return {
+            title: details.title,
+            year: new Date(details.release_date).getFullYear(),
+            genre: details.genres.map((g: any) => g.name).join(', '),
+            creator: director ? director.name : 'N/A',
+            stars: topActors.join(', '),
+            synopsis: details.overview,
+            imdbRating: parseFloat(details.vote_average.toFixed(1)) || 0,
+            posterUrl: details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : '',
+        };
 
-    return {
-      title: movieDetails.title,
-      year: new Date(movieDetails.release_date).getFullYear(),
-      genre: movieDetails.genres.map((g: any) => g.name).join(', '),
-      creator: director ? director.name : 'N/A',
-      stars: topActors.join(', '),
-      synopsis: movieDetails.overview,
-      imdbRating: parseFloat(movieDetails.vote_average.toFixed(1)) || 0,
-      posterUrl: movieDetails.poster_path ? `${IMAGE_BASE_URL}${movieDetails.poster_path}` : '',
-    };
+    } else if (mediaType === 'tv') {
+        const tvResponse = await axios.get(`${API_BASE_URL}/tv/${contentId}`, { params: detailParams });
+        details = tvResponse.data;
+        credits = details.credits;
+        
+        const creators = details.created_by.map((c: any) => c.name);
+        const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
+
+        return {
+            title: details.name,
+            year: new Date(details.first_air_date).getFullYear(),
+            genre: details.genres.map((g: any) => g.name).join(', '),
+            creator: creators.length > 0 ? creators.join(', ') : 'N/A',
+            stars: topActors.join(', '),
+            synopsis: details.overview,
+            imdbRating: parseFloat(details.vote_average.toFixed(1)) || 0,
+            posterUrl: details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : '',
+        };
+    } else {
+         throw new Error('Unsupported media type found.');
+    }
+
   } catch (error: any) {
     console.error('Error fetching from TMDb:', error);
     if (axios.isAxiosError(error) && error.response) {
