@@ -65,10 +65,14 @@ export const fetchMovieDetailsFromOMDb = async (title: string, year?: number): P
     }
 
     const data = response.data;
+    
+    // Robustly parse the year, handling cases like "2025-"
+    const yearString = (data.Year || '').split('–')[0];
+    const parsedYear = parseInt(yearString, 10);
 
     return {
       title: data.Title,
-      year: parseInt(data.Year, 10),
+      year: parsedYear,
       genre: data.Genre,
       creator: data.Director,
       stars: data.Actors,
