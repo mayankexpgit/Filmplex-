@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -208,6 +209,7 @@ export default function UploadMovie() {
             synopsis: result.synopsis,
             description: result.description,
             cardInfoText: result.cardInfoText,
+            trailerUrl: result.trailerUrl,
         }));
 
         toast({
@@ -611,3 +613,5 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
         </div>
     )
 }
+
+    
