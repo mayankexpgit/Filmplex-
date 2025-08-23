@@ -10,13 +10,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +56,6 @@ const initialFormState: FormData = {
   stars: '',
   creator: '',
   quality: '',
-  qualityBadge: 'none',
   contentType: 'movie',
   downloadLinks: [{ quality: '1080p', url: '', size: '' }],
   episodes: [],
@@ -67,6 +67,7 @@ export default function UploadMovie() {
   const { toast } = useToast();
   const movies = useMovieStore((state) => state.latestReleases);
   const [isPending, startTransition] = useTransition();
+  const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -84,7 +85,6 @@ export default function UploadMovie() {
             downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: '1080p', url: '', size: '' }],
             screenshots: movieToEdit.screenshots && movieToEdit.screenshots.length > 0 ? movieToEdit.screenshots : ['', '', ''],
             episodes: movieToEdit.episodes && movieToEdit.episodes.length > 0 ? movieToEdit.episodes : [],
-            qualityBadge: movieToEdit.qualityBadge || 'none',
         });
       }
     } else {
@@ -170,6 +170,46 @@ export default function UploadMovie() {
       newEpisodes[epIndex].downloadLinks = removeListItem(newEpisodes[epIndex].downloadLinks, linkIndex);
       handleInputChange('episodes', newEpisodes);
   }
+  
+  const handleAutoFill = async () => {
+    if (!formData.title) {
+        toast({
+            variant: 'destructive',
+            title: 'Title Required',
+            description: 'Please enter a movie title before using AI auto-fill.',
+        });
+        return;
+    }
+    setIsFetchingAI(true);
+    try {
+        const result = await getMovieDetails({ title: formData.title });
+        setFormData(prev => ({
+            ...prev,
+            year: result.year,
+            genre: result.genre,
+            imdbRating: result.imdbRating,
+            stars: result.stars,
+            creator: result.creator,
+            tagsString: result.tags.join(', '),
+            synopsis: result.synopsis,
+            description: result.description,
+        }));
+        toast({
+            title: 'Success!',
+            description: 'Movie details have been auto-filled.',
+        });
+    } catch (error) {
+        console.error("AI auto-fill failed:", error);
+        toast({
+            variant: 'destructive',
+            title: 'AI Error',
+            description: 'Could not fetch movie details. Please try again or fill manually.',
+        });
+    } finally {
+        setIsFetchingAI(false);
+    }
+};
+
 
   const handleSave = () => {
     startTransition(async () => {
@@ -216,7 +256,7 @@ export default function UploadMovie() {
     // If validation passes, the AlertDialogTrigger will open the dialog.
   };
 
-  const isFormDisabled = isPending;
+  const isFormDisabled = isPending || isFetchingAI;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -249,7 +289,13 @@ export default function UploadMovie() {
               {/* Basic Info */}
               <div className="space-y-2">
                 <Label htmlFor="movie-title">Title</Label>
-                <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
+                 <div className="flex items-center gap-2">
+                    <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
+                     <Button variant="outline" size="icon" onClick={handleAutoFill} disabled={isFormDisabled}>
+                        {isFetchingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                        <span className="sr-only">Auto-fill with AI</span>
+                    </Button>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="card-info-text">Card Info Text</Label>
@@ -301,27 +347,7 @@ export default function UploadMovie() {
                 <Label htmlFor="trailer-url">Trailer URL</Label>
                 <Input id="trailer-url" value={formData.trailerUrl || ''} onChange={(e) => handleInputChange('trailerUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." disabled={isFormDisabled} />
               </div>
-
-               <Separator />
-               
-              <div className="space-y-2">
-                <Label>Quality Badge</Label>
-                 <RadioGroup value={formData.qualityBadge || 'none'} onValueChange={(val) => handleInputChange('qualityBadge', val as Movie['qualityBadge'])} className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="none" id="q-none" />
-                    <Label htmlFor="q-none">None</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="HD" id="q-hd" />
-                    <Label htmlFor="q-hd">HD</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="4K" id="q-4k" />
-                    <Label htmlFor="q-4k">4K</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
+              
               <Separator />
 
               {/* Screenshots */}
