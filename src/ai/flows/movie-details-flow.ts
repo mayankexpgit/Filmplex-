@@ -45,9 +45,9 @@ const prompt = ai.definePrompt({
   - Creator/Director
   - Relevant tags (as an array of strings)
   - A concise, one-paragraph synopsis
-  - A detailed description formatted as HTML. The description MUST follow this exact template:
+  - A detailed description formatted as HTML. The description MUST follow this exact template, including all colors and tags:
   
-  <p>✅ Download {{title}} ({{year}}) WEB-DL Full Movie<br>(Hindi-English)<br>480p, 720p & 1080p qualities.<br>This is a Japanese anime masterpiece,<br>blending romance, fantasy, and emotional drama,<br>now available in Hindi dubbed.</p><br><br><p>🎬 Your Ultimate Destination for Fast, Secure Anime Downloads! 🎬</p><p>At FilmPlex, dive into the world of<br>high-speed anime and movie downloads<br>with direct Google Drive (G-Drive) links.<br>Enjoy blazing-fast access,<br>rock-solid security,<br>and zero waiting time!</p>
+  <p><span style="color:#ff4d4d;">✅ <b>Download {{title}} ({{year}}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a Japanese anime masterpiece</span>,<br><span style="color:#ff66b3;">blending romance, fantasy, and emotional drama</span>,<br>now <span style="color:#00cccc;">available in Hindi dubbed</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>
   `,
 });
 
