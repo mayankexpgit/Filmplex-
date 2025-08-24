@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to fetch movie details.
@@ -73,9 +74,15 @@ const getMovieDetailsFlow = ai.defineFlow(
     // Step 0: Correct spelling of the title first.
     const spellingResult = await correctSpelling({ text: input.title });
     const correctedTitle = spellingResult.correctedText || input.title;
-
-    // Step 1: Get factual data from TMDb API using the corrected title
-    const tmdbData = await fetchMovieDetailsFromTMDb(correctedTitle, input.year);
+    
+    let tmdbData;
+    try {
+      // Step 1: Get factual data from TMDb API using the corrected title
+      tmdbData = await fetchMovieDetailsFromTMDb(correctedTitle, input.year);
+    } catch (error: any) {
+        // Re-throw with a more user-friendly message
+        throw new Error(error.message || 'Could not fetch movie details. Please check the title/year or fill manually.');
+    }
 
     // Step 2: Get the official trailer from YouTube
     const trailerUrl = await searchYouTubeTrailer(tmdbData.title, tmdbData.year);

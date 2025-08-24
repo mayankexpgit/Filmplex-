@@ -123,6 +123,7 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
     if (axios.isAxiosError(error) && error.response) {
       throw new Error(`TMDb API request failed: ${error.response.data?.status_message || error.message}`);
     }
+    // Re-throw the original error if it's not from Axios
     throw error;
   }
 };
