@@ -1,12 +1,10 @@
 
 import axios from 'axios';
 
-const TRAKT_API_KEY = process.env.TRAKT_API_KEY;
 const TMDB_API_KEY = process.env.TMDB_API_KEY; 
-const TRAKT_API_BASE_URL = 'https://api.trakt.tv';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-export interface FormattedTraktData {
+export interface FormattedTMDbData {
   title: string;
   year: number;
   genre: string;
@@ -18,108 +16,127 @@ export interface FormattedTraktData {
   trailerUrl?: string;
 }
 
-// Fetches poster URL from TMDb using the IMDb ID from Trakt
-const getPosterFromTMDb = async (imdbId: string): Promise<string> => {
-    if (!TMDB_API_KEY || !imdbId) {
-        return '';
-    }
-    try {
-        const findResponse = await axios.get(`https://api.themoviedb.org/3/find/${imdbId}`, {
-            params: {
-                api_key: TMDB_API_KEY,
-                external_source: 'imdb_id'
-            }
-        });
-        const movieResult = findResponse.data.movie_results[0];
-        if (movieResult && movieResult.poster_path) {
-            return `${TMDB_IMAGE_BASE_URL}${movieResult.poster_path}`;
-        }
-        return '';
-    } catch (error) {
-        console.error('Error fetching poster from TMDb:', error);
-        return '';
-    }
+const getTrailerUrl = (videos: any[]): string | undefined => {
+    if (!videos || videos.length === 0) return undefined;
+
+    // Prioritize official trailers
+    let trailer = videos.find(v => v.type === 'Trailer' && v.site === 'YouTube' && v.official);
+    if (trailer) return `https://www.youtube.com/watch?v=${trailer.key}`;
+
+    // Fallback to any trailer
+    trailer = videos.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+    if (trailer) return `https://www.youtube.com/watch?v=${trailer.key}`;
+    
+    // Fallback to any teaser if no trailer
+    trailer = videos.find(v => v.type === 'Teaser' && v.site === 'YouTube');
+    if (trailer) return `https://www.youtube.com/watch?v=${trailer.key}`;
+
+    return undefined;
 };
 
-export const fetchMovieDetailsFromTrakt = async (title: string, year?: number): Promise<FormattedTraktData> => {
-  if (!TRAKT_API_KEY) {
-    throw new Error('Trakt.tv API key is not configured.');
-  }
 
-  const normalizedTitle = title.trim().toLowerCase();
+export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): Promise<FormattedTMDbData> => {
+    if (!TMDB_API_KEY) {
+        throw new Error('TMDb API key is not configured.');
+    }
 
-  try {
-    // Step 1: Search for the movie on Trakt.tv
-    const searchResponse = await axios.get(`${TRAKT_API_BASE_URL}/search/movie`, {
-        params: {
-            query: normalizedTitle,
-            fields: 'title',
-            limit: 5 // Get a few results to find the best match
-        },
-        headers: {
-            'Content-Type': 'application/json',
-            'trakt-api-version': '2',
-            'trakt-api-key': TRAKT_API_KEY
+    const normalizedTitle = title.trim().toLowerCase();
+    
+    // Helper function to search and find the best match
+    const searchAndFind = async (endpoint: 'movie' | 'tv') => {
+        let bestMatch: any = null;
+        let currentPage = 1;
+        let totalPages = 1;
+
+        while (currentPage <= totalPages) {
+            try {
+                const searchResponse = await axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
+                    params: {
+                        api_key: TMDB_API_KEY,
+                        query: normalizedTitle,
+                        year: endpoint === 'movie' ? year : undefined,
+                        page: currentPage,
+                    },
+                });
+
+                const { results, total_pages } = searchResponse.data;
+                totalPages = total_pages > 10 ? 10 : total_pages; // Limit to 10 pages to avoid excessive calls
+
+                if (results && results.length > 0) {
+                     // Look for an exact title match first
+                    const exactMatch = results.find((r: any) => (r.title || r.name)?.toLowerCase() === normalizedTitle);
+                    if (exactMatch) {
+                        bestMatch = exactMatch;
+                        break; // Found exact match, no need to check more pages
+                    }
+
+                    // If it's the first page and no exact match yet, hold the first result as a fallback
+                    if (currentPage === 1 && !bestMatch) {
+                        bestMatch = results[0];
+                    }
+                }
+                currentPage++;
+
+            } catch (error) {
+                 if (axios.isAxiosError(error) && error.response?.status === 404) {
+                    // This page doesn't exist, stop searching
+                    break;
+                }
+                console.error(`Error fetching page ${currentPage} from TMDb ${endpoint} search:`, error);
+                // Don't throw, just break and proceed with what we have
+                break;
+            }
         }
-    });
+        return bestMatch;
+    };
+    
+    let searchResult = await searchAndFind('movie');
+    if (!searchResult) {
+       searchResult = await searchAndFind('tv');
+    }
 
-    if (!searchResponse.data || searchResponse.data.length === 0) {
-        throw new Error('Movie not found on Trakt.tv.');
+    if (!searchResult) {
+        throw new Error('Movie or TV show not found in TMDb.');
     }
     
-    // Find the best match - either by year or the first result
-    const searchResult = 
-        searchResponse.data.find((item: any) => item.movie.year === year) || 
-        searchResponse.data[0];
+    const contentId = searchResult.id;
+    const contentType = searchResult.media_type || (searchResult.title ? 'movie' : 'tv');
 
-    const movieSlug = searchResult.movie.ids.slug;
-
-    // Step 2: Get detailed information for the matched movie
-    const detailsResponse = await axios.get(`${TRAKT_API_BASE_URL}/movies/${movieSlug}`, {
+    // Fetch full details with credits and videos
+    const detailsResponse = await axios.get(`https://api.themoviedb.org/3/${contentType}/${contentId}`, {
         params: {
-            extended: 'full,people'
+            api_key: TMDB_API_KEY,
+            append_to_response: 'credits,videos',
         },
-        headers: {
-            'Content-Type': 'application/json',
-            'trakt-api-version': '2',
-            'trakt-api-key': TRAKT_API_KEY
-        }
     });
 
     const details = detailsResponse.data;
-    
-    // Step 3: Get poster from TMDb
-    const imdbId = details.ids.imdb;
-    const posterUrl = await getPosterFromTMDb(imdbId);
-    
-    // Step 4: Format the data, with checks for missing 'people' data
-    const people = details.people;
-    let directors: string[] = [];
-    let actors: string[] = [];
 
-    if (people) {
-        directors = people.directing?.map((p: any) => p.person.name) || [];
-        actors = people.cast?.slice(0, 3).map((p: any) => p.person.name) || [];
+    // Format the data
+    const releaseDate = new Date(details.release_date || details.first_air_date);
+    const genres = details.genres.map((g: any) => g.name).join(', ');
+    const rating = parseFloat(details.vote_average?.toFixed(1)) || 0;
+    const poster = details.poster_path ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}` : '';
+    
+    let directors: string[] = [];
+    if (contentType === 'movie') {
+        directors = details.credits?.crew.filter((p: any) => p.job === 'Director').map((p: any) => p.name) || [];
+    } else { // For TV shows, use 'created_by'
+        directors = details.created_by?.map((p: any) => p.name) || [];
     }
+
+    const actors = details.credits?.cast.slice(0, 3).map((p: any) => p.name) || [];
+    const trailer = getTrailerUrl(details.videos?.results);
 
     return {
-        title: details.title,
-        year: details.year,
-        genre: details.genres.map((g: string) => g.charAt(0).toUpperCase() + g.slice(1)).join(', '),
-        creator: directors.join(', ') || 'N/A',
-        stars: actors.join(', ') || 'N/A',
-        synopsis: details.overview || 'No synopsis available.',
-        imdbRating: parseFloat(details.rating?.toFixed(1)) || 0,
-        posterUrl: posterUrl,
-        trailerUrl: details.trailer,
+        title: details.title || details.name,
+        year: releaseDate.getFullYear(),
+        genre: genres,
+        creator: directors.join(', '),
+        stars: actors.join(', '),
+        synopsis: details.overview,
+        imdbRating: rating,
+        posterUrl: poster,
+        trailerUrl: trailer,
     };
-
-  } catch (error: any) {
-    console.error('Error fetching from Trakt.tv:', error.message);
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(`Trakt.tv API Error: ${error.response.data?.error_description || error.message}`);
-    }
-    // Re-throw our custom or other errors
-    throw error;
-  }
 };
