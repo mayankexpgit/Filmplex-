@@ -71,23 +71,23 @@ const getMovieDetailsFlow = ai.defineFlow(
   },
   async (input) => {
     
-    // Step 0: Correct spelling of the title first.
+    // Step 1: Correct spelling of the title first.
     const spellingResult = await correctSpelling({ text: input.title });
     const correctedTitle = spellingResult.correctedText || input.title;
     
     let tmdbData;
     try {
-      // Step 1: Get factual data from TMDb API using the corrected title
+      // Step 2: Get factual data from TMDb API using the corrected title
       tmdbData = await fetchMovieDetailsFromTMDb(correctedTitle, input.year);
     } catch (error: any) {
         // Re-throw with a more user-friendly message
         throw new Error(error.message || 'Could not fetch movie details. Please check the title/year or fill manually.');
     }
 
-    // Step 2: Get the official trailer from YouTube
+    // Step 3: Get the official trailer from YouTube
     const trailerUrl = await searchYouTubeTrailer(tmdbData.title, tmdbData.year);
 
-    // Step 3: Use the factual data to generate creative content with the LLM
+    // Step 4: Use the factual data to generate creative content with the LLM
     const creativeInput: MovieDetailsOutput = {
       ...tmdbData,
       trailerUrl: trailerUrl,
@@ -104,7 +104,7 @@ const getMovieDetailsFlow = ai.defineFlow(
         throw new Error("AI failed to generate creative content.");
     }
 
-    // Step 4: Combine factual and creative data into the final output
+    // Step 5: Combine factual and creative data into the final output
     return {
       title: tmdbData.title,
       year: tmdbData.year,
