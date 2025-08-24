@@ -6,11 +6,11 @@ export const metadata: Metadata = {
   title: 'FILMPLEX',
   description: 'The future of cinema.',
   icons: {
-    icon: '/favicon2.ico?v=2', // main favicon with cache busting
-    apple: '/apple-touch-icon.png?v=2', // Apple touch icon
+    icon: '/favicon2.ico?v=3', // version update
+    apple: '/apple-touch-icon.png?v=3', // version update
     other: [
-      { rel: 'icon', sizes: '16x16', url: '/favicon-16x16.png?v=2' },
-      { rel: 'icon', sizes: '32x32', url: '/favicon-32x32.png?v=2' },
+      { rel: 'icon', sizes: '16x16', url: '/favicon-16x16.png?v=3' },
+      { rel: 'icon', sizes: '32x32', url: '/favicon-32x32.png?v=3' },
     ],
   },
 };
@@ -36,7 +36,7 @@ export default function RootLayout({
         />
 
         {/* Manifest */}
-        <link rel="manifest" href="/site.webmanifest?v=2" />
+        <link rel="manifest" href="/site.webmanifest?v=3" />
 
         {/* JSON-LD for Organization */}
         <script
@@ -48,7 +48,7 @@ export default function RootLayout({
                 "@type": "Organization",
                 "name": "FILMPLEX",
                 "url": "https://filmplex.space",
-                "logo": "https://filmplex.space/apple-touch-icon.png"
+                "logo": "https://filmplex.space/apple-touch-icon.png?v=3"
               }
             `,
           }}
