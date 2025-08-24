@@ -37,6 +37,22 @@ export default function RootLayout({
 
         {/* Manifest */}
         <link rel="manifest" href="/site.webmanifest?v=2" />
+
+        {/* JSON-LD for Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: `
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "name": "FILMPLEX",
+                "url": "https://filmplex.space",
+                "logo": "https://filmplex.space/apple-touch-icon.png"
+              }
+            `,
+          }}
+        />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
         <div className="flex-grow">{children}</div>
