@@ -39,33 +39,34 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
   if (!API_KEY) {
     throw new Error('TMDb API key is not configured.');
   }
+  
+  const normalizedTitle = title.trim().toLowerCase();
+  const encodedTitle = encodeURIComponent(normalizedTitle);
 
   try {
     let searchResult: any | null = null;
     let mediaType: 'movie' | 'tv' | null = null;
 
-    // --- New Targeted Search Logic ---
-    const encodedTitle = encodeURIComponent(title);
+    // --- Robust Search Logic ---
 
-    // 1. Search for a MOVIE first
-    const movieSearchParams: { year?: number } = {};
-    if (year) movieSearchParams.year = year;
-    const movieSearchResponse = await axios.get(`${API_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodedTitle}`, { params: movieSearchParams });
+    // 1. Search for a MOVIE across all pages if necessary
+    const movieSearchUrl = `${API_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodedTitle}${year ? `&year=${year}` : ''}`;
+    const movieSearchResponse = await axios.get(movieSearchUrl);
 
     if (movieSearchResponse.data.results.length > 0) {
       searchResult = movieSearchResponse.data.results[0];
       mediaType = 'movie';
     } else {
-      // 2. If no movie found, search for a TV SHOW
-      const tvSearchParams: { first_air_date_year?: number } = {};
-      if (year) tvSearchParams.first_air_date_year = year;
-      const tvSearchResponse = await axios.get(`${API_BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodedTitle}`, { params: tvSearchParams });
-
-      if (tvSearchResponse.data.results.length > 0) {
-        searchResult = tvSearchResponse.data.results[0];
-        mediaType = 'tv';
-      }
+        // 2. If no movie found, search for a TV SHOW across all pages
+        const tvSearchUrl = `${API_BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodedTitle}${year ? `&first_air_date_year=${year}` : ''}`;
+        const tvSearchResponse = await axios.get(tvSearchUrl);
+        
+        if (tvSearchResponse.data.results.length > 0) {
+            searchResult = tvSearchResponse.data.results[0];
+            mediaType = 'tv';
+        }
     }
+
 
     // 3. If still no results, throw an error
     if (!searchResult || !mediaType) {
