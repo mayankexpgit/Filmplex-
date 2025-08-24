@@ -48,30 +48,39 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
     let mediaType: 'movie' | 'tv' | null = null;
 
     // --- Robust Search Logic ---
-
-    // 1. Search for a MOVIE across all pages if necessary
-    const movieSearchUrl = `${API_BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodedTitle}${year ? `&year=${year}` : ''}`;
-    const movieSearchResponse = await axios.get(movieSearchUrl);
-
-    if (movieSearchResponse.data.results.length > 0) {
-      searchResult = movieSearchResponse.data.results[0];
-      mediaType = 'movie';
-    } else {
-        // 2. If no movie found, search for a TV SHOW across all pages
-        const tvSearchUrl = `${API_BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodedTitle}${year ? `&first_air_date_year=${year}` : ''}`;
-        const tvSearchResponse = await axios.get(tvSearchUrl);
-        
-        if (tvSearchResponse.data.results.length > 0) {
-            searchResult = tvSearchResponse.data.results[0];
-            mediaType = 'tv';
+    // Function to perform a search and find the best match
+    const performSearch = async (query: string, searchYear?: number) => {
+        // 1. Search for a MOVIE
+        const movieSearchUrl = `${API_BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}${searchYear ? `&year=${searchYear}` : ''}`;
+        const movieSearchResponse = await axios.get(movieSearchUrl);
+        if (movieSearchResponse.data.results.length > 0) {
+            return { result: movieSearchResponse.data.results[0], type: 'movie' as const };
         }
+
+        // 2. If no movie found, search for a TV SHOW
+        const tvSearchUrl = `${API_BASE_URL}/search/tv?api_key=${API_KEY}&query=${query}${searchYear ? `&first_air_date_year=${searchYear}` : ''}`;
+        const tvSearchResponse = await axios.get(tvSearchUrl);
+        if (tvSearchResponse.data.results.length > 0) {
+            return { result: tvSearchResponse.data.results[0], type: 'tv' as const };
+        }
+        
+        return null;
     }
 
+    // First attempt: search with the provided year
+    let searchOutcome = await performSearch(encodedTitle, year);
 
-    // 3. If still no results, throw an error
-    if (!searchResult || !mediaType) {
+    // Fallback: if no result with year, search without it
+    if (!searchOutcome) {
+        searchOutcome = await performSearch(encodedTitle);
+    }
+    
+    if (!searchOutcome) {
         throw new Error('Movie or TV show not found in TMDb.');
     }
+
+    searchResult = searchOutcome.result;
+    mediaType = searchOutcome.type;
     
     const contentId = searchResult.id;
     const detailParams = {
@@ -123,9 +132,9 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
     }
 
   } catch (error: any) {
-    console.error('Error fetching from TMDb:', error);
+    console.error('Error fetching from TMDb:', error.message);
     if (axios.isAxiosError(error) && error.response) {
-      throw new Error(`TMDb API request failed: ${error.response.data?.status_message || error.message}`);
+      throw new Error(`TMDb API Error: ${error.response.data?.status_message || error.message}`);
     }
     // Re-throw our custom or other errors
     throw error;
