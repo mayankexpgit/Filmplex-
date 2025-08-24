@@ -18,70 +18,71 @@ export interface FormattedTMDbData {
   trailerUrl?: string;
 }
 
+
+const getTrailerUrl = (videos: any): string | undefined => {
+    if (videos?.results) {
+        // Prioritize "Official Trailer", then any "Trailer", then any "Teaser"
+        const officialTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer' && video.official);
+        if (officialTrailer) return `https://www.youtube.com/watch?v=${officialTrailer.key}`;
+
+        const anyTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
+        if (anyTrailer) return `https://www.youtube.com/watch?v=${anyTrailer.key}`;
+        
+        const anyTeaser = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Teaser');
+        if (anyTeaser) return `https://www.youtube.com/watch?v=${anyTeaser.key}`;
+    }
+    return undefined;
+};
+
+
 export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): Promise<FormattedTMDbData> => {
   if (!API_KEY) {
     throw new Error('TMDb API key is not configured.');
   }
 
   try {
-    const performSearch = async (includeYear: boolean) => {
-      const searchParams: { api_key: string, query: string, year?: number, first_air_date_year?: number } = {
-        api_key: API_KEY,
-        query: title,
-      };
-      if (includeYear && year) {
-        searchParams.year = year;
-        searchParams.first_air_date_year = year;
-      }
-      return await axios.get(`${API_BASE_URL}/search/multi`, { params: searchParams });
-    }
+    let searchResult: any | null = null;
+    let mediaType: 'movie' | 'tv' | null = null;
 
-    // 1. Search for the content (movie or TV) to get its ID and media type
-    let searchResponse = await performSearch(true);
-
-    // If no results with the year, try again without it.
-    if (searchResponse.data.results.length === 0) {
-      searchResponse = await performSearch(false);
-    }
+    // --- New Targeted Search Logic ---
     
-    // Filter out people from search results and take the first movie or TV show
-    const searchResult = searchResponse.data.results.find((r: any) => r.media_type === 'movie' || r.media_type === 'tv');
+    // 1. Search for a MOVIE first
+    const movieSearchParams: { api_key: string, query: string, year?: number } = { api_key: API_KEY, query: title };
+    if (year) movieSearchParams.year = year;
+    const movieSearchResponse = await axios.get(`${API_BASE_URL}/search/movie`, { params: movieSearchParams });
 
-    if (!searchResult) {
+    if (movieSearchResponse.data.results.length > 0) {
+      searchResult = movieSearchResponse.data.results[0];
+      mediaType = 'movie';
+    } else {
+      // 2. If no movie found, search for a TV SHOW
+      const tvSearchParams: { api_key: string, query: string, first_air_date_year?: number } = { api_key: API_KEY, query: title };
+      if (year) tvSearchParams.first_air_date_year = year;
+      const tvSearchResponse = await axios.get(`${API_BASE_URL}/search/tv`, { params: tvSearchParams });
+
+      if (tvSearchResponse.data.results.length > 0) {
+        searchResult = tvSearchResponse.data.results[0];
+        mediaType = 'tv';
+      }
+    }
+
+    // 3. If still no results, throw an error
+    if (!searchResult || !mediaType) {
         throw new Error('Movie or TV show not found in TMDb.');
     }
     
     const contentId = searchResult.id;
-    const mediaType = searchResult.media_type;
-
     const detailParams = {
       api_key: API_KEY,
       append_to_response: 'credits,videos'
     };
     
-    let details, credits, videos;
-
-    const getTrailerUrl = (videos: any): string | undefined => {
-        if (videos?.results) {
-            // Prioritize "Official Trailer", then any "Trailer"
-            const officialTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer' && video.official);
-            if (officialTrailer) return `https://www.youtube.com/watch?v=${officialTrailer.key}`;
-
-            const anyTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
-            if (anyTrailer) return `https://www.youtube.com/watch?v=${anyTrailer.key}`;
-            
-            // Fallback to any "Teaser"
-            const anyTeaser = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Teaser');
-            if (anyTeaser) return `https://www.youtube.com/watch?v=${anyTeaser.key}`;
-        }
-        return undefined;
-    };
+    // --- Fetch Details based on Media Type ---
 
     if (mediaType === 'movie') {
         const movieResponse = await axios.get(`${API_BASE_URL}/movie/${contentId}`, { params: detailParams });
-        details = movieResponse.data;
-        credits = details.credits;
-        videos = details.videos;
+        const details = movieResponse.data;
+        const { credits, videos } = details;
 
         const director = credits.crew.find((member: any) => member.job === 'Director');
         const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
@@ -98,11 +99,10 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
             trailerUrl: getTrailerUrl(videos),
         };
 
-    } else if (mediaType === 'tv') {
+    } else { // mediaType === 'tv'
         const tvResponse = await axios.get(`${API_BASE_URL}/tv/${contentId}`, { params: detailParams });
-        details = tvResponse.data;
-        credits = details.credits;
-        videos = details.videos;
+        const details = tvResponse.data;
+        const { credits, videos } = details;
         
         const creators = details.created_by.map((c: any) => c.name);
         const topActors = credits.cast.slice(0, 3).map((actor: any) => actor.name);
@@ -118,8 +118,6 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
             posterUrl: details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : '',
             trailerUrl: getTrailerUrl(videos),
         };
-    } else {
-         throw new Error('Unsupported media type found.');
     }
 
   } catch (error: any) {
@@ -127,7 +125,7 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
     if (axios.isAxiosError(error) && error.response) {
       throw new Error(`TMDb API request failed: ${error.response.data?.status_message || error.message}`);
     }
-    // Re-throw the original error if it's not from Axios
+    // Re-throw our custom or other errors
     throw error;
   }
 };
