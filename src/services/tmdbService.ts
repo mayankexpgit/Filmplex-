@@ -20,7 +20,6 @@ export interface FormattedTMDbData {
 
 const getTrailerUrl = (videos: any): string | undefined => {
     if (videos?.results) {
-        // Prioritize "Official Trailer", then any "Trailer", then any "Teaser"
         const officialTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer' && video.official);
         if (officialTrailer) return `https://www.youtube.com/watch?v=${officialTrailer.key}`;
 
@@ -40,41 +39,58 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
   }
 
   const normalizedTitle = title.trim().toLowerCase();
-  
+  let firstResultOfFirstPage: any = null;
+  let totalPages = 1;
+
   try {
-    const searchParams: any = {
+    // Iterate through all pages to find the best match
+    for (let page = 1; page <= totalPages; page++) {
+      const searchParams: any = {
         api_key: API_KEY,
         query: normalizedTitle,
-    };
-    if (year) {
+        page: page,
+      };
+      // Only include year in the initial search for better accuracy
+      if (year && page === 1) {
         searchParams.year = year;
-    }
+      }
+      
+      const searchResponse = await axios.get(`${API_BASE_URL}/search/movie`, { params: searchParams });
+      const { results, total_pages } = searchResponse.data;
 
-    const searchResponse = await axios.get(`${API_BASE_URL}/search/movie`, { params: searchParams });
-    
-    if (!searchResponse.data || !searchResponse.data.results || searchResponse.data.results.length === 0) {
-      // Fallback: If no results with year, search without it
-      if (year) {
-        const fallbackParams = { api_key: API_KEY, query: normalizedTitle };
-        const fallbackResponse = await axios.get(`${API_BASE_URL}/search/movie`, { params: fallbackParams });
-        if (!fallbackResponse.data || !fallbackResponse.data.results || fallbackResponse.data.results.length === 0) {
-            throw new Error('Movie not found in TMDb.');
+      if (page === 1) {
+        if (!results || results.length === 0) {
+            // If nothing found, try searching without the year as a fallback
+             delete searchParams.year;
+             const fallbackResponse = await axios.get(`${API_BASE_URL}/search/movie`, { params: searchParams });
+             if (fallbackResponse.data.results.length > 0) {
+                // Use fallback results
+                results.push(...fallbackResponse.data.results);
+                totalPages = fallbackResponse.data.total_pages;
+             } else {
+                 throw new Error('Movie not found in TMDb.');
+             }
+        } else {
+             totalPages = total_pages;
         }
-        searchResponse.data = fallbackResponse.data;
-      } else {
-        throw new Error('Movie not found in TMDb.');
+        if (results.length > 0) {
+          firstResultOfFirstPage = results[0];
+        }
+      }
+      
+      const exactMatch = results.find((m: any) => m.title.toLowerCase() === normalizedTitle);
+      
+      if (exactMatch) {
+          firstResultOfFirstPage = exactMatch;
+          break; // Exit loop once exact match is found
       }
     }
     
-    const results = searchResponse.data.results;
-
-    // Find an exact match ignoring case, otherwise take the first result.
-    let movie = results.find((m: any) => m.title.toLowerCase() === normalizedTitle);
-    if (!movie) {
-        movie = results[0];
+    if (!firstResultOfFirstPage) {
+        throw new Error('Movie not found in TMDb.');
     }
-    
-    const contentId = movie.id;
+
+    const contentId = firstResultOfFirstPage.id;
     const detailParams = {
       api_key: API_KEY,
       append_to_response: 'credits,videos'
