@@ -69,6 +69,10 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
 
             const anyTrailer = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
             if (anyTrailer) return `https://www.youtube.com/watch?v=${anyTrailer.key}`;
+            
+            // Fallback to any "Teaser"
+            const anyTeaser = videos.results.find((video: any) => video.site === 'YouTube' && video.type === 'Teaser');
+            if (anyTeaser) return `https://www.youtube.com/watch?v=${anyTeaser.key}`;
         }
         return undefined;
     };
