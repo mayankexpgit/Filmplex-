@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { fetchMovieDetailsFromTMDb } from '@/services/traktService';
+import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
 import 'dotenv/config'
 import { correctSpelling } from './spell-check-flow';
 
