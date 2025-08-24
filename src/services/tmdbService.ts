@@ -24,19 +24,26 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
   }
 
   try {
+    const performSearch = async (includeYear: boolean) => {
+      const searchParams: { api_key: string, query: string, year?: number, first_air_date_year?: number } = {
+        api_key: API_KEY,
+        query: title,
+      };
+      if (includeYear && year) {
+        searchParams.year = year;
+        searchParams.first_air_date_year = year;
+      }
+      return await axios.get(`${API_BASE_URL}/search/multi`, { params: searchParams });
+    }
+
     // 1. Search for the content (movie or TV) to get its ID and media type
-    const searchParams: { api_key: string, query: string, year?: number, first_air_date_year?: number } = {
-      api_key: API_KEY,
-      query: title,
-    };
-    // TMDb uses 'year' for movies and 'first_air_date_year' for TV shows. We can include both.
-    if (year) {
-      searchParams.year = year;
-      searchParams.first_air_date_year = year;
+    let searchResponse = await performSearch(true);
+
+    // If no results with the year, try again without it.
+    if (searchResponse.data.results.length === 0) {
+      searchResponse = await performSearch(false);
     }
     
-    const searchResponse = await axios.get(`${API_BASE_URL}/search/multi`, { params: searchParams });
-
     if (searchResponse.data.results.length === 0) {
       throw new Error('Content not found in TMDb.');
     }
