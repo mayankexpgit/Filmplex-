@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'FILMPLEX',
   description: 'The future of cinema.',
   icons: {
-    icon: '/favicon.ico', // ye ab public/favicon.ico ko use karega
+    icon: '/favicon2.ico', // ye ab public/favicon.ico ko use karega
   },
 };
 
