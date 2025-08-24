@@ -223,7 +223,7 @@ export default function MovieDetailPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
           <div className="flex flex-col items-center text-center space-y-2 mb-6">
-            <InfoRow label="iMDB Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
+            <InfoRow label="TMDb Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
             <InfoRow label="Genre" value={movie.genre} />
             <InfoRow label="Stars" value={movie.stars} />
             <InfoRow label="Creator" value={movie.creator} />
@@ -345,9 +345,10 @@ export default function MovieDetailPage() {
           {movie.synopsis && (
             <section className="mb-8 w-full">
               <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Synopsis</h2>
-              <p className="text-center text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                {movie.synopsis}
-              </p>
+              <div 
+                className="prose prose-invert text-center text-muted-foreground leading-relaxed max-w-2xl mx-auto"
+                dangerouslySetInnerHTML={{ __html: movie.synopsis.replace(/\n/g, '<br />') }}
+              />
             </section>
           )}
 
@@ -399,5 +400,3 @@ export default function MovieDetailPage() {
     </div>
   );
 }
-
-    

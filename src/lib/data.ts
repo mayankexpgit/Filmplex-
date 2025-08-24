@@ -94,7 +94,7 @@ export const initialMovies: Movie[] = [
       <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
       <br>
       <h4>REVIEW:</h4>
-      <p>Inception is a true masterpiece from Christopher Nolan. This isn't your typical heist film; it's smart, mysterious, and visually stunning, making every scene absolutely electric. The tension is next-level, and the way the story unfolds keeps you hooked right until the jaw-dropping finale. To top it off, the performances by Leonardo DiCaprio are outstanding. It's a film that genuinely makes you think and leaves you wanting more.</p>
+      <p>Inception is a true masterpiece from Christopher Nolan. This isn\'t your typical heist film; it\'s smart, mysterious, and visually stunning, making every scene absolutely electric. The tension is next-level, and the way the story unfolds keeps you hooked right until the jaw-dropping finale. To top it off, the performances by Leonardo DiCaprio are outstanding. It\'s a film that genuinely makes you think and leaves you wanting more.</p>
     `,
     screenshots: [
         'https://placehold.co/1280x720.png',
