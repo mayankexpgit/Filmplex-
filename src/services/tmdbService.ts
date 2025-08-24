@@ -41,69 +41,74 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
     }
 
     const normalizedTitle = title.trim().toLowerCase();
+    let bestMatch: any = null;
+    let fallbackResult: any = null;
     
-    // Helper function to search and find the best match
-    const searchAndFind = async (endpoint: 'movie' | 'tv') => {
-        let bestMatch: any = null;
-        let currentPage = 1;
-        let totalPages = 1;
+    let currentPage = 1;
+    let totalPages = 1;
 
-        while (currentPage <= totalPages) {
-            try {
-                const searchResponse = await axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
-                    params: {
-                        api_key: TMDB_API_KEY,
-                        query: normalizedTitle,
-                        year: endpoint === 'movie' ? year : undefined,
-                        page: currentPage,
-                    },
-                });
+    // Search through all pages until an exact match is found
+    while (currentPage <= totalPages) {
+        try {
+            const searchResponse = await axios.get('https://api.themoviedb.org/3/search/movie', {
+                params: {
+                    api_key: TMDB_API_KEY,
+                    query: normalizedTitle,
+                    year: year,
+                    page: currentPage,
+                },
+            });
 
-                const { results, total_pages } = searchResponse.data;
-                totalPages = total_pages > 10 ? 10 : total_pages; // Limit to 10 pages to avoid excessive calls
+            const { results, total_pages } = searchResponse.data;
+            totalPages = total_pages > 10 ? 10 : total_pages; // Cap at 10 pages to prevent excessive requests
 
-                if (results && results.length > 0) {
-                     // Look for an exact title match first
-                    const exactMatch = results.find((r: any) => (r.title || r.name)?.toLowerCase() === normalizedTitle);
-                    if (exactMatch) {
-                        bestMatch = exactMatch;
-                        break; // Found exact match, no need to check more pages
-                    }
-
-                    // If it's the first page and no exact match yet, hold the first result as a fallback
-                    if (currentPage === 1 && !bestMatch) {
-                        bestMatch = results[0];
-                    }
+            if (results && results.length > 0) {
+                // Store the very first result as a fallback
+                if (currentPage === 1) {
+                    fallbackResult = results[0];
                 }
-                currentPage++;
-
-            } catch (error) {
-                 if (axios.isAxiosError(error) && error.response?.status === 404) {
-                    // This page doesn't exist, stop searching
-                    break;
+                
+                // Look for an exact title match on the current page
+                const exactMatch = results.find((r: any) => (r.title || r.name)?.toLowerCase() === normalizedTitle);
+                if (exactMatch) {
+                    bestMatch = exactMatch;
+                    break; // Exact match found, no need to search more pages
                 }
-                console.error(`Error fetching page ${currentPage} from TMDb ${endpoint} search:`, error);
-                // Don't throw, just break and proceed with what we have
+            }
+            
+            // If no results on the first page, break
+            if (results.length === 0 && currentPage === 1) {
                 break;
             }
+
+            currentPage++;
+
+        } catch (error) {
+             if (axios.isAxiosError(error)) {
+                console.error(`Error fetching page ${currentPage} from TMDb:`, error.message);
+                // If it's a client error (like 404), stop trying. Otherwise, it might be a server issue.
+                if (error.response && error.response.status >= 400 && error.response.status < 500) {
+                    break;
+                }
+            } else {
+                 console.error('An unexpected error occurred during TMDb search:', error);
+            }
+            // Break on any error to be safe
+            break;
         }
-        return bestMatch;
-    };
-    
-    let searchResult = await searchAndFind('movie');
-    if (!searchResult) {
-       searchResult = await searchAndFind('tv');
-    }
-
-    if (!searchResult) {
-        throw new Error('Movie or TV show not found in TMDb.');
     }
     
-    const contentId = searchResult.id;
-    const contentType = searchResult.media_type || (searchResult.title ? 'movie' : 'tv');
+    // Use the exact match if found, otherwise use the fallback
+    const finalResult = bestMatch || fallbackResult;
 
-    // Fetch full details with credits and videos
-    const detailsResponse = await axios.get(`https://api.themoviedb.org/3/${contentType}/${contentId}`, {
+    if (!finalResult) {
+        throw new Error('Movie not found in TMDb.');
+    }
+    
+    const contentId = finalResult.id;
+    
+    // Fetch full details for the matched movie
+    const detailsResponse = await axios.get(`https://api.themoviedb.org/3/movie/${contentId}`, {
         params: {
             api_key: TMDB_API_KEY,
             append_to_response: 'credits,videos',
@@ -118,13 +123,8 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
     const rating = parseFloat(details.vote_average?.toFixed(1)) || 0;
     const poster = details.poster_path ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}` : '';
     
-    let directors: string[] = [];
-    if (contentType === 'movie') {
-        directors = details.credits?.crew.filter((p: any) => p.job === 'Director').map((p: any) => p.name) || [];
-    } else { // For TV shows, use 'created_by'
-        directors = details.created_by?.map((p: any) => p.name) || [];
-    }
-
+    let directors: string[] = details.credits?.crew.filter((p: any) => p.job === 'Director').map((p: any) => p.name) || [];
+    
     const actors = details.credits?.cast.slice(0, 3).map((p: any) => p.name) || [];
     const trailer = getTrailerUrl(details.videos?.results);
 
@@ -132,8 +132,8 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
         title: details.title || details.name,
         year: releaseDate.getFullYear(),
         genre: genres,
-        creator: directors.join(', '),
-        stars: actors.join(', '),
+        creator: directors.join(', ') || 'N/A',
+        stars: actors.join(', ') || 'N/A',
         synopsis: details.overview,
         imdbRating: rating,
         posterUrl: poster,
