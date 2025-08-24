@@ -44,10 +44,6 @@ export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): P
       searchResponse = await performSearch(false);
     }
     
-    if (searchResponse.data.results.length === 0) {
-      throw new Error('Content not found in TMDb.');
-    }
-    
     // Filter out people from search results and take the first movie or TV show
     const searchResult = searchResponse.data.results.find((r: any) => r.media_type === 'movie' || r.media_type === 'tv');
 
