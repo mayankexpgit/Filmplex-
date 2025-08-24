@@ -87,22 +87,27 @@ export const fetchMovieDetailsFromTrakt = async (title: string, year?: number): 
     });
 
     const details = detailsResponse.data;
-    const { people } = details;
     
     // Step 3: Get poster from TMDb
     const imdbId = details.ids.imdb;
     const posterUrl = await getPosterFromTMDb(imdbId);
     
-    // Step 4: Format the data
-    const directors = people.directing?.map((p: any) => p.person.name) || [];
-    const actors = people.cast?.slice(0, 3).map((p: any) => p.person.name) || [];
+    // Step 4: Format the data, with checks for missing 'people' data
+    const people = details.people;
+    let directors: string[] = [];
+    let actors: string[] = [];
+
+    if (people) {
+        directors = people.directing?.map((p: any) => p.person.name) || [];
+        actors = people.cast?.slice(0, 3).map((p: any) => p.person.name) || [];
+    }
 
     return {
         title: details.title,
         year: details.year,
         genre: details.genres.map((g: string) => g.charAt(0).toUpperCase() + g.slice(1)).join(', '),
         creator: directors.join(', ') || 'N/A',
-        stars: actors.join(', '),
+        stars: actors.join(', ') || 'N/A',
         synopsis: details.overview || 'No synopsis available.',
         imdbRating: parseFloat(details.rating?.toFixed(1)) || 0,
         posterUrl: posterUrl,
