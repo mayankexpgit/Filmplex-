@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -18,7 +19,14 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
-import { correctSpelling } from '@/ai/flows/spell-check-flow';
+import { searchMoviesOnTMDb, type TMDbSearchResult } from '@/services/tmdbService';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +82,11 @@ export default function UploadMovie() {
   
   const [formData, setFormData] = useState<FormData>(initialFormState);
   
+  // State for the recommendation dialog
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<TMDbSearchResult[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   useEffect(() => {
     const movieId = searchParams.get('id');
     if (movieId && movies.length > 0) {
@@ -172,29 +185,43 @@ export default function UploadMovie() {
       handleInputChange('episodes', newEpisodes);
   }
   
-  const handleAutoFill = async () => {
+  const handleSearchClick = async () => {
     if (!formData.title) {
-        toast({
-            variant: 'destructive',
-            title: 'Title Required',
-            description: 'Please enter a movie title before using AI auto-fill.',
-        });
-        return;
+      toast({
+        variant: 'destructive',
+        title: 'Title Required',
+        description: 'Please enter a movie title before searching.',
+      });
+      return;
     }
+    setIsSearching(true);
+    setIsDialogOpen(true);
+    try {
+      const results = await searchMoviesOnTMDb(formData.title);
+      setSearchResults(results);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Search Failed',
+        description: error.message || 'Could not search for movies.',
+      });
+      setIsDialogOpen(false);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleMovieSelect = async (tmdbId: number) => {
+    setIsDialogOpen(false);
+    setSearchResults([]);
     setIsFetchingAI(true);
     try {
         toast({
             title: 'Fetching Details...',
-            description: `Searching for "${formData.title}"...`,
+            description: `Getting full details for the selected movie...`,
         });
         
-        const result = await getMovieDetails({ 
-            title: formData.title,
-            year: formData.year 
-        });
-
-        // Update title in form in case it was corrected by the API's search
-        handleInputChange('title', result.title);
+        const result = await getMovieDetails({ tmdbId });
 
         setFormData(prev => ({
             ...prev,
@@ -221,12 +248,12 @@ export default function UploadMovie() {
         toast({
             variant: 'destructive',
             title: 'API Error',
-            description: error.message || 'Could not fetch movie details. Please check the title/year or fill manually.',
+            description: error.message || 'Could not fetch movie details. Please fill manually.',
         });
     } finally {
         setIsFetchingAI(false);
     }
-};
+  };
 
 
   const handleSave = () => {
@@ -274,250 +301,301 @@ export default function UploadMovie() {
     // If validation passes, the AlertDialogTrigger will open the dialog.
   };
 
-  const isFormDisabled = isPending || isFetchingAI;
+  const isFormDisabled = isPending || isFetchingAI || isSearching;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Form Column */}
-      <Card className="lg:max-h-[85vh] flex flex-col">
-        <CardHeader>
-          <CardTitle>{formData.id ? 'Edit Content' : 'Upload Content'}</CardTitle>
-          <CardDescription>Fill in the details and see a live preview on the right.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-grow overflow-hidden">
-          <ScrollArea className="h-full pr-6">
-            <div className="space-y-4">
-              
-              <div className="space-y-2">
-                <Label>Content Type</Label>
-                 <RadioGroup value={formData.contentType} onValueChange={(val) => handleInputChange('contentType', val)} className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="movie" id="r-movie" />
-                    <Label htmlFor="r-movie">Movie</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="series" id="r-series" />
-                    <Label htmlFor="r-series">Series</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <Separator />
-
-              {/* Basic Info */}
-              <div className="space-y-2">
-                <Label htmlFor="movie-title">Title</Label>
-                 <div className="flex items-center gap-2">
-                    <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
-                     <Button variant="outline" size="icon" onClick={handleAutoFill} disabled={isFormDisabled} className="ai-glow-button">
-                        {isFetchingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                        <span className="sr-only">Auto-fill with AI</span>
-                    </Button>
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Form Column */}
+        <Card className="lg:max-h-[85vh] flex flex-col">
+          <CardHeader>
+            <CardTitle>{formData.id ? 'Edit Content' : 'Upload Content'}</CardTitle>
+            <CardDescription>Fill in the details and see a live preview on the right.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-grow overflow-hidden">
+            <ScrollArea className="h-full pr-6">
+              <div className="space-y-4">
+                
+                <div className="space-y-2">
+                  <Label>Content Type</Label>
+                  <RadioGroup value={formData.contentType} onValueChange={(val) => handleInputChange('contentType', val)} className="flex gap-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="movie" id="r-movie" />
+                      <Label htmlFor="r-movie">Movie</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="series" id="r-series" />
+                      <Label htmlFor="r-series">Series</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="card-info-text">Card Info Text</Label>
-                <Input id="card-info-text" value={formData.cardInfoText || ''} onChange={(e) => handleInputChange('cardInfoText', e.target.value)} disabled={isFormDisabled} placeholder="e.g. 2024 • Hindi • IMDb 8.5" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                      <Label htmlFor="movie-genre">Genre</Label>
-                      <Input id="movie-genre" value={formData.genre || ''} onChange={(e) => handleInputChange('genre', e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isFormDisabled} />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="movie-year">Year</Label>
-                      <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isFormDisabled} />
-                  </div>
-              </div>
-               <div className="space-y-2">
-                  <Label htmlFor="movie-language">Language</Label>
-                  <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isFormDisabled} />
-              </div>
-               <div className="space-y-2">
-                  <Label htmlFor="movie-stars">Stars (comma-separated)</Label>
-                  <Input id="movie-stars" value={formData.stars || ''} onChange={(e) => handleInputChange('stars', e.target.value)} placeholder="e.g. Actor One, Actor Two" disabled={isFormDisabled} />
-              </div>
-               <div className="space-y-2">
-                  <Label htmlFor="movie-creator">Creator / Director</Label>
-                  <Input id="movie-creator" value={formData.creator || ''} onChange={(e) => handleInputChange('creator', e.target.value)} placeholder="e.g. Director Name" disabled={isFormDisabled} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                      <Label htmlFor="movie-quality">Quality Description</Label>
-                      <Input id="movie-quality" value={formData.quality || ''} onChange={(e) => handleInputChange('quality', e.target.value)} placeholder="e.g. BluRay 4K | 1080p" disabled={isFormDisabled} />
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="movie-imdb">TMDb Rating</Label>
-                      <Input id="movie-imdb" type="number" step="0.1" value={formData.imdbRating || ''} onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))} disabled={isFormDisabled} />
-                  </div>
-              </div>
 
-              <div className="space-y-2">
-                  <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
-                  <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isFormDisabled} />
-              </div>
-              {/* Media Links */}
-              <div className="space-y-2">
-                <Label htmlFor="movie-poster">Poster URL</Label>
-                <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isFormDisabled} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="trailer-url">Trailer URL</Label>
-                <Input id="trailer-url" value={formData.trailerUrl || ''} onChange={(e) => handleInputChange('trailerUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." disabled={isFormDisabled} />
-              </div>
-              
-              <Separator />
+                <Separator />
 
-              {/* Screenshots */}
-              <div className="space-y-4 pt-2">
-                <Label>Screenshots</Label>
-                {(formData.screenshots || []).map((ss, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                     <Input
-                        className="flex-1"
-                        placeholder={`https://.../screenshot${index+1}.png`}
-                        value={ss}
-                        onChange={(e) => handleScreenshotChange(index, e.target.value)}
-                        disabled={isFormDisabled}
-                      />
-                      <Button variant="ghost" size="icon" onClick={() => removeScreenshot(index)} disabled={isFormDisabled}>
-                        <XCircle className="h-5 w-5 text-destructive" />
+                {/* Basic Info */}
+                <div className="space-y-2">
+                  <Label htmlFor="movie-title">Title</Label>
+                  <div className="flex items-center gap-2">
+                      <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
+                      <Button variant="outline" size="icon" onClick={handleSearchClick} disabled={isFormDisabled} className="ai-glow-button">
+                          {isSearching || isFetchingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                          <span className="sr-only">Auto-fill with AI</span>
                       </Button>
                   </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={addScreenshot} disabled={isFormDisabled}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Screenshot
-                </Button>
-              </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="card-info-text">Card Info Text</Label>
+                  <Input id="card-info-text" value={formData.cardInfoText || ''} onChange={(e) => handleInputChange('cardInfoText', e.target.value)} disabled={isFormDisabled} placeholder="e.g. 2024 • Hindi • IMDb 8.5" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="movie-genre">Genre</Label>
+                        <Input id="movie-genre" value={formData.genre || ''} onChange={(e) => handleInputChange('genre', e.target.value)} placeholder="e.g. Action, Sci-Fi" disabled={isFormDisabled} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="movie-year">Year</Label>
+                        <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isFormDisabled} />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="movie-language">Language</Label>
+                    <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isFormDisabled} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="movie-stars">Stars (comma-separated)</Label>
+                    <Input id="movie-stars" value={formData.stars || ''} onChange={(e) => handleInputChange('stars', e.target.value)} placeholder="e.g. Actor One, Actor Two" disabled={isFormDisabled} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="movie-creator">Creator / Director</Label>
+                    <Input id="movie-creator" value={formData.creator || ''} onChange={(e) => handleInputChange('creator', e.target.value)} placeholder="e.g. Director Name" disabled={isFormDisabled} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="movie-quality">Quality Description</Label>
+                        <Input id="movie-quality" value={formData.quality || ''} onChange={(e) => handleInputChange('quality', e.target.value)} placeholder="e.g. BluRay 4K | 1080p" disabled={isFormDisabled} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="movie-imdb">TMDb Rating</Label>
+                        <Input id="movie-imdb" type="number" step="0.1" value={formData.imdbRating || ''} onChange={(e) => handleInputChange('imdbRating', parseFloat(e.target.value))} disabled={isFormDisabled} />
+                    </div>
+                </div>
 
-              <Separator />
+                <div className="space-y-2">
+                    <Label htmlFor="movie-tags">Tags (comma-separated)</Label>
+                    <Input id="movie-tags" value={formData.tagsString || ''} onChange={(e) => handleInputChange('tagsString', e.target.value)} placeholder="Action, New Release" disabled={isFormDisabled} />
+                </div>
+                {/* Media Links */}
+                <div className="space-y-2">
+                  <Label htmlFor="movie-poster">Poster URL</Label>
+                  <Input id="movie-poster" value={formData.posterUrl || ''} onChange={(e) => handleInputChange('posterUrl', e.target.value)} placeholder="https://image.tmdb.org/..." disabled={isFormDisabled} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="trailer-url">Trailer URL</Label>
+                  <Input id="trailer-url" value={formData.trailerUrl || ''} onChange={(e) => handleInputChange('trailerUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." disabled={isFormDisabled} />
+                </div>
+                
+                <Separator />
 
-              {/* Download Links Section */}
-              {formData.contentType === 'movie' ? (
+                {/* Screenshots */}
                 <div className="space-y-4 pt-2">
-                  <Label>Download Links</Label>
-                  {(formData.downloadLinks || []).map((link, index) => (
-                    <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleMovieLinkChange} onRemoveLink={removeMovieLink} disabled={isFormDisabled} />
+                  <Label>Screenshots</Label>
+                  {(formData.screenshots || []).map((ss, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                          className="flex-1"
+                          placeholder={`https://.../screenshot${index+1}.png`}
+                          value={ss}
+                          onChange={(e) => handleScreenshotChange(index, e.target.value)}
+                          disabled={isFormDisabled}
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => removeScreenshot(index)} disabled={isFormDisabled}>
+                          <XCircle className="h-5 w-5 text-destructive" />
+                        </Button>
+                    </div>
                   ))}
-                  <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Link
+                  <Button variant="outline" size="sm" onClick={addScreenshot} disabled={isFormDisabled}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Screenshot
                   </Button>
                 </div>
-              ) : (
-                <div className="space-y-6 pt-2">
-                    <div>
-                        <div className="flex justify-between items-center mb-4">
-                            <Label className="text-lg">Episodes</Label>
-                            <Button variant="outline" size="sm" onClick={addEpisode} disabled={isFormDisabled}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Episode
-                            </Button>
-                        </div>
-                        <div className="space-y-4">
-                            {(formData.episodes || []).map((ep, epIndex) => (
-                                <EpisodeEditor 
-                                    key={epIndex} 
-                                    epIndex={epIndex} 
-                                    episode={ep} 
-                                    onEpisodeChange={handleInputChange}
-                                    onLinkChange={handleEpisodeLinkChange} 
-                                    onAddLink={addEpisodeLink} 
-                                    onRemoveLink={removeEpisodeLink} 
-                                    onRemoveEpisode={removeEpisode} 
-                                    disabled={isFormDisabled} 
-                                    currentEpisodes={formData.episodes || []}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                    <Separator />
-                     <div>
-                        <Label className="text-lg mb-4 block">Full Season Download Links</Label>
-                        <div className="space-y-4">
-                            {(formData.seasonDownloadLinks || []).map((link, index) => (
-                                <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleSeasonLinkChange} onRemoveLink={removeSeasonLink} disabled={isFormDisabled} />
-                            ))}
-                            <Button variant="outline" size="sm" onClick={addSeasonLink} disabled={isFormDisabled}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Season Link
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-              )}
 
-              <Separator />
+                <Separator />
 
-              {/* Synopsis */}
-               <div className="space-y-2">
-                <Label htmlFor="movie-synopsis">Synopsis</Label>
-                <Textarea 
-                  id="movie-synopsis" 
-                  value={formData.synopsis || ''} 
-                  onChange={(e) => handleInputChange('synopsis', e.target.value)} 
-                  disabled={isFormDisabled} 
-                  rows={5}
-                  placeholder="Provide a brief synopsis of the movie/series..."
-                />
-              </div>
+                {/* Download Links Section */}
+                {formData.contentType === 'movie' ? (
+                  <div className="space-y-4 pt-2">
+                    <Label>Download Links</Label>
+                    {(formData.downloadLinks || []).map((link, index) => (
+                      <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleMovieLinkChange} onRemoveLink={removeMovieLink} disabled={isFormDisabled} />
+                    ))}
+                    <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Link
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6 pt-2">
+                      <div>
+                          <div className="flex justify-between items-center mb-4">
+                              <Label className="text-lg">Episodes</Label>
+                              <Button variant="outline" size="sm" onClick={addEpisode} disabled={isFormDisabled}>
+                                  <PlusCircle className="mr-2 h-4 w-4" /> Add Episode
+                              </Button>
+                          </div>
+                          <div className="space-y-4">
+                              {(formData.episodes || []).map((ep, epIndex) => (
+                                  <EpisodeEditor 
+                                      key={epIndex} 
+                                      epIndex={epIndex} 
+                                      episode={ep} 
+                                      onEpisodeChange={handleInputChange}
+                                      onLinkChange={handleEpisodeLinkChange} 
+                                      onAddLink={addEpisodeLink} 
+                                      onRemoveLink={removeEpisodeLink} 
+                                      onRemoveEpisode={removeEpisode} 
+                                      disabled={isFormDisabled} 
+                                      currentEpisodes={formData.episodes || []}
+                                  />
+                              ))}
+                          </div>
+                      </div>
+                      <Separator />
+                      <div>
+                          <Label className="text-lg mb-4 block">Full Season Download Links</Label>
+                          <div className="space-y-4">
+                              {(formData.seasonDownloadLinks || []).map((link, index) => (
+                                  <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleSeasonLinkChange} onRemoveLink={removeSeasonLink} disabled={isFormDisabled} />
+                              ))}
+                              <Button variant="outline" size="sm" onClick={addSeasonLink} disabled={isFormDisabled}>
+                                  <PlusCircle className="mr-2 h-4 w-4" /> Add Season Link
+                              </Button>
+                          </div>
+                      </div>
+                  </div>
+                )}
 
-              {/* Description */}
-               <div className="space-y-2">
-                <Label htmlFor="movie-description">Description</Label>
-                <div className="p-2 border rounded-md">
-                   <Textarea 
-                      id="movie-description" 
-                      value={formData.description || ''} 
-                      onChange={(e) => handleInputChange('description', e.target.value)} 
-                      disabled={isFormDisabled} 
-                      rows={10}
-                      className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
-                      placeholder="Provide a longer description or review here..."
+                <Separator />
+
+                {/* Synopsis */}
+                <div className="space-y-2">
+                  <Label htmlFor="movie-synopsis">Synopsis</Label>
+                  <Textarea 
+                    id="movie-synopsis" 
+                    value={formData.synopsis || ''} 
+                    onChange={(e) => handleInputChange('synopsis', e.target.value)} 
+                    disabled={isFormDisabled} 
+                    rows={5}
+                    placeholder="Provide a brief synopsis of the movie/series..."
                   />
                 </div>
-              </div>
-            </div>
-          </ScrollArea>
-        </CardContent>
-        <CardFooter className="justify-between border-t pt-4">
-             <div>
-                {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isFormDisabled}>Cancel Edit</Button>}
-             </div>
-             <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button onClick={triggerSave} disabled={isFormDisabled}>
-                        {formData.id ? 'Update Content' : 'Confirm & Upload'}
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action will save the current data to the database. Please double-check that all information is correct before proceeding.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleSave} disabled={isPending}>
-                        {isPending ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Processing...
-                            </>
-                        ) : 'Confirm'}
-                    </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </CardFooter>
-      </Card>
 
-      {/* Preview Column */}
-      <div className="lg:max-h-[85vh] overflow-hidden rounded-lg">
-        <div className="h-full w-full bg-secondary overflow-y-auto rounded-lg border">
-            <MovieDetailPreview movie={formData as Movie} />
+                {/* Description */}
+                <div className="space-y-2">
+                  <Label htmlFor="movie-description">Description</Label>
+                  <div className="p-2 border rounded-md">
+                    <Textarea 
+                        id="movie-description" 
+                        value={formData.description || ''} 
+                        onChange={(e) => handleInputChange('description', e.target.value)} 
+                        disabled={isFormDisabled} 
+                        rows={10}
+                        className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                        placeholder="Provide a longer description or review here..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </CardContent>
+          <CardFooter className="justify-between border-t pt-4">
+              <div>
+                  {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isFormDisabled}>Cancel Edit</Button>}
+              </div>
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button onClick={triggerSave} disabled={isFormDisabled}>
+                          {formData.id ? 'Update Content' : 'Confirm & Upload'}
+                      </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          This action will save the current data to the database. Please double-check that all information is correct before proceeding.
+                      </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSave} disabled={isPending}>
+                          {isPending ? (
+                              <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Processing...
+                              </>
+                          ) : 'Confirm'}
+                      </AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
+          </CardFooter>
+        </Card>
+
+        {/* Preview Column */}
+        <div className="lg:max-h-[85vh] overflow-hidden rounded-lg">
+          <div className="h-full w-full bg-secondary overflow-y-auto rounded-lg border">
+              <MovieDetailPreview movie={formData as Movie} />
+          </div>
         </div>
       </div>
-    </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle>Select Movie</DialogTitle>
+            <DialogDescription>
+              We found these movies matching your title. Please select the correct one.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {isSearching ? (
+              <div className="flex justify-center items-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : searchResults.length === 0 ? (
+               <div className="text-center h-48 flex flex-col justify-center items-center">
+                 <p className="font-semibold">No Results Found</p>
+                 <p className="text-sm text-muted-foreground">Try a different title or check for spelling errors.</p>
+               </div>
+            ) : (
+              <ScrollArea className="h-[60vh]">
+                <div className="space-y-4 pr-4">
+                  {searchResults.map((movie) => (
+                    <div
+                      key={movie.id}
+                      onClick={() => handleMovieSelect(movie.id)}
+                      className="flex items-center gap-4 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                    >
+                      <div className="w-16 h-24 relative flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                        <Image
+                          src={movie.posterUrl}
+                          alt={movie.title}
+                          fill
+                          className="object-cover"
+                          data-ai-hint="movie poster"
+                        />
+                      </div>
+                      <div className="flex-grow">
+                        <p className="font-bold">{movie.title}</p>
+                        <p className="text-sm text-muted-foreground">{movie.year}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -613,5 +691,3 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
         </div>
     )
 }
-
-    

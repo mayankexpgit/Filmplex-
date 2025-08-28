@@ -15,8 +15,7 @@ import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
 import 'dotenv/config'
 
 const MovieDetailsInputSchema = z.object({
-  title: z.string().describe('The title of the movie to search for.'),
-  year: z.number().optional().describe('The release year of the movie to improve accuracy.'),
+  tmdbId: z.number().describe('The TMDb ID of the movie to fetch details for.'),
 });
 export type MovieDetailsInput = z.infer<typeof MovieDetailsInputSchema>;
 
@@ -57,7 +56,7 @@ Your tasks:
 3.  **Card Info Text**: Create a detailed info string for the movie card. It must be long and descriptive, following this exact format: 'Filmplex – {{title}} ({{year}}) [Source (e.g. BluRay)] [Audio Languages (e.g., Hindi + English)] [Available Qualities (e.g., 1080p, 720p)] | [Extra details like Dual Audio, x264, 10Bit HEVC] | [Content Type, e.g., Movie, Anime Movie, Series]'.
 4.  **Description**: Generate a detailed, colorful HTML description. It MUST follow this exact template:
 
-<p><span style="color:#ff4d4d;">✅ <b>Download {{title}} ({{year}}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a masterpiece in the {{genre}} genre</span>,<br><span style="color:#ff66b3;">blending drama, action, and powerful performances</span>,<br>now <span style="color:#00cccc;">available in high definition</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>
+<p><span style="color:#ff4d4d;">✅ <b>Download {{title}} ({{year}}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a masterpiece in the {{genre}} genre</span>,<br><span style="color:#ff66b3;">blending drama, action, and powerful performances</span>,<br>now <span style="color:#00cccc;">available in high definition</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;\">zero waiting time</span>!</p>
   `,
 });
 
@@ -72,8 +71,8 @@ const getMovieDetailsFlow = ai.defineFlow(
     
     let tmdbData;
     try {
-      // Step 1: Get factual data from TMDb API using the corrected title
-      tmdbData = await fetchMovieDetailsFromTMDb(input.title, input.year);
+      // Step 1: Get factual data from TMDb API using the TMDb ID
+      tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId);
     } catch (error: any) {
         // Re-throw with a more user-friendly message
         throw new Error(error.message || 'Could not fetch movie details. Please check the title/year or fill manually.');

@@ -4,6 +4,13 @@ import axios from 'axios';
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY; 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
+export interface TMDbSearchResult {
+  id: number;
+  title: string;
+  year: string;
+  posterUrl: string;
+}
+
 export interface FormattedTMDbData {
   title: string;
   year: number;
@@ -15,6 +22,31 @@ export interface FormattedTMDbData {
   posterUrl: string;
   trailerUrl?: string;
 }
+
+export const searchMoviesOnTMDb = async (title: string): Promise<TMDbSearchResult[]> => {
+    if (!TMDB_API_KEY) {
+        throw new Error('TMDb API key is not configured.');
+    }
+
+    const searchResponse = await axios.get('https://api.themoviedb.org/3/search/movie', {
+        params: {
+            api_key: TMDB_API_KEY,
+            query: title,
+            include_adult: false,
+        },
+    });
+
+    if (!searchResponse.data.results) {
+        return [];
+    }
+
+    return searchResponse.data.results.map((movie: any) => ({
+        id: movie.id,
+        title: movie.title,
+        year: movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A',
+        posterUrl: movie.poster_path ? `${TMDB_IMAGE_BASE_URL}${movie.poster_path}` : 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image',
+    }));
+};
 
 const getTrailerUrl = (videos: any[]): string | undefined => {
     if (!videos || videos.length === 0) return undefined;
@@ -35,88 +67,24 @@ const getTrailerUrl = (videos: any[]): string | undefined => {
 };
 
 
-export const fetchMovieDetailsFromTMDb = async (title: string, year?: number): Promise<FormattedTMDbData> => {
+export const fetchMovieDetailsFromTMDb = async (tmdbId: number): Promise<FormattedTMDbData> => {
     if (!TMDB_API_KEY) {
         throw new Error('TMDb API key is not configured.');
     }
 
-    const normalizedTitle = title.trim().toLowerCase();
-    let bestMatch: any = null;
-    let fallbackResult: any = null;
-    
-    let currentPage = 1;
-    let totalPages = 1;
-
-    // Search through all pages until an exact match is found
-    while (currentPage <= totalPages) {
-        try {
-            const searchResponse = await axios.get('https://api.themoviedb.org/3/search/movie', {
-                params: {
-                    api_key: TMDB_API_KEY,
-                    query: normalizedTitle,
-                    year: year,
-                    page: currentPage,
-                },
-            });
-
-            const { results, total_pages } = searchResponse.data;
-            totalPages = total_pages > 10 ? 10 : total_pages; // Cap at 10 pages to prevent excessive requests
-
-            if (results && results.length > 0) {
-                // Store the very first result as a fallback
-                if (currentPage === 1) {
-                    fallbackResult = results[0];
-                }
-                
-                // Look for an exact title match on the current page
-                const exactMatch = results.find((r: any) => (r.title || r.name)?.toLowerCase() === normalizedTitle);
-                if (exactMatch) {
-                    bestMatch = exactMatch;
-                    break; // Exact match found, no need to search more pages
-                }
-            }
-            
-            // If no results on the first page, break
-            if (results.length === 0 && currentPage === 1) {
-                break;
-            }
-
-            currentPage++;
-
-        } catch (error) {
-             if (axios.isAxiosError(error)) {
-                console.error(`Error fetching page ${currentPage} from TMDb:`, error.message);
-                // If it's a client error (like 404), stop trying. Otherwise, it might be a server issue.
-                if (error.response && error.response.status >= 400 && error.response.status < 500) {
-                    break;
-                }
-            } else {
-                 console.error('An unexpected error occurred during TMDb search:', error);
-            }
-            // Break on any error to be safe
-            break;
-        }
+    let details;
+    try {
+        const detailsResponse = await axios.get(`https://api.themoviedb.org/3/movie/${tmdbId}`, {
+            params: {
+                api_key: TMDB_API_KEY,
+                append_to_response: 'credits,videos',
+            },
+        });
+        details = detailsResponse.data;
+    } catch (error) {
+        throw new Error('Movie not found in TMDb with the provided ID.');
     }
     
-    // Use the exact match if found, otherwise use the fallback
-    const finalResult = bestMatch || fallbackResult;
-
-    if (!finalResult) {
-        throw new Error('Movie not found in TMDb.');
-    }
-    
-    const contentId = finalResult.id;
-    
-    // Fetch full details for the matched movie
-    const detailsResponse = await axios.get(`https://api.themoviedb.org/3/movie/${contentId}`, {
-        params: {
-            api_key: TMDB_API_KEY,
-            append_to_response: 'credits,videos',
-        },
-    });
-
-    const details = detailsResponse.data;
-
     // Format the data
     const releaseDate = new Date(details.release_date || details.first_air_date);
     const genres = details.genres.map((g: any) => g.name).join(', ');
