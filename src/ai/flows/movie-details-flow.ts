@@ -11,11 +11,12 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
+import { fetchMovieDetailsFromTMDb, type ContentType } from '@/services/tmdbService';
 import 'dotenv/config'
 
 const MovieDetailsInputSchema = z.object({
-  tmdbId: z.number().describe('The TMDb ID of the movie to fetch details for.'),
+  tmdbId: z.number().describe('The TMDb ID of the movie or series to fetch details for.'),
+  type: z.enum(['movie', 'tv']).describe('The type of content to fetch: movie or tv.')
 });
 export type MovieDetailsInput = z.infer<typeof MovieDetailsInputSchema>;
 
@@ -72,7 +73,7 @@ const getMovieDetailsFlow = ai.defineFlow(
     let tmdbData;
     try {
       // Step 1: Get factual data from TMDb API using the TMDb ID
-      tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId);
+      tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
     } catch (error: any) {
         // Re-throw with a more user-friendly message
         throw new Error(error.message || 'Could not fetch movie details. Please check the title/year or fill manually.');

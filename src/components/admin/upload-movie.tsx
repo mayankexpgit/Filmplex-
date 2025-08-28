@@ -19,7 +19,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
-import { searchMoviesOnTMDb, type TMDbSearchResult } from '@/services/tmdbService';
+import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from '../ui/badge';
 
 
 type FormData = Partial<Movie> & {
@@ -211,7 +212,7 @@ export default function UploadMovie() {
     }
   };
 
-  const handleMovieSelect = async (tmdbId: number) => {
+  const handleMovieSelect = async (tmdbId: number, type: ContentType) => {
     setIsDialogOpen(false);
     setSearchResults([]);
     setIsFetchingAI(true);
@@ -221,10 +222,11 @@ export default function UploadMovie() {
             description: `Getting full details for the selected movie...`,
         });
         
-        const result = await getMovieDetails({ tmdbId });
+        const result = await getMovieDetails({ tmdbId, type });
 
         setFormData(prev => ({
             ...prev,
+            contentType: type, // Set the content type based on selection
             title: result.title,
             year: result.year,
             posterUrl: result.posterUrl,
@@ -550,9 +552,9 @@ export default function UploadMovie() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
-            <DialogTitle>Select Movie</DialogTitle>
+            <DialogTitle>Select Movie or Series</DialogTitle>
             <DialogDescription>
-              We found these movies matching your title. Please select the correct one.
+              We found these matching your title. Please select the correct one.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
@@ -568,24 +570,27 @@ export default function UploadMovie() {
             ) : (
               <ScrollArea className="h-[60vh]">
                 <div className="space-y-4 pr-4">
-                  {searchResults.map((movie) => (
+                  {searchResults.map((item) => (
                     <div
-                      key={movie.id}
-                      onClick={() => handleMovieSelect(movie.id)}
-                      className="flex items-center gap-4 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                      key={`${item.type}-${item.id}`}
+                      onClick={() => handleMovieSelect(item.id, item.type)}
+                      className="flex items-start gap-4 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
                     >
-                      <div className="w-16 h-24 relative flex-shrink-0 bg-muted rounded-md overflow-hidden">
+                      <div className="w-20 h-28 relative flex-shrink-0 bg-muted rounded-md overflow-hidden">
                         <Image
-                          src={movie.posterUrl}
-                          alt={movie.title}
+                          src={item.posterUrl}
+                          alt={item.title}
                           fill
                           className="object-cover"
                           data-ai-hint="movie poster"
                         />
                       </div>
                       <div className="flex-grow">
-                        <p className="font-bold">{movie.title}</p>
-                        <p className="text-sm text-muted-foreground">{movie.year}</p>
+                        <p className="font-bold">{item.title}</p>
+                        <p className="text-sm text-muted-foreground">{item.year}</p>
+                        <Badge variant={item.type === 'movie' ? 'default' : 'secondary'} className="mt-2">
+                            {item.type === 'movie' ? 'Movie' : 'TV Series'}
+                        </Badge>
                       </div>
                     </div>
                   ))}
