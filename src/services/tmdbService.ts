@@ -1,4 +1,6 @@
 
+'use server';
+
 import axios from 'axios';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY; 
