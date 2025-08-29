@@ -7,7 +7,7 @@ import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Menu, Search, Film, Tv, Clapperboard, IndianRupee, Bot } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import StreamingLogos from './streaming-logos';
 import {
   DropdownMenu,
@@ -48,6 +48,10 @@ function GridSkeleton() {
 
 const genres = [
   'All Genres',
+  'Bollywood',
+  'Hollywood',
+  'Anime',
+  'Dubbed',
   'Action',
   'Adventure',
   'Animation',
@@ -62,12 +66,6 @@ const genres = [
   'War',
 ];
 
-const smartFilters = [
-    { label: 'Bollywood', icon: IndianRupee },
-    { label: 'Hollywood', icon: Clapperboard },
-    { label: 'Anime', icon: Tv },
-    { label: 'Dubbed', icon: Film },
-]
 
 export function HomePageClient() {
   const { 
@@ -130,13 +128,12 @@ export function HomePageClient() {
       <section className="space-y-6">
         <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
           <div className="relative flex-1">
-             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground">
-                <Search className="h-5 w-5" />
-                <Bot className="h-4 w-4" />
+             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground" />
             </div>
             <Input
-              placeholder="AI-powered search..."
-              className="pl-14 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Search for movies or series..."
+              className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
             />
@@ -161,20 +158,6 @@ export function HomePageClient() {
           </div>
         </div>
         
-        <div className="flex items-center justify-center gap-2 md:gap-4 flex-wrap">
-            {smartFilters.map(filter => (
-                <Button 
-                    key={filter.label} 
-                    variant={selectedGenre === filter.label ? "default" : "outline"}
-                    onClick={() => setSelectedGenre(filter.label)}
-                    className="transition-all"
-                >
-                    <filter.icon className="mr-2 h-4 w-4" />
-                    {filter.label}
-                </Button>
-            ))}
-        </div>
-
         <StreamingLogos />
 
         <MovieCardLarge />
