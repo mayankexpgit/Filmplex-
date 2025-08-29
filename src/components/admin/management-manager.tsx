@@ -18,11 +18,9 @@ export default function ManagementManager() {
 
   const [name, setName] = useState('');
   const [info, setInfo] = useState('');
-  const [contactUsername, setContactUsername] = useState('');
-  const [contactPlatform, setContactPlatform] = useState<'telegram' | 'whatsapp' | 'instagram'>('telegram');
 
   const handleAddMember = () => {
-    if (!name || !info || !contactUsername) {
+    if (!name || !info) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -40,25 +38,20 @@ export default function ManagementManager() {
       return;
     }
 
-    const newMember: Omit<ManagementMember, 'id'> = {
+    const newMember: Omit<ManagementMember, 'id' | 'contact'> = {
         name,
         info,
-        contact: {
-            platform: contactPlatform,
-            username: contactUsername
-        }
     };
 
     startTransition(async () => {
       try {
-        await addManagementMember(newMember);
+        await addManagementMember(newMember as any); // Type assertion for simplicity
         toast({
           title: 'Success!',
           description: `Team member "${name}" has been added.`,
         });
         setName('');
         setInfo('');
-        setContactUsername('');
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -117,30 +110,6 @@ export default function ManagementManager() {
               disabled={isPending}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Contact Info</Label>
-            <div className="flex gap-2">
-                <select
-                    value={contactPlatform}
-                    onChange={(e) => setContactPlatform(e.target.value as any)}
-                    className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                    disabled={isPending}
-                >
-                    <option value="telegram">Telegram</option>
-                    <option value="whatsapp">WhatsApp</option>
-                    <option value="instagram">Instagram</option>
-                </select>
-                <Input
-                    value={contactUsername}
-                    onChange={(e) => setContactUsername(e.target.value)}
-                    placeholder="Username or Number"
-                    disabled={isPending}
-                />
-            </div>
-             <p className="text-xs text-muted-foreground">
-                Enter the username (for Telegram/Instagram) or phone number with country code (for WhatsApp).
-            </p>
-          </div>
           <Button onClick={handleAddMember} disabled={isPending}>
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
             {isPending ? 'Adding...' : 'Add Member'}
@@ -166,10 +135,6 @@ export default function ManagementManager() {
                             <div>
                                 <p className="font-semibold">{member.name}</p>
                                 <p className="text-sm text-muted-foreground">{member.info}</p>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                    <LinkIcon className="h-3 w-3" />
-                                    {member.contact.platform}: {member.contact.username}
-                                </p>
                             </div>
                           </div>
                           <Button variant="destructive" size="icon" onClick={() => handleDeleteMember(member.id)} disabled={isPending}>

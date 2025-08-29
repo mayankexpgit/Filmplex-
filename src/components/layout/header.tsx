@@ -120,6 +120,7 @@ const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: strin
 
 function ManagementPanel() {
     const { managementTeam, isInitialized } = useMovieStore();
+    const [isSuggestionOpen, setSuggestionOpen] = useState(false);
     
     useEffect(() => {
         if (!isInitialized) {
@@ -127,56 +128,58 @@ function ManagementPanel() {
         }
     }, [isInitialized]);
 
-    const getContactLink = (member: ManagementMember) => {
-        const { platform, username } = member.contact;
-        switch (platform) {
-            case 'telegram': return `https://t.me/${username}`;
-            case 'whatsapp': return `https://wa.me/${username}`;
-            case 'instagram': return `https://instagram.com/${username}`;
-            default: return '#';
-        }
-    };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start px-3">
-                    <Users className="mr-2 h-5 w-5" />
-                    Contact Management
-                </Button>
-            </SheetTrigger>
-            <SheetContent className="w-[400px]">
-                <SheetHeader>
-                    <SheetTitle>Management Team</SheetTitle>
-                    <SheetDescription>
-                        Our dedicated team is here to help you.
-                    </SheetDescription>
-                </SheetHeader>
-                 <ScrollArea className="h-[calc(100%-4rem)] pr-4 mt-4">
-                    <div className="space-y-4">
-                        {managementTeam.length > 0 ? (
-                            managementTeam.map(member => (
-                                <div key={member.id} className="p-3 bg-secondary/50 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-semibold">{member.name}</h3>
-                                            <p className="text-sm text-muted-foreground">{member.info}</p>
-                                        </div>
-                                        <Button asChild>
-                                            <a href={getContactLink(member)} target="_blank" rel="noopener noreferrer">
+        <>
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start px-3">
+                        <Users className="mr-2 h-5 w-5" />
+                        Contact Management
+                    </Button>
+                </SheetTrigger>
+                <SheetContent className="w-[400px]">
+                    <SheetHeader>
+                        <SheetTitle>Management Team</SheetTitle>
+                        <SheetDescription>
+                            Our dedicated team is here to help you.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <ScrollArea className="h-[calc(100%-4rem)] pr-4 mt-4">
+                        <div className="space-y-4">
+                            {managementTeam.length > 0 ? (
+                                managementTeam.map(member => (
+                                    <div key={member.id} className="p-3 bg-secondary/50 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h3 className="font-semibold">{member.name}</h3>
+                                                <p className="text-sm text-muted-foreground">{member.info}</p>
+                                            </div>
+                                            <Button onClick={() => setSuggestionOpen(true)}>
                                                 <Send className="mr-2 h-4 w-4" /> Message
-                                            </a>
-                                        </Button>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-muted-foreground py-10">Management team details are not available at the moment.</p>
-                        )}
-                    </div>
-                </ScrollArea>
-            </SheetContent>
-        </Sheet>
+                                ))
+                            ) : (
+                                <p className="text-center text-muted-foreground py-10">Management team details are not available at the moment.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </SheetContent>
+            </Sheet>
+             <Sheet open={isSuggestionOpen} onOpenChange={setSuggestionOpen}>
+                <SheetContent className="w-[400px]">
+                    <SheetHeader>
+                    <SheetTitle>Contact Us</SheetTitle>
+                    <SheetDescription>
+                        Have a question or a suggestion? Let us know!
+                    </SheetDescription>
+                    </SheetHeader>
+                    <SuggestionForm onSubmitted={() => setSuggestionOpen(false)} />
+                </SheetContent>
+            </Sheet>
+        </>
     );
 }
 

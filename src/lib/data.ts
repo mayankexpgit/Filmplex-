@@ -32,7 +32,7 @@ export interface ManagementMember {
     id: string;
     name: string;
     info: string;
-    contact: {
+    contact?: { // Make contact optional
         platform: 'telegram' | 'whatsapp' | 'instagram';
         username: string;
     }
