@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useDebounce } from 'use-debounce';
 import MovieCardSmall from './movie-card-small';
-import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+import { Badge } from './ui/badge';
 
 
 function CarouselSkeleton() {
@@ -76,15 +76,11 @@ export function HomePageClient() {
     searchQuery,
     setSearchQuery,
     setSelectedGenre,
-    setSelectedQuality,
-    selectedQuality,
   } = useMovieStore((state) => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
     setSelectedGenre: state.setSelectedGenre,
-    setSelectedQuality: state.setSelectedQuality,
-    selectedQuality: state.selectedQuality,
   }));
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -149,10 +145,11 @@ export function HomePageClient() {
                     />
                 </div>
                 
-                <div className="border-l border-border h-10 flex items-center">
+                <div className="border-l border-border h-10 flex items-center px-3 gap-2">
+                    <Badge variant="outline" className="border-primary text-primary pointer-events-none">4K/HD</Badge>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-4">
+                        <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-2">
                         <Menu className="h-5 w-5" />
                         </Button>
                     </DropdownMenuTrigger>
