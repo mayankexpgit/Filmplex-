@@ -131,7 +131,7 @@ export function HomePageClient() {
       </div>
 
       <div className="bg-secondary p-3 rounded-lg border border-border text-center text-lg font-bold text-foreground">
-        ðŸ’¥ 100% Free Downloads â€“ No Subscriptions, No Charges! ðŸ“½ï¸ðŸŽ‰
+        💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
 
       <section className="space-y-6">

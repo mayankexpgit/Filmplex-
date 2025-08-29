@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -430,8 +431,8 @@ export default function UploadMovie() {
                       <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleMovieLinkChange} onRemoveLink={removeMovieLink} disabled={isFormDisabled} />
                     ))}
                     <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
-                      <PlusCircle className="mr-2 h-4 w-4" />Add Link
-</Button>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Link
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-6 pt-2">
@@ -694,5 +695,4 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
             </Button>
         </div>
     )
-    }
-    
+}
