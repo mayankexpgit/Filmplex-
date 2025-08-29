@@ -98,8 +98,7 @@ export function HomePageClient() {
     }
   }, [searchQuery]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchClick = () => {
     startTransition(() => {
       setSearchQuery(localSearch);
     });
@@ -127,42 +126,45 @@ export function HomePageClient() {
 
       <section className="space-y-6">
         <div className="flex flex-col gap-4">
-            <form onSubmit={handleSearchSubmit}>
-                <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
-                    <div className="relative flex-1">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                            {isPending ? <Loader2 className="h-5 w-5 animate-spin"/> : <Search className="h-5 w-5 text-muted-foreground" />}
-                        </div>
-                        <Input
-                        placeholder="Search for movies or series..."
-                        className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                        value={localSearch}
-                        onChange={(e) => setLocalSearch(e.target.value)}
-                        />
+            <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
+                <div className="relative flex-1">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                        {isPending ? <Loader2 className="h-5 w-5 animate-spin"/> : <Search className="h-5 w-5 text-muted-foreground" />}
                     </div>
-                    
-                    <div className="border-l border-border h-10 flex items-center bg-secondary px-2 gap-2">
-                        <Badge variant="default" className="h-8 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
-                        <Film className="h-5 w-5"/>
-                        <span className="font-bold">4K/HD</span>
-                        </Badge>
-                        <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
-                            <Menu className="h-5 w-5" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {genres.map((genre) => (
-                            <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
-                                {genre}
-                            </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+                    <Input
+                    placeholder="Search for movies or series..."
+                    className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchClick(); }}
+                    />
                 </div>
-            </form>
+                
+                <Button onClick={handleSearchClick} className="rounded-l-none" disabled={isPending}>
+                    Search
+                </Button>
+
+                <div className="border-l border-border h-10 flex items-center bg-secondary px-2 gap-2">
+                    <Badge variant="default" className="h-8 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
+                    <Film className="h-5 w-5"/>
+                    <span className="font-bold">4K/HD</span>
+                    </Badge>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
+                        <Menu className="h-5 w-5" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {genres.map((genre) => (
+                        <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
+                            {genre}
+                        </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
         </div>
         
         <StreamingLogos />
