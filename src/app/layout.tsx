@@ -27,7 +27,7 @@ export default function RootLayout({
         <Toaster />
         <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
           <div className="container mx-auto text-center text-sm text-muted-foreground">
-            <p>FILMPLEX powered by anm organization and regulated by dev.mayank</p>
+            <p>&copy; {new Date().getFullYear()} FILMPLEX. All Rights Reserved.</p>
           </div>
         </footer>
       </body>
