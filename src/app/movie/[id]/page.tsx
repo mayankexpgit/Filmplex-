@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -16,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
+import { createSlug } from '@/lib/utils';
 
 function MoviePageLoader() {
     return (
@@ -153,7 +155,7 @@ export default function MovieDetailPage() {
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
   const params = useParams();
-  const id = params.id as string;
+  const slug = params.slug as string;
 
   useEffect(() => {
     if (!isInitialized) {
@@ -162,12 +164,12 @@ export default function MovieDetailPage() {
   }, [isInitialized]);
 
   useEffect(() => {
-    if (isInitialized && id) {
+    if (isInitialized && slug) {
       const allMovies = [...latestReleases, ...featuredMovies];
-      const foundMovie = allMovies.find(m => m.id === id);
+      const foundMovie = allMovies.find(m => createSlug(m.title, m.year) === slug);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, id]);
+  }, [isInitialized, latestReleases, featuredMovies, slug]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
@@ -396,5 +398,3 @@ export default function MovieDetailPage() {
     </div>
   );
 }
-
-    

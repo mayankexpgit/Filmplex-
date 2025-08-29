@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import type { Movie } from '@/lib/data';
-import { cn } from '@/lib/utils';
+import { cn, createSlug } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
@@ -42,7 +42,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   };
   
   const qualityToDisplay = getQualityBadge();
-  const linkHref = `/movie/${movie.id}`;
+  const linkHref = `/movie/${createSlug(movie.title, movie.year)}`;
 
   const cardContent = (
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
@@ -123,5 +123,3 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
     </Link>
   );
 }
-
-    
