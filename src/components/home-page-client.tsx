@@ -129,7 +129,7 @@ export function HomePageClient() {
       <div className="py-4">
         <MovieCardSmall />
       </div>
-      
+
       <div className="bg-secondary p-3 rounded-lg border border-border text-center text-lg font-bold text-foreground">
         💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
@@ -149,14 +149,14 @@ export function HomePageClient() {
                     />
                 </div>
                 
-                <div className="border-l border-border h-10 flex items-center bg-secondary">
-                    <Badge variant="default" className="h-full flex items-center gap-2 rounded-none bg-primary text-primary-foreground pointer-events-none px-4">
+                <div className="border-l border-border h-10 flex items-center bg-secondary px-2 gap-2">
+                    <Badge variant="default" className="h-8 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
                       <Film className="h-5 w-5"/>
                       <span className="font-bold">4K/HD</span>
                     </Badge>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-2">
+                        <Button variant="ghost" className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
                         <Menu className="h-5 w-5" />
                         </Button>
                     </DropdownMenuTrigger>
