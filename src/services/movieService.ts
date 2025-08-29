@@ -14,7 +14,7 @@ import {
   orderBy,
   increment
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
 import { initialMovies } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
 
@@ -152,6 +152,26 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
     const docRef = doc(db, 'singletons', 'contactInfo');
     await setDoc(docRef, info, { merge: true });
 }
+
+// --- Management Team Functions ---
+
+export const fetchManagementTeam = async (): Promise<ManagementMember[]> => {
+    const teamCollection = collection(db, 'management');
+    const snapshot = await getDocs(teamCollection);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ManagementMember));
+};
+
+export const addManagementMember = async (member: Omit<ManagementMember, 'id'>): Promise<string> => {
+    const teamCollection = collection(db, 'management');
+    const docRef = await addDoc(teamCollection, member);
+    return docRef.id;
+};
+
+export const deleteManagementMember = async (id: string): Promise<void> => {
+    const memberDoc = doc(db, 'management', id);
+    await deleteDoc(memberDoc);
+};
+
 
 // --- Suggestions Functions ---
 

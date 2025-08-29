@@ -28,6 +28,16 @@ export interface Comment {
   movieId: string;
 }
 
+export interface ManagementMember {
+    id: string;
+    name: string;
+    info: string;
+    contact: {
+        platform: 'telegram' | 'whatsapp' | 'instagram';
+        username: string;
+    }
+}
+
 export interface Movie {
   id:string;
   title: string;

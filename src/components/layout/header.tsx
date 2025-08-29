@@ -7,9 +7,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -19,11 +20,12 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { useMovieStore, fetchMovieData } from '@/store/movieStore';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import SuggestionForm from '../suggestion-form';
+import type { ManagementMember } from '@/lib/data';
 
 function UpcomingReleasesPanel() {
   const { notifications, isInitialized } = useMovieStore();
@@ -116,6 +118,68 @@ const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: strin
   )
 }
 
+function ManagementPanel() {
+    const { managementTeam, isInitialized } = useMovieStore();
+    
+    useEffect(() => {
+        if (!isInitialized) {
+            fetchMovieData();
+        }
+    }, [isInitialized]);
+
+    const getContactLink = (member: ManagementMember) => {
+        const { platform, username } = member.contact;
+        switch (platform) {
+            case 'telegram': return `https://t.me/${username}`;
+            case 'whatsapp': return `https://wa.me/${username}`;
+            case 'instagram': return `https://instagram.com/${username}`;
+            default: return '#';
+        }
+    };
+
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <Button variant="ghost" className="w-full justify-start px-3">
+                    <Users className="mr-2 h-5 w-5" />
+                    Contact Management
+                </Button>
+            </SheetTrigger>
+            <SheetContent className="w-[400px]">
+                <SheetHeader>
+                    <SheetTitle>Management Team</SheetTitle>
+                    <SheetDescription>
+                        Our dedicated team is here to help you.
+                    </SheetDescription>
+                </SheetHeader>
+                 <ScrollArea className="h-[calc(100%-4rem)] pr-4 mt-4">
+                    <div className="space-y-4">
+                        {managementTeam.length > 0 ? (
+                            managementTeam.map(member => (
+                                <div key={member.id} className="p-3 bg-secondary/50 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="font-semibold">{member.name}</h3>
+                                            <p className="text-sm text-muted-foreground">{member.info}</p>
+                                        </div>
+                                        <Button asChild>
+                                            <a href={getContactLink(member)} target="_blank" rel="noopener noreferrer">
+                                                <Send className="mr-2 h-4 w-4" /> Message
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center text-muted-foreground py-10">Management team details are not available at the moment.</p>
+                        )}
+                    </div>
+                </ScrollArea>
+            </SheetContent>
+        </Sheet>
+    );
+}
+
 function HelpCenterPanel() {
   const { contactInfo, isInitialized } = useMovieStore();
   
@@ -145,10 +209,16 @@ function HelpCenterPanel() {
             <SocialLink href={contactInfo.telegramUrl} Icon={Send} label="Join on Telegram" />
             <SocialLink href={contactInfo.whatsappUrl} Icon={MessageCircle} label="Join on WhatsApp" />
             <SocialLink href={contactInfo.instagramUrl} Icon={Instagram} label="Follow on Instagram" />
+            
             <Separator className="my-4" />
             <h3 className="px-3 text-sm font-semibold text-muted-foreground">Direct Contact</h3>
             <InfoRow Icon={Mail} label="Email Address" value={contactInfo.email} />
             <InfoRow Icon={MessageCircle} label="WhatsApp Number" value={contactInfo.whatsappNumber} />
+
+            <Separator className="my-4" />
+            <div className="p-1">
+                <ManagementPanel />
+            </div>
         </div>
       </SheetContent>
     </Sheet>
@@ -197,6 +267,7 @@ export function Header() {
                 Admin panel
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
              <HelpCenterPanel />
             <SuggestionPanel />
           </DropdownMenuContent>

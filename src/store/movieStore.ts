@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import type { Movie, Notification, Comment, Reactions } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
 import {
   addMovie as dbAddMovie,
   updateMovie as dbUpdateMovie,
@@ -21,6 +21,9 @@ import {
   deleteComment as dbDeleteComment,
   updateReaction as dbUpdateReaction,
   fetchAllComments as dbFetchAllComments,
+  fetchManagementTeam as dbFetchManagementTeam,
+  addManagementMember as dbAddManagementMember,
+  deleteManagementMember as dbDeleteManagementMember,
 } from '@/services/movieService';
 
 // --- Types ---
@@ -46,6 +49,11 @@ export interface SecurityLog {
   timestamp: string;
 }
 
+export interface AdminCredentials {
+  validUsername: string;
+  validPassword: string;
+}
+
 interface MovieState {
   // Movies
   featuredMovies: Movie[];
@@ -59,6 +67,7 @@ interface MovieState {
   securityLogs: SecurityLog[];
   notifications: Notification[];
   allComments: Comment[];
+  managementTeam: ManagementMember[];
   
   // Per-movie state
   comments: Comment[];
@@ -90,6 +99,7 @@ export const useMovieStore = create<MovieState>((set) => ({
   securityLogs: [],
   notifications: [],
   allComments: [],
+  managementTeam: [],
   comments: [],
   isInitialized: false,
 
@@ -130,10 +140,11 @@ export const fetchMovieData = async (): Promise<void> => {
   }
   isFetchingMovies = true;
   try {
-    const [allMovies, notifications, contactInfo] = await Promise.all([
+    const [allMovies, notifications, contactInfo, managementTeam] = await Promise.all([
         dbFetchMovies(),
         dbFetchNotifications(),
         dbFetchContactInfo(),
+        dbFetchManagementTeam(),
     ]);
     
     useMovieStore.setState({
@@ -141,6 +152,7 @@ export const fetchMovieData = async (): Promise<void> => {
       latestReleases: allMovies,
       notifications,
       contactInfo,
+      managementTeam,
       isInitialized: true,
     });
   } catch (error) {
@@ -159,13 +171,14 @@ export const fetchAdminData = async (): Promise<void> => {
   }
   isFetchingAdmin = true;
   try {
-     const [contactInfo, suggestions, securityLogs, allMovies, notifications, allComments] = await Promise.all([
+     const [contactInfo, suggestions, securityLogs, allMovies, notifications, allComments, managementTeam] = await Promise.all([
       dbFetchContactInfo(),
       dbFetchSuggestions(),
       dbFetchSecurityLogs(),
       dbFetchMovies(),
       dbFetchNotifications(),
       dbFetchAllComments(),
+      dbFetchManagementTeam(),
     ]);
 
     useMovieStore.setState({
@@ -174,6 +187,7 @@ export const fetchAdminData = async (): Promise<void> => {
       securityLogs,
       notifications,
       allComments,
+      managementTeam,
       featuredMovies: allMovies.filter(movie => movie.isFeatured),
       latestReleases: allMovies,
       isInitialized: true,
@@ -279,7 +293,7 @@ export const deleteNotification = async (id: string): Promise<void> => {
     }));
 };
 
-// --- NEW ACTIONS for Comments and Reactions ---
+// --- Comments and Reactions ---
 
 export const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
   try {
@@ -312,4 +326,25 @@ export const deleteComment = async (movieId: string, commentId: string): Promise
 export const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
     await dbUpdateReaction(movieId, reaction);
     useMovieStore.getState().incrementReaction(movieId, reaction);
+};
+
+// --- Management Team ---
+
+export const addManagementMember = async (memberData: Omit<ManagementMember, 'id'>): Promise<void> => {
+    const id = await dbAddManagementMember(memberData);
+    await addSecurityLog(`Added management member: "${memberData.name}"`);
+    useMovieStore.setState(state => ({
+        managementTeam: [{ id, ...memberData }, ...state.managementTeam],
+    }));
+};
+
+export const deleteManagementMember = async (id: string): Promise<void> => {
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    await dbDeleteManagementMember(id);
+    if (member) {
+        await addSecurityLog(`Removed management member: "${member.name}"`);
+    }
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.filter(m => m.id !== id),
+    }));
 };
