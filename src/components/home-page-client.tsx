@@ -146,7 +146,7 @@ export function HomePageClient() {
                 </div>
                 
                 <div className="border-l border-border h-10 flex items-center px-3 gap-2">
-                    <Badge variant="outline" className="border-primary text-primary pointer-events-none">4K/HD</Badge>
+                    <Badge variant="default" className="rounded-md bg-primary text-primary-foreground pointer-events-none">4K/HD</Badge>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-2">
