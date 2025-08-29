@@ -120,7 +120,7 @@ const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: strin
 
 function ManagementPanel() {
     const { managementTeam, isInitialized } = useMovieStore();
-    const [isSuggestionOpen, setSuggestionOpen] = useState(false);
+    const [messagingMember, setMessagingMember] = useState<ManagementMember | null>(null);
     
     useEffect(() => {
         if (!isInitialized) {
@@ -155,7 +155,7 @@ function ManagementPanel() {
                                                 <h3 className="font-semibold">{member.name}</h3>
                                                 <p className="text-sm text-muted-foreground">{member.info}</p>
                                             </div>
-                                            <Button onClick={() => setSuggestionOpen(true)}>
+                                            <Button onClick={() => setMessagingMember(member)}>
                                                 <Send className="mr-2 h-4 w-4" /> Message
                                             </Button>
                                         </div>
@@ -168,15 +168,18 @@ function ManagementPanel() {
                     </ScrollArea>
                 </SheetContent>
             </Sheet>
-             <Sheet open={isSuggestionOpen} onOpenChange={setSuggestionOpen}>
+             <Sheet open={!!messagingMember} onOpenChange={(isOpen) => !isOpen && setMessagingMember(null)}>
                 <SheetContent className="w-[400px]">
                     <SheetHeader>
-                    <SheetTitle>Contact Us</SheetTitle>
+                    <SheetTitle>Contact {messagingMember?.name}</SheetTitle>
                     <SheetDescription>
-                        Have a question or a suggestion? Let us know!
+                        Your message will be sent directly to {messagingMember?.name}.
                     </SheetDescription>
                     </SheetHeader>
-                    <SuggestionForm onSubmitted={() => setSuggestionOpen(false)} />
+                    <SuggestionForm 
+                        onSubmitted={() => setMessagingMember(null)}
+                        recipient={messagingMember} 
+                    />
                 </SheetContent>
             </Sheet>
         </>
