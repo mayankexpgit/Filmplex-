@@ -7,7 +7,7 @@ import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Menu, Search } from 'lucide-react';
+import { Menu, Search, Film } from 'lucide-react';
 import StreamingLogos from './streaming-logos';
 import {
   DropdownMenu,
@@ -76,11 +76,15 @@ export function HomePageClient() {
     searchQuery,
     setSearchQuery,
     setSelectedGenre,
+    setSelectedQuality,
+    selectedQuality
   } = useMovieStore((state) => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
     setSelectedGenre: state.setSelectedGenre,
+    selectedQuality: state.selectedQuality,
+    setSelectedQuality: state.setSelectedQuality,
   }));
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -125,7 +129,7 @@ export function HomePageClient() {
       <div className="py-4">
         <MovieCardSmall />
       </div>
-
+      
       <div className="bg-secondary p-3 rounded-lg border border-border text-center text-lg font-bold text-foreground">
         💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
@@ -145,8 +149,11 @@ export function HomePageClient() {
                     />
                 </div>
                 
-                <div className="border-l border-border h-10 flex items-center px-3 gap-2">
-                    <Badge variant="default" className="rounded-md bg-primary text-primary-foreground pointer-events-none">4K/HD</Badge>
+                <div className="border-l border-border h-10 flex items-center bg-secondary">
+                    <Badge variant="default" className="h-full flex items-center gap-2 rounded-none bg-primary text-primary-foreground pointer-events-none px-4">
+                      <Film className="h-5 w-5"/>
+                      <span className="font-bold">4K/HD</span>
+                    </Badge>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-2">
