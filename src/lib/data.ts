@@ -32,10 +32,7 @@ export interface ManagementMember {
     id: string;
     name: string;
     info: string;
-    contact?: { // Make contact optional
-        platform: 'telegram' | 'whatsapp' | 'instagram';
-        username: string;
-    }
+    timestamp: string; // Added for sorting
 }
 
 export interface Movie {

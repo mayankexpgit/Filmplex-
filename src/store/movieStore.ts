@@ -350,11 +350,15 @@ export const submitReaction = async (movieId: string, reaction: keyof Reactions)
 
 // --- Management Team ---
 
-export const addManagementMember = async (memberData: Omit<ManagementMember, 'id'>): Promise<void> => {
-    const id = await dbAddManagementMember(memberData);
+export const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'timestamp'>): Promise<void> => {
+    const fullMemberData = {
+      ...memberData,
+      timestamp: new Date().toISOString(),
+    };
+    const id = await dbAddManagementMember(fullMemberData);
     await addSecurityLog(`Added management member: "${memberData.name}"`);
     useMovieStore.setState(state => ({
-        managementTeam: [{ id, ...memberData }, ...state.managementTeam],
+        managementTeam: [{ id, ...fullMemberData }, ...state.managementTeam],
     }));
 };
 

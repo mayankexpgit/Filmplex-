@@ -157,7 +157,8 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
 
 export const fetchManagementTeam = async (): Promise<ManagementMember[]> => {
     const teamCollection = collection(db, 'management');
-    const snapshot = await getDocs(teamCollection);
+    const q = query(teamCollection, orderBy('timestamp', 'asc'));
+    const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ManagementMember));
 };
 

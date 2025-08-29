@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addManagementMember, deleteManagementMember } from '@/store/movieStore';
-import { Loader2, PlusCircle, Trash2, User } from 'lucide-react';
+import { useMovieStore, addManagementMember } from '@/store/movieStore';
+import { Loader2, PlusCircle, User } from 'lucide-react';
 import type { ManagementMember } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -32,6 +32,16 @@ export default function ManagementManager() {
   const [name, setName] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
 
+  const sortedTeam = useMemo(() => {
+    // Sort by timestamp, oldest first. Fallback for items without a timestamp.
+    return [...managementTeam].sort((a, b) => {
+        if (a.timestamp && b.timestamp) {
+            return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+        }
+        return 0;
+    });
+  }, [managementTeam]);
+
   const availableRoles = useMemo(() => {
     const assignedRoles = new Set(managementTeam.map(member => member.info));
     return adminRoles.filter(role => !assignedRoles.has(role));
@@ -47,7 +57,8 @@ export default function ManagementManager() {
       return;
     }
     
-    const newMember: Omit<ManagementMember, 'id'> = {
+    // We only need to pass the name and info. The timestamp and id are handled by the backend/store.
+    const newMember: Omit<ManagementMember, 'id' | 'timestamp'> = {
         name,
         info: selectedRole,
     };
@@ -123,10 +134,10 @@ export default function ManagementManager() {
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-              {managementTeam.length === 0 ? (
+              {sortedTeam.length === 0 ? (
                   <p className="text-muted-foreground text-center">No team members added yet.</p>
               ) : (
-                  managementTeam.map(member => (
+                  sortedTeam.map(member => (
                       <div key={member.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
                           <div className="flex items-center gap-4">
                             <User className="h-6 w-6 text-primary" />
