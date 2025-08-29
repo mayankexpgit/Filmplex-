@@ -166,18 +166,6 @@ export function HomePageClient() {
                     </DropdownMenu>
                 </div>
             </div>
-             <div className="flex justify-center">
-                <ToggleGroup 
-                  type="single" 
-                  value={selectedQuality} 
-                  onValueChange={(value) => setSelectedQuality(value as any)}
-                  variant="outline"
-                >
-                    <ToggleGroupItem value="all" aria-label="Toggle All">All</ToggleGroupItem>
-                    <ToggleGroupItem value="4k" aria-label="Toggle 4K">4K</ToggleGroupItem>
-                    <ToggleGroupItem value="hd" aria-label="Toggle HD">HD</ToggleGroupItem>
-                </ToggleGroup>
-            </div>
         </div>
         
         <StreamingLogos />
