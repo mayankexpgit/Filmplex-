@@ -136,7 +136,6 @@ export function HomePageClient() {
                     className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchClick(); }}
                     />
                 </div>
                 
