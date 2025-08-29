@@ -56,12 +56,15 @@ export interface AdminCredentials {
   validPassword: string;
 }
 
+type QualityFilter = 'all' | '4k' | 'hd';
+
 interface MovieState {
   // Movies
   featuredMovies: Movie[];
   latestReleases: Movie[];
   searchQuery: string;
   selectedGenre: string;
+  selectedQuality: QualityFilter;
   
   // Admin Data
   contactInfo: ContactInfo;
@@ -80,6 +83,7 @@ interface MovieState {
   // Actions (only state setters)
   setSearchQuery: (query: string) => void;
   setSelectedGenre: (genre: string) => void;
+  setSelectedQuality: (quality: QualityFilter) => void;
   setState: (state: Partial<MovieState>) => void;
   setComments: (comments: Comment[]) => void;
   setAllComments: (comments: Comment[]) => void;
@@ -96,6 +100,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   latestReleases: [],
   searchQuery: '',
   selectedGenre: 'All Genres',
+  selectedQuality: 'all',
   contactInfo: { telegramUrl: '', whatsappUrl: '', instagramUrl: '', email: '', whatsappNumber: '' },
   suggestions: [],
   securityLogs: [],
@@ -110,6 +115,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   setSelectedGenre: (genre: string) => {
     set({ selectedGenre: genre, searchQuery: '' }); // Reset search when genre changes
   },
+  setSelectedQuality: (quality: QualityFilter) => set({ selectedQuality: quality }),
   setState: (state: Partial<MovieState>) => set(state),
   setComments: (comments) => set({ comments }),
   setAllComments: (comments) => set({ allComments: comments }),

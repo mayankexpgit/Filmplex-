@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useDebounce } from 'use-debounce';
 import MovieCardSmall from './movie-card-small';
+import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+
 
 function CarouselSkeleton() {
   return (
@@ -74,11 +76,15 @@ export function HomePageClient() {
     searchQuery,
     setSearchQuery,
     setSelectedGenre,
+    setSelectedQuality,
+    selectedQuality,
   } = useMovieStore((state) => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
     setSelectedGenre: state.setSelectedGenre,
+    setSelectedQuality: state.setSelectedQuality,
+    selectedQuality: state.selectedQuality,
   }));
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -129,35 +135,49 @@ export function HomePageClient() {
       </div>
 
       <section className="space-y-6">
-        <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
-          <div className="relative flex-1">
-             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-muted-foreground" />
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
+                <div className="relative flex-1">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <Input
+                    placeholder="Search for movies or series..."
+                    className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
+                    />
+                </div>
+                
+                <div className="border-l border-border h-10 flex items-center">
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-4">
+                        <Menu className="h-5 w-5" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {genres.map((genre) => (
+                        <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
+                            {genre}
+                        </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
-            <Input
-              placeholder="Search for movies or series..."
-              className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
-          </div>
-          
-          <div className="border-l border-border h-10 flex items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-4">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {genres.map((genre) => (
-                  <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
-                    {genre}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+             <div className="flex justify-center">
+                <ToggleGroup 
+                  type="single" 
+                  value={selectedQuality} 
+                  onValueChange={(value) => setSelectedQuality(value as any)}
+                  variant="outline"
+                >
+                    <ToggleGroupItem value="all" aria-label="Toggle All">All</ToggleGroupItem>
+                    <ToggleGroupItem value="4k" aria-label="Toggle 4K">4K</ToggleGroupItem>
+                    <ToggleGroupItem value="hd" aria-label="Toggle HD">HD</ToggleGroupItem>
+                </ToggleGroup>
+            </div>
         </div>
         
         <StreamingLogos />
