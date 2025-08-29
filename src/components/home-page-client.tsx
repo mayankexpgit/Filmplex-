@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useDebounce } from 'use-debounce';
+import MovieCardSmall from './movie-card-small';
 
 function CarouselSkeleton() {
   return (
@@ -121,6 +122,10 @@ export function HomePageClient() {
       
       <div className="bg-secondary p-3 rounded-lg border border-border text-center text-lg font-bold text-foreground">
         💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
+      </div>
+      
+      <div className="py-4">
+        <MovieCardSmall />
       </div>
 
       <section className="space-y-6">
