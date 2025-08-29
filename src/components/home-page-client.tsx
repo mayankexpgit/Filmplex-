@@ -72,13 +72,11 @@ export function HomePageClient() {
     isInitialized,
     searchQuery,
     setSearchQuery,
-    selectedGenre,
     setSelectedGenre,
   } = useMovieStore((state) => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
-    selectedGenre: state.selectedGenre,
     setSelectedGenre: state.setSelectedGenre,
   }));
 
@@ -142,9 +140,8 @@ export function HomePageClient() {
           <div className="border-l border-border h-10 flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-4">
-                  <Menu className="h-5 w-5 mr-2" />
-                  <span>{selectedGenre}</span>
+                <Button variant="ghost" className="h-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-none bg-secondary hover:bg-accent px-4">
+                  <Menu className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
