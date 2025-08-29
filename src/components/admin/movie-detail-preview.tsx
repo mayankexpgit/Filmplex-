@@ -88,12 +88,13 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               <h2 className="text-2xl font-bold mb-4 text-center">: Screen-Shots :</h2>
               <div className="flex flex-col items-center gap-4">
                 {movie.screenshots.map((src, index) => (
-                  src && <div key={index} className="relative w-full max-w-2xl aspect-video overflow-hidden rounded-lg">
+                  src && <div key={index} className="relative w-full max-w-2xl overflow-hidden rounded-lg">
                     <Image
                       src={src}
                       alt={`Screenshot ${index + 1} for ${movie.title}`}
-                      fill
-                      className="object-contain"
+                      width={1280}
+                      height={720}
+                      className="object-contain w-full h-auto"
                       data-ai-hint="movie screenshot"
                     />
                   </div>
