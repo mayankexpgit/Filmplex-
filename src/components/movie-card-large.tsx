@@ -5,7 +5,7 @@ import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
 import { Button } from './ui/button';
 import { Flame, Loader2 } from 'lucide-react';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition, useEffect } from 'react';
 import type { Movie } from '@/lib/data';
 
 const MOVIES_PER_PAGE = 12;
