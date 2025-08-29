@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import type { Movie } from '@/lib/data';
-import { cn } from '@/lib/utils';
+import { cn, createSlug } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
@@ -13,15 +13,6 @@ interface MovieCardProps {
   movie: Movie;
   variant?: 'small' | 'large' | 'featured';
 }
-
-function createSlug(title: string, year: number): string {
-    const titleSlug = title.toLowerCase()
-      .replace(/[^\w\s-]/g, '') // remove non-word chars
-      .replace(/[\s_-]+/g, '-') // collapse whitespace and replace _ with -
-      .replace(/^-+|-+$/g, ''); // remove leading/trailing dashes
-    return `${titleSlug}-${year}`;
-}
-
 
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
   const getQualityBadge = (): '4K' | 'HD' | null => {
@@ -130,5 +121,3 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
     </Link>
   );
 }
-
-    

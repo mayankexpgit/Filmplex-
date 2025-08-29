@@ -16,14 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
-
-function createSlug(title: string, year: number): string {
-    const titleSlug = title.toLowerCase()
-      .replace(/[^\w\s-]/g, '') // remove non-word chars
-      .replace(/[\s_-]+/g, '-') // collapse whitespace and replace _ with -
-      .replace(/^-+|-+$/g, ''); // remove leading/trailing dashes
-    return `${titleSlug}-${year}`;
-}
+import { createSlug } from '@/lib/utils';
 
 function MoviePageLoader() {
     return (
@@ -403,5 +396,3 @@ export default function MovieDetailPage() {
     </div>
   );
 }
-
-    
