@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import type { Movie } from '@/lib/data';
-import { cn, createSlug } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from './ui/badge';
 import Link from 'next/link';
@@ -42,7 +42,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   };
   
   const qualityToDisplay = getQualityBadge();
-  const slug = createSlug(movie.title, movie.year);
+  const linkHref = `/movie/${movie.id}`;
 
   const cardContent = (
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
@@ -110,7 +110,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   if (variant === 'small' || variant === 'featured') {
      return (
-       <Link href={`/movie/${slug}`} passHref>
+       <Link href={linkHref} passHref>
          {smallVariantContent}
        </Link>
     );
@@ -118,8 +118,10 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   // Large variant
   return (
-    <Link href={`/movie/${slug}`} passHref>
+    <Link href={linkHref} passHref>
       {cardContent}
     </Link>
   );
 }
+
+    

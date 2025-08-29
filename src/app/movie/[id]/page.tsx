@@ -16,7 +16,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
-import { createSlug } from '@/lib/utils';
 
 function MoviePageLoader() {
     return (
@@ -154,7 +153,7 @@ export default function MovieDetailPage() {
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
   const params = useParams();
-  const slug = params.slug as string;
+  const id = params.id as string;
 
   useEffect(() => {
     if (!isInitialized) {
@@ -163,12 +162,12 @@ export default function MovieDetailPage() {
   }, [isInitialized]);
 
   useEffect(() => {
-    if (isInitialized && slug) {
+    if (isInitialized && id) {
       const allMovies = [...latestReleases, ...featuredMovies];
-      const foundMovie = allMovies.find(m => createSlug(m.title, m.year) === slug);
+      const foundMovie = allMovies.find(m => m.id === id);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, slug]);
+  }, [isInitialized, latestReleases, featuredMovies, id]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
@@ -397,3 +396,5 @@ export default function MovieDetailPage() {
     </div>
   );
 }
+
+    
