@@ -24,16 +24,18 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
     }
 
     let qualities: string[] = [];
-    if (movie.contentType === 'movie' && movie.downloadLinks) {
-        qualities = movie.downloadLinks.map(link => link.quality.toLowerCase());
+     if (movie.contentType === 'movie' && movie.downloadLinks) {
+        qualities = movie.downloadLinks.map(link => link.quality?.toLowerCase() || '');
     } else if (movie.contentType === 'series' && movie.episodes) {
-        qualities = movie.episodes.flatMap(ep => ep.downloadLinks.map(link => link.quality.toLowerCase()));
+        qualities = movie.episodes.flatMap(ep => ep.downloadLinks?.map(link => link.quality?.toLowerCase() || '') || []);
+    } else if (movie.contentType === 'series' && movie.seasonDownloadLinks) {
+        qualities = movie.seasonDownloadLinks.map(link => link.quality?.toLowerCase() || '');
     }
     
-    if (qualities.includes('4k') || qualities.includes('2160p')) {
+    if (qualities.some(q => q.includes('4k') || q.includes('2160p'))) {
       return '4K';
     }
-    if (qualities.includes('1080p') || qualities.includes('720p')) {
+    if (qualities.some(q => q.includes('1080p') || q.includes('720p'))) {
       return 'HD';
     }
     return null;
