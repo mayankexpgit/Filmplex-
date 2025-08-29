@@ -232,7 +232,11 @@ export const setAiCorrectedSearchQuery = async (query: string): Promise<void> =>
 };
 
 export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
-  await dbAddMovie(movieData);
+  const movieWithTimestamp = {
+    ...movieData,
+    createdAt: new Date().toISOString(),
+  };
+  await dbAddMovie(movieWithTimestamp);
   await addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
   const allMovies = await dbFetchMovies();
   useMovieStore.setState({
