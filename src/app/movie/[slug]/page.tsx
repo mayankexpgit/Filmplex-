@@ -15,6 +15,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'next/navigation';
+
+function createSlug(title: string, year: number): string {
+    const titleSlug = title.toLowerCase()
+      .replace(/[^\w\s-]/g, '') // remove non-word chars
+      .replace(/[\s_-]+/g, '-') // collapse whitespace and replace _ with -
+      .replace(/^-+|-+$/g, ''); // remove leading/trailing dashes
+    return `${titleSlug}-${year}`;
+}
 
 function MoviePageLoader() {
     return (
@@ -151,28 +160,22 @@ export default function MovieDetailPage() {
   const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
-  const [movieId, setMovieId] = useState<string | null>(null);
+  const params = useParams();
+  const slug = params.slug as string;
 
   useEffect(() => {
-    // Get ID from URL path
-    const path = window.location.pathname;
-    const id = path.split('/').pop();
-    if (id) {
-        setMovieId(id);
-    }
-
     if (!isInitialized) {
       fetchMovieData();
     }
   }, [isInitialized]);
 
   useEffect(() => {
-    if (isInitialized && movieId) {
+    if (isInitialized && slug) {
       const allMovies = [...latestReleases, ...featuredMovies];
-      const foundMovie = allMovies.find(m => m.id === movieId);
+      const foundMovie = allMovies.find(m => createSlug(m.title, m.year) === slug);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, movieId]);
+  }, [isInitialized, latestReleases, featuredMovies, slug]);
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
@@ -400,3 +403,5 @@ export default function MovieDetailPage() {
     </div>
   );
 }
+
+    

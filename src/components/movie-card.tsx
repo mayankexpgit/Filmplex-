@@ -14,6 +14,15 @@ interface MovieCardProps {
   variant?: 'small' | 'large' | 'featured';
 }
 
+function createSlug(title: string, year: number): string {
+    const titleSlug = title.toLowerCase()
+      .replace(/[^\w\s-]/g, '') // remove non-word chars
+      .replace(/[\s_-]+/g, '-') // collapse whitespace and replace _ with -
+      .replace(/^-+|-+$/g, ''); // remove leading/trailing dashes
+    return `${titleSlug}-${year}`;
+}
+
+
 export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) {
   const getQualityBadge = (): '4K' | 'HD' | null => {
     if (movie.qualityBadge && movie.qualityBadge !== 'none') {
@@ -40,6 +49,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   };
   
   const qualityToDisplay = getQualityBadge();
+  const slug = createSlug(movie.title, movie.year);
 
   const cardContent = (
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
@@ -107,7 +117,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   if (variant === 'small' || variant === 'featured') {
      return (
-       <Link href={`/movie/${movie.id}`} passHref>
+       <Link href={`/movie/${slug}`} passHref>
          {smallVariantContent}
        </Link>
     );
@@ -115,8 +125,10 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   // Large variant
   return (
-    <Link href={`/movie/${movie.id}`} passHref>
+    <Link href={`/movie/${slug}`} passHref>
       {cardContent}
     </Link>
   );
 }
+
+    
