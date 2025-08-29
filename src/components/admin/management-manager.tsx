@@ -1,15 +1,28 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addManagementMember, deleteManagementMember } from '@/store/movieStore';
-import { Loader2, PlusCircle, Trash2, User, LinkIcon } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, User } from 'lucide-react';
 import type { ManagementMember } from '@/lib/data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const adminRoles = [
+    'Regulator',
+    'Founder',
+    'Owner',
+    'Admin',
+    'Co-Founder',
+    'Moderator',
+    'Uploader',
+    'Content Manager',
+    'Support Head'
+];
 
 export default function ManagementManager() {
   const { toast } = useToast();
@@ -17,30 +30,26 @@ export default function ManagementManager() {
   const managementTeam = useMovieStore((state) => state.managementTeam);
 
   const [name, setName] = useState('');
-  const [info, setInfo] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+
+  const availableRoles = useMemo(() => {
+    const assignedRoles = new Set(managementTeam.map(member => member.info));
+    return adminRoles.filter(role => !assignedRoles.has(role));
+  }, [managementTeam]);
 
   const handleAddMember = () => {
-    if (!name || !info) {
+    if (!name || !selectedRole) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please fill in all fields for the team member.',
+        description: 'Please fill in the member name and select a role.',
       });
       return;
     }
     
-    if (managementTeam.some(m => m.name === name)) {
-       toast({
-        variant: 'destructive',
-        title: 'Already Exists',
-        description: 'A team member with this name already exists.',
-      });
-      return;
-    }
-
-    const newMember: Omit<ManagementMember, 'id' | 'contact'> = {
+    const newMember: Omit<ManagementMember, 'id'> = {
         name,
-        info,
+        info: selectedRole,
     };
 
     startTransition(async () => {
@@ -48,10 +57,10 @@ export default function ManagementManager() {
         await addManagementMember(newMember as any); // Type assertion for simplicity
         toast({
           title: 'Success!',
-          description: `Team member "${name}" has been added.`,
+          description: `Team member "${name}" has been added with the role "${selectedRole}".`,
         });
         setName('');
-        setInfo('');
+        setSelectedRole('');
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -62,31 +71,13 @@ export default function ManagementManager() {
     });
   };
 
-  const handleDeleteMember = (id: string) => {
-    startTransition(async () => {
-      try {
-        await deleteManagementMember(id);
-        toast({
-          title: 'Success!',
-          description: 'Team member has been removed.',
-        });
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Database Error',
-          description: 'Could not remove the team member.',
-        });
-      }
-    });
-  }
-
   return (
     <div className="space-y-8">
       <Card>
         <CardHeader>
           <CardTitle>Add New Team Member</CardTitle>
           <CardDescription>
-            Add a new member to the management team. This will be visible to users in the Help Center.
+            Add a new member to the management team with a specific role. Each role can only be assigned once.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -101,16 +92,23 @@ export default function ManagementManager() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="member-info">Role / Info</Label>
-            <Input
-              id="member-info"
-              value={info}
-              onChange={(e) => setInfo(e.target.value)}
-              placeholder="e.g. Head of Support"
-              disabled={isPending}
-            />
+            <Label htmlFor="member-role">Role</Label>
+             <Select value={selectedRole} onValueChange={setSelectedRole} disabled={isPending}>
+                <SelectTrigger id="member-role">
+                    <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                    {availableRoles.length > 0 ? (
+                        availableRoles.map(role => (
+                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                        ))
+                    ) : (
+                        <div className="p-2 text-center text-sm text-muted-foreground">All roles assigned</div>
+                    )}
+                </SelectContent>
+            </Select>
           </div>
-          <Button onClick={handleAddMember} disabled={isPending}>
+          <Button onClick={handleAddMember} disabled={isPending || availableRoles.length === 0}>
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
             {isPending ? 'Adding...' : 'Add Member'}
           </Button>
@@ -121,7 +119,7 @@ export default function ManagementManager() {
           <CardHeader>
               <CardTitle>Current Team</CardTitle>
               <CardDescription>
-                  This is the current list of management team members.
+                  This is the current list of management team members. Members cannot be deleted from this panel.
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -137,9 +135,7 @@ export default function ManagementManager() {
                                 <p className="text-sm text-muted-foreground">{member.info}</p>
                             </div>
                           </div>
-                          <Button variant="destructive" size="icon" onClick={() => handleDeleteMember(member.id)} disabled={isPending}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                           {/* Per user request, the delete button is removed */}
                       </div>
                   ))
               )}
