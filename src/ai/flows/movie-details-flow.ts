@@ -12,7 +12,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { fetchMovieDetailsFromTMDb, type ContentType } from '@/services/tmdbService';
-import 'dotenv/config'
 
 const MovieDetailsInputSchema = z.object({
   tmdbId: z.number().describe('The TMDb ID of the movie or series to fetch details for.'),

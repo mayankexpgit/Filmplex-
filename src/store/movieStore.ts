@@ -25,6 +25,8 @@ import {
   addManagementMember as dbAddManagementMember,
   deleteManagementMember as dbDeleteManagementMember,
 } from '@/services/movieService';
+import { correctSpelling } from '@/ai/flows/spell-check-flow';
+
 
 // --- Types ---
 export interface ContactInfo {
@@ -88,7 +90,7 @@ interface MovieState {
 // =================================================================
 // 1. ZUSTAND STORE DEFINITION
 // =================================================================
-export const useMovieStore = create<MovieState>((set) => ({
+export const useMovieStore = create<MovieState>((set, get) => ({
   // --- Initial State ---
   featuredMovies: [],
   latestReleases: [],
@@ -105,7 +107,9 @@ export const useMovieStore = create<MovieState>((set) => ({
 
   // --- Actions ---
   setSearchQuery: (query: string) => set({ searchQuery: query }),
-  setSelectedGenre: (genre: string) => set({ selectedGenre: genre }),
+  setSelectedGenre: (genre: string) => {
+    set({ selectedGenre: genre, searchQuery: '' }); // Reset search when genre changes
+  },
   setState: (state: Partial<MovieState>) => set(state),
   setComments: (comments) => set({ comments }),
   setAllComments: (comments) => set({ allComments: comments }),
@@ -209,6 +213,16 @@ const addSecurityLog = async (action: string): Promise<void> => {
     const id = await dbAddSecurityLog(newLog);
     const existingLogs = useMovieStore.getState().securityLogs;
     useMovieStore.setState({ securityLogs: [{ id, ...newLog }, ...existingLogs] });
+};
+
+// AI-powered search query correction
+export const setAiCorrectedSearchQuery = async (query: string): Promise<void> => {
+    const { latestReleases, featuredMovies } = useMovieStore.getState();
+    const allMovies = [...latestReleases, ...featuredMovies].filter(
+      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
+    );
+    const correctedQuery = await correctSpelling(query, allMovies);
+    useMovieStore.getState().setSearchQuery(correctedQuery);
 };
 
 export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {

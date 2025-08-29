@@ -10,6 +10,13 @@ import type { Movie } from '@/lib/data';
 
 const MOVIES_PER_PAGE = 12;
 
+const smartFilterTags: Record<string, string[]> = {
+    'Bollywood': ['bollywood', 'hindi', 'indian cinema'],
+    'Hollywood': ['hollywood', 'english'],
+    'Anime': ['anime', 'animation', 'japanese'],
+    'Dubbed': ['dubbed', 'hindi-dubbed'],
+}
+
 export default function MovieCardLarge() {
   const allMovies: Movie[] = useMovieStore((state) => [
     ...state.featuredMovies,
@@ -24,21 +31,33 @@ export default function MovieCardLarge() {
     const unique = allMovies.filter(
       (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
     );
-    return unique.sort((a, b) => a.year - b.year);
+    return unique.sort((a, b) => b.year - a.year);
   }, [allMovies]);
 
   const filteredMovies = useMemo(() => {
     let movies = uniqueMovies;
+    const lowerCaseGenre = selectedGenre.toLowerCase();
 
-    // Filter by genre
-    if (selectedGenre && selectedGenre !== 'All Genres') {
+    // Smart filter logic
+    if (smartFilterTags[selectedGenre]) {
+        const tagsToMatch = smartFilterTags[selectedGenre];
+        movies = movies.filter((movie) =>
+            tagsToMatch.some(tag => 
+                (movie.genre?.toLowerCase().includes(tag)) ||
+                (movie.tags?.some(t => t.toLowerCase().includes(tag))) ||
+                (movie.language?.toLowerCase().includes(tag))
+            )
+        );
+    }
+    // Regular genre filter
+    else if (selectedGenre && selectedGenre !== 'All Genres') {
       movies = movies.filter((movie) =>
-        (movie.genre?.toLowerCase().includes(selectedGenre.toLowerCase())) ||
-        (movie.tags?.some(tag => tag.toLowerCase() === selectedGenre.toLowerCase()))
+        (movie.genre?.toLowerCase().includes(lowerCaseGenre)) ||
+        (movie.tags?.some(tag => tag.toLowerCase() === lowerCaseGenre))
       );
     }
     
-    // Filter by search query
+    // Filter by search query (which is now AI-corrected)
     if (searchQuery) {
       movies = movies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -50,6 +69,12 @@ export default function MovieCardLarge() {
   const moviesToShow = useMemo(() => {
     return filteredMovies.slice(0, visibleMoviesCount);
   }, [filteredMovies, visibleMoviesCount]);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleMoviesCount(MOVIES_PER_PAGE);
+  }, [searchQuery, selectedGenre]);
+
 
   const handleMoreMovies = () => {
     startTransition(() => {
