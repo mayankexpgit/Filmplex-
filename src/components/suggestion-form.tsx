@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { submitSuggestion } from '@/store/movieStore';
 import { Label } from './ui/label';
@@ -21,14 +21,6 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
   const [isPending, startTransition] = useTransition();
   const [movieName, setMovieName] = useState('');
   const [comment, setComment] = useState('');
-
-  useEffect(() => {
-    if (recipient) {
-      setMovieName(`Message to ${recipient.name}`);
-    } else {
-      setMovieName('');
-    }
-  }, [recipient]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +64,7 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
           id="suggestion-movie-name"
           value={movieName}
           onChange={(e) => setMovieName(e.target.value)}
-          placeholder={recipient ? '' : "e.g. The Matrix"}
+          placeholder={recipient ? `Message to ${recipient.name}` : "e.g. The Matrix"}
           disabled={isPending || !!recipient}
         />
       </div>

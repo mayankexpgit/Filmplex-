@@ -142,6 +142,21 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 // 2. ASYNCHRONOUS ACTION FUNCTIONS
 // =================================================================
 
+const addSecurityLog = async (action: string): Promise<void> => {
+    const newLog = {
+        admin: 'admin_user', // This should be dynamic in a real multi-user system
+        action,
+        timestamp: new Date().toLocaleString(),
+    };
+    try {
+        const id = await dbAddSecurityLog(newLog);
+        const existingLogs = useMovieStore.getState().securityLogs;
+        useMovieStore.setState({ securityLogs: [{ id, ...newLog }, ...existingLogs] });
+    } catch (error) {
+        console.error("Failed to add security log:", error);
+    }
+};
+
 let isFetchingMovies = false;
 export const fetchMovieData = async (): Promise<void> => {
   const { isInitialized } = useMovieStore.getState();
@@ -208,17 +223,6 @@ export const fetchAdminData = async (): Promise<void> => {
   } finally {
     isFetchingAdmin = false;
   }
-};
-
-const addSecurityLog = async (action: string): Promise<void> => {
-    const newLog = {
-        admin: 'admin_user',
-        action,
-        timestamp: new Date().toLocaleString(),
-    };
-    const id = await dbAddSecurityLog(newLog);
-    const existingLogs = useMovieStore.getState().securityLogs;
-    useMovieStore.setState({ securityLogs: [{ id, ...newLog }, ...existingLogs] });
 };
 
 export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
