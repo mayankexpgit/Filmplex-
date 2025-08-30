@@ -136,8 +136,7 @@ export function HomePageClient() {
                   onChange={(e) => setLocalSearch(e.target.value)}
               />
           </div>
-          <Button onClick={handleSearch} className="h-11 text-base px-4">
-              <Search className="mr-2 h-5 w-5" />
+          <Button onClick={handleSearch} size="sm">
               Search
           </Button>
           <Badge variant="default" className="h-11 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
