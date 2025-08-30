@@ -103,12 +103,6 @@ export function HomePageClient() {
     });
   }
 
-  const handleSearchInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  }
-
   if (!isInitialized) {
      return (
       <div className="container mx-auto py-8 md:py-12 space-y-12">
@@ -126,7 +120,7 @@ export function HomePageClient() {
       </div>
 
       <div className="bg-secondary p-3 rounded-lg border border-border text-center text-sm md:text-lg font-bold text-foreground">
-        100% Free Downloads - No Subscriptions, No Charges!
+        💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
 
       <section className="space-y-6">
