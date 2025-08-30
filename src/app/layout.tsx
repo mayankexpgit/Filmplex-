@@ -1,36 +1,122 @@
-import type {Metadata} from 'next';
-import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
 
-export const metadata: Metadata = {
-  title: 'FILMPLEX',
-  description: 'The future of cinema.',
-};
+'use client';
 
-export default function RootLayout({
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
+import { useMovieStore, fetchAdminData } from '@/store/movieStore';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter, usePathname } from 'next/navigation';
+
+export default function AdminLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="icon" href="https://placehold.co/32x32/F5B50A/000000?text=F" type="image/png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased flex flex-col min-h-screen">
-        <div className="flex-grow">
-          {children}
+}) {
+  const { isInitialized } = useMovieStore();
+  const { isAuthenticated, isLoading, logout } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
+      router.push('/admin/login');
+    }
+  }, [isAuthenticated, isLoading, router, pathname]);
+
+  useEffect(() => {
+    if (isAuthenticated && !isInitialized) {
+      fetchAdminData();
+    }
+  }, [isAuthenticated, isInitialized]);
+  
+  // If we are on the login page, let it render without the layout shell
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="bg-background min-h-screen text-foreground flex items-center justify-center">
+        <div className="space-y-8 max-w-4xl w-full p-4">
+          <CardSkeleton />
+          <CardSkeleton withTable />
         </div>
-        <Toaster />
-        <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
-          <div className="container mx-auto text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} FILMPLEX. All Rights Reserved.</p>
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="bg-background min-h-screen text-foreground">
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-3">
+             <LayoutDashboard className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
-        </footer>
-      </body>
-    </html>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" asChild>
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Site
+              </Link>
+            </Button>
+             <Button variant="destructive" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+      <main>
+        {!isInitialized ? (
+          <div className="container mx-auto py-8 md:py-12">
+            <div className="space-y-8 max-w-4xl mx-auto">
+              <CardSkeleton />
+              <CardSkeleton withTable />
+            </div>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
+    </div>
   );
 }
+
+const CardSkeleton = ({ withTable = false }) => (
+  <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+    <Skeleton className="h-8 w-1/2" />
+    <Skeleton className="h-4 w-3/4" />
+    <div className="space-y-4 pt-4">
+      {withTable ? (
+        <>
+          <div className="flex justify-between">
+            <Skeleton className="h-10 w-1/3" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+          <Skeleton className="h-10 w-28" />
+        </>
+      )}
+    </div>
+  </div>
+);
