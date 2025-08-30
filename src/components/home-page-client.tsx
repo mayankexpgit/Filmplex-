@@ -103,6 +103,12 @@ export function HomePageClient() {
     });
   }
 
+  const handleSearchInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }
+
   if (!isInitialized) {
      return (
       <div className="container mx-auto py-8 md:py-12 space-y-12">
@@ -136,7 +142,7 @@ export function HomePageClient() {
                   onChange={(e) => setLocalSearch(e.target.value)}
               />
           </div>
-          <Button onClick={handleSearch} size="sm">
+          <Button onClick={handleSearch} className="h-11 px-4">
               Search
           </Button>
           <Badge variant="default" className="h-11 flex items-center gap-1 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
