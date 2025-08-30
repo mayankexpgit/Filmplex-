@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
 import {
@@ -309,59 +308,42 @@ export const deleteNotification = async (id: string): Promise<void> => {
 // --- Comments and Reactions ---
 
 export const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
-  try {
-    const comments = await dbFetchComments(movieId);
-    useMovieStore.getState().setComments(comments);
-  } catch (error) {
-    console.error("Failed to fetch comments:", error);
-  }
+  const comments = await dbFetchComments(movieId);
+  useMovieStore.getState().setComments(comments);
 };
 
-export const submitComment = async (movieId: string, user: string, text: string): Promise<void> => {
-    const newCommentData = {
-        user,
-        text,
-        timestamp: new Date().toISOString(),
-    };
-    const id = await dbAddComment(movieId, newCommentData);
-    const newComment: Comment = { id, movieId, ...newCommentData };
-    useMovieStore.getState().addCommentToState(newComment);
+export const addComment = async (movieId: string, commentData: Omit<Comment, 'id'>): Promise<void> => {
+  const id = await dbAddComment(movieId, commentData);
+  const newComment = { ...commentData, id };
+  useMovieStore.getState().addCommentToState(newComment);
 };
 
 export const deleteComment = async (movieId: string, commentId: string): Promise<void> => {
-    await dbDeleteComment(movieId, commentId);
-    await addSecurityLog(`Deleted Comment ID: ${commentId} from Movie ID: ${movieId}`);
-    useMovieStore.setState(state => ({
-        allComments: state.allComments.filter(c => c.id !== commentId)
-    }));
+  await dbDeleteComment(movieId, commentId);
+  useMovieStore.setState(state => ({
+    comments: state.comments.filter(c => c.id !== commentId)
+  }));
 };
 
-export const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
-    await dbUpdateReaction(movieId, reaction);
-    useMovieStore.getState().incrementReaction(movieId, reaction);
+export const updateReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
+  await dbUpdateReaction(movieId, reaction);
+  useMovieStore.getState().incrementReaction(movieId, reaction);
 };
 
 // --- Management Team ---
 
-export const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'timestamp'>): Promise<void> => {
-    const fullMemberData = {
-      ...memberData,
-      timestamp: new Date().toISOString(),
-    };
-    const id = await dbAddManagementMember(fullMemberData);
-    await addSecurityLog(`Added management member: "${memberData.name}"`);
-    useMovieStore.setState(state => ({
-        managementTeam: [{ id, ...fullMemberData }, ...state.managementTeam],
-    }));
+export const addManagementMember = async (member: Omit<ManagementMember, 'id'>): Promise<void> => {
+  const id = await dbAddManagementMember(member);
+  useMovieStore.setState(state => ({
+    managementTeam: [...state.managementTeam, { ...member, id }],
+  }));
+  await addSecurityLog(`Added Management Member: "${member.name}"`);
 };
 
 export const deleteManagementMember = async (id: string): Promise<void> => {
-    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
-    await dbDeleteManagementMember(id);
-    if (member) {
-        await addSecurityLog(`Removed management member: "${member.name}"`);
-    }
-    useMovieStore.setState(state => ({
-        managementTeam: state.managementTeam.filter(m => m.id !== id),
-    }));
+  await dbDeleteManagementMember(id);
+  useMovieStore.setState(state => ({
+    managementTeam: state.managementTeam.filter(m => m.id !== id),
+  }));
+  await addSecurityLog(`Deleted Management Member ID: ${id}`);
 };
