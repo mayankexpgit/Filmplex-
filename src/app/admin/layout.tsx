@@ -37,7 +37,6 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
-
   if (isLoading || !isAuthenticated) {
     return (
       <div className="bg-background min-h-screen text-foreground flex items-center justify-center">
@@ -48,7 +47,6 @@ export default function AdminLayout({
       </div>
     );
   }
-
 
   return (
     <div className="bg-background min-h-screen text-foreground">
