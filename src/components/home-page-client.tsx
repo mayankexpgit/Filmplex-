@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
@@ -92,18 +91,16 @@ export function HomePageClient() {
   }, [isInitialized]);
   
   useEffect(() => {
-    // If global search query is cleared (e.g. by selecting a filter), update local input
     if(!searchQuery) {
         setLocalSearch('');
     }
   }, [searchQuery]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     startTransition(() => {
-      setSearchQuery(localSearch);
+        setSearchQuery(localSearch);
     });
-  };
+  }
 
   if (!isInitialized) {
      return (
@@ -121,48 +118,44 @@ export function HomePageClient() {
         <MovieCardSmall />
       </div>
 
-      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-lg font-bold text-foreground">
-        ðŸ’¥ 100% Free Downloads â€“ No Subscriptions, No Charges! ðŸ“½ï¸ðŸŽ‰
+      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-sm md:text-lg font-bold text-foreground">
+        💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
 
       <section className="space-y-6">
-        <div className="flex flex-col gap-4">
-            <form onSubmit={handleSearchSubmit}>
-                <div className="flex items-center gap-0 bg-secondary rounded-lg border border-border overflow-hidden">
-                    <div className="relative flex-1">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                            {isPending ? <Loader2 className="h-5 w-5 animate-spin"/> : <Search className="h-5 w-5 text-muted-foreground" />}
-                        </div>
-                        <Input
-                        placeholder="Search for movies or series..."
-                        className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                        value={localSearch}
-                        onChange={(e) => setLocalSearch(e.target.value)}
-                        />
-                    </div>
-                    
-                    <div className="border-l border-border h-10 flex items-center bg-secondary px-2 gap-2">
-                        <Badge variant="default" className="h-8 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
-                        <Film className="h-5 w-5"/>
-                        <span className="font-bold">4K/HD</span>
-                        </Badge>
-                        <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
-                            <Menu className="h-5 w-5" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {genres.map((genre) => (
-                            <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
-                                {genre}
-                            </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
-            </form>
+        <div className="flex items-center gap-2 bg-secondary rounded-lg border border-input p-1.5">
+          <div className="relative flex-grow flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none">
+                  {isPending ? <Loader2 className="h-5 w-5 animate-spin"/> : <Search className="h-5 w-5 text-muted-foreground" />}
+              </div>
+              <Input
+                  placeholder="Search for movies or series..."
+                  className="pl-10 w-full bg-transparent border-0 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+              />
+          </div>
+          <Button onClick={handleSearch} className="h-11 px-4">
+              Search
+          </Button>
+          <Badge variant="default" className="h-11 flex items-center gap-1 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
+              <Film className="h-4 w-4"/>
+              <span className="font-bold text-base">4K/HD</span>
+          </Badge>
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-11 w-11 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
+                      <Menu className="h-5 w-5" />
+                  </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                  {genres.map((genre) => (
+                  <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
+                      {genre}
+                  </DropdownMenuItem>
+                  ))}
+              </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         <StreamingLogos />
