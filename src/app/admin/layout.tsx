@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
-import { useMovieStore, fetchAdminData } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -28,7 +28,8 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (isAuthenticated && !isInitialized) {
-      fetchAdminData();
+      // Fetch all data, including admin-specific data like suggestions
+      fetchInitialData(true);
     }
   }, [isAuthenticated, isInitialized]);
   

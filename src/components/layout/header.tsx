@@ -19,7 +19,7 @@ import {
   SheetTrigger,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { useMovieStore, fetchMovieData } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
@@ -32,7 +32,7 @@ function UpcomingReleasesPanel() {
 
   useEffect(() => {
     if (!isInitialized) {
-      fetchMovieData();
+      fetchInitialData(false);
     }
   }, [isInitialized]);
 
@@ -124,7 +124,7 @@ function ManagementPanel() {
     
     useEffect(() => {
         if (!isInitialized) {
-            fetchMovieData();
+            fetchInitialData(false);
         }
     }, [isInitialized]);
 
@@ -191,7 +191,7 @@ function HelpCenterPanel() {
   
   useEffect(() => {
     if (!isInitialized) {
-      fetchMovieData();
+      fetchInitialData(false);
     }
   }, [isInitialized]);
   

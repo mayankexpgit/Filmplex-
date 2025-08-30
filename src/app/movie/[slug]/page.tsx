@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
-import { useMovieStore, fetchMovieData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Download, Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send } from 'lucide-react';
@@ -158,7 +158,7 @@ export default function MovieDetailPage() {
 
   useEffect(() => {
     if (!isInitialized) {
-      fetchMovieData();
+      fetchInitialData(false);
     }
   }, [isInitialized]);
 

@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { useMovieStore, fetchMovieData } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
@@ -87,7 +87,8 @@ export function HomePageClient() {
   
   useEffect(() => {
     if (!isInitialized) {
-      fetchMovieData();
+      // Fetch public data only
+      fetchInitialData(false);
     }
   }, [isInitialized]);
   
@@ -119,7 +120,7 @@ export function HomePageClient() {
         <MovieCardSmall />
       </div>
 
-      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-sm md:text-lg font-bold text-foreground">
+      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-xs md:text-base font-bold text-foreground">
         💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
 
