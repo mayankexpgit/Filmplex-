@@ -65,7 +65,7 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
           value={movieName}
           onChange={(e) => setMovieName(e.target.value)}
           placeholder={recipient ? `Message to ${recipient.name}` : "e.g. The Matrix"}
-          disabled={isPending || !!recipient}
+          disabled={isPending}
         />
       </div>
       <div className="space-y-2">

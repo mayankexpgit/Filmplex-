@@ -343,7 +343,7 @@ export const deleteComment = async (movieId: string, commentId: string): Promise
 
 export const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
     await dbUpdateReaction(movieId, reaction);
-    useMovieStore.getState().incrementReaction(movieId, reaction);
+    useMovieStore.getState().incrementReaction(reaction, reaction);
 };
 
 // --- Management Team ---
