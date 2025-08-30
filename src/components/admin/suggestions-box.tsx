@@ -1,70 +1,69 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useTransition } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMovieStore } from '@/store/movieStore';
-import { Loader2, Send } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { useMovieStore, deleteSuggestion as storeDeleteSuggestion } from '@/store/movieStore';
+import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function SuggestionsBox() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const addSuggestion = useMovieStore((state) => state.addSuggestion);
+  const { suggestions } = useMovieStore();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !description.trim()) return;
-
-    setIsLoading(true);
-    try {
-      await addSuggestion(title, description);
-      setTitle('');
-      setDescription('');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      try {
+        await storeDeleteSuggestion(id);
+        toast({
+          title: 'Suggestion Removed',
+          description: `The suggestion has been deleted.`,
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Database Error',
+          description: 'Could not delete suggestion. Please try again.',
+        });
+      }
+    });
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Suggestions Box</CardTitle>
+        <CardTitle>Suggestions Box</CardTitle>
+        <CardDescription>Suggestions and requests from users.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Input
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <div>
-            <Textarea
-              placeholder="Your suggestion..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Submit Suggestion
-              </>
-            )}
-          </Button>
-        </form>
+        <ScrollArea className="h-[400px] pr-4">
+          {suggestions.length > 0 ? (
+            <div className="space-y-4">
+              {suggestions.map((item) => (
+                <div key={item.id} className="p-3 bg-secondary rounded-lg flex justify-between items-start">
+                  <div className="flex-1 space-y-2">
+                    <p className="text-base text-foreground font-semibold">{item.movieName}</p>
+                    <p className="text-sm text-muted-foreground">{item.comment}</p>
+                    <p className="text-xs text-muted-foreground pt-1">
+                      {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} disabled={isPending}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+             <div className="text-center text-muted-foreground py-16">
+                <p>No suggestions yet.</p>
+              </div>
+          )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );
