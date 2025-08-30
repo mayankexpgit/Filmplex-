@@ -124,46 +124,40 @@ export function HomePageClient() {
       </div>
 
       <section className="space-y-6">
-        <div className="flex flex-col md:flex-row items-stretch gap-2">
-            <div className="relative flex-grow">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                    {isPending ? <Loader2 className="h-5 w-5 animate-spin"/> : <Search className="h-5 w-5 text-muted-foreground" />}
-                </div>
-                <Input
-                    placeholder="Search for movies or series..."
-                    className="pl-10 w-full h-12"
-                    value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-            </div>
-            
-            <div className="flex items-center gap-2">
-                <Button onClick={handleSearch} className="h-12 text-base px-6">
-                    <Search className="mr-2 h-5 w-5" />
-                    Search
-                </Button>
-                <div className="flex items-center h-12 bg-secondary rounded-md border border-border px-2 gap-2">
-                    <Badge variant="default" className="h-10 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
-                        <Film className="h-5 w-5"/>
-                        <span className="font-bold text-base">4K/HD</span>
-                    </Badge>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-10 w-10 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {genres.map((genre) => (
-                            <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
-                                {genre}
-                            </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </div>
+        <div className="flex items-center gap-2 bg-secondary rounded-lg border border-input p-1.5">
+          <div className="relative flex-grow flex items-center">
+              <div className="absolute left-3 flex items-center pointer-events-none">
+                  {isPending ? <Loader2 className="h-5 w-5 animate-spin"/> : <Search className="h-5 w-5 text-muted-foreground" />}
+              </div>
+              <Input
+                  placeholder="Search for movies or series..."
+                  className="pl-10 w-full bg-transparent border-0 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+              />
+          </div>
+          <Button onClick={handleSearch} className="h-11 text-base px-4">
+              <Search className="mr-2 h-5 w-5" />
+              Search
+          </Button>
+          <Badge variant="default" className="h-11 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
+              <Film className="h-5 w-5"/>
+              <span className="font-bold text-base">4K/HD</span>
+          </Badge>
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-11 w-11 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
+                      <Menu className="h-5 w-5" />
+                  </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                  {genres.map((genre) => (
+                  <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
+                      {genre}
+                  </DropdownMenuItem>
+                  ))}
+              </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         <StreamingLogos />
