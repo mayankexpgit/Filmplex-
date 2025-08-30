@@ -139,8 +139,8 @@ export function HomePageClient() {
           <Button onClick={handleSearch} size="sm">
               Search
           </Button>
-          <Badge variant="default" className="h-11 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
-              <Film className="h-5 w-5"/>
+          <Badge variant="default" className="h-11 flex items-center gap-1 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
+              <Film className="h-4 w-4"/>
               <span className="font-bold text-base">4K/HD</span>
           </Badge>
           <DropdownMenu>
