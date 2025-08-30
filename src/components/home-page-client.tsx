@@ -98,11 +98,13 @@ export function HomePageClient() {
     }
   }, [searchQuery]);
 
-  const handleSearchClick = () => {
-    startTransition(() => {
-      setSearchQuery(localSearch);
-    });
-  };
+  const handleSearchOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+        startTransition(() => {
+            setSearchQuery(localSearch);
+        });
+    }
+  }
 
   if (!isInitialized) {
      return (
@@ -133,24 +135,21 @@ export function HomePageClient() {
                     </div>
                     <Input
                     placeholder="Search for movies or series..."
-                    className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="pl-10 w-full bg-secondary border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 h-12"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
+                    onKeyDown={handleSearchOnEnter}
                     />
                 </div>
                 
-                <Button onClick={handleSearchClick} className="rounded-l-none" disabled={isPending}>
-                    Search
-                </Button>
-
-                <div className="border-l border-border h-10 flex items-center bg-secondary px-2 gap-2">
-                    <Badge variant="default" className="h-8 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
+                <div className="border-l border-border h-12 flex items-center bg-secondary px-2 gap-2">
+                    <Badge variant="default" className="h-10 flex items-center gap-2 rounded-md bg-primary text-primary-foreground pointer-events-none px-3">
                     <Film className="h-5 w-5"/>
-                    <span className="font-bold">4K/HD</span>
+                    <span className="font-bold text-base">4K/HD</span>
                     </Badge>
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
+                        <Button variant="ghost" className="h-10 w-10 p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border-0 rounded-md bg-secondary hover:bg-accent">
                         <Menu className="h-5 w-5" />
                         </Button>
                     </DropdownMenuTrigger>
