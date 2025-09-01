@@ -75,11 +75,15 @@ export function HomePageClient() {
     searchQuery,
     setSearchQuery,
     setSelectedGenre,
+    featuredMovies,
+    latestReleases,
   } = useMovieStore((state) => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
     setSelectedGenre: state.setSelectedGenre,
+    featuredMovies: state.featuredMovies,
+    latestReleases: state.latestReleases,
   }));
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -117,7 +121,7 @@ export function HomePageClient() {
     <div className="container mx-auto py-8 md:py-12 space-y-8">
       
       <div className="py-4">
-        <MovieCardSmall />
+        <MovieCardSmall movies={featuredMovies} />
       </div>
 
       <div className="bg-secondary p-3 rounded-lg border border-border text-center text-xs md:text-base font-bold text-foreground">
@@ -162,7 +166,7 @@ export function HomePageClient() {
         
         <StreamingLogos />
 
-        <MovieCardLarge />
+        <MovieCardLarge movies={latestReleases} featuredMovies={featuredMovies} />
       </section>
     </div>
   );
