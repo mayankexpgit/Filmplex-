@@ -23,7 +23,14 @@ function MoviePageLoader() {
         <div>
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
                 <div className="container max-w-screen-2xl">
-                    <MovieCardSmall />
+                    {/* Replace the component with a simple skeleton to avoid crashing */}
+                    <div className="flex space-x-2 overflow-hidden">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="flex-shrink-0 w-full basis-1/5">
+                            <Skeleton className="aspect-[2/3] w-full" />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </header>
             <main className="container mx-auto py-8 md:py-12">
@@ -196,7 +203,7 @@ export default function MovieDetailPage() {
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
         <div className="container max-w-screen-2xl">
-           <MovieCardSmall />
+           <MovieCardSmall movies={featuredMovies} />
         </div>
       </header>
       <main className="container mx-auto py-8 md:py-12">
