@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAdminCredentials, fetchManagementTeam } from '@/services/movieService';
+import type { ManagementMember } from '@/lib/data';
 
 const AUTH_TOKEN_KEY = 'filmplex_admin_auth_token';
 const ADMIN_NAME_KEY = 'filmplex_admin_name';
@@ -12,7 +13,25 @@ export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [adminName, setAdminName] = useState<string | null>(null);
+  const [adminProfile, setAdminProfile] = useState<ManagementMember | null>(null);
   const router = useRouter();
+
+  const syncProfile = useCallback(async (name: string) => {
+    try {
+      const team = await fetchManagementTeam();
+      const profile = team.find(member => member.name === name);
+      if (profile) {
+        setAdminProfile(profile);
+      } else {
+        // This case could happen if admin is removed while logged in
+        logout();
+      }
+    } catch (error) {
+       console.error("Could not sync admin profile:", error);
+       logout();
+    }
+  }, []);
+
 
   useEffect(() => {
     // Check for the token on initial component mount
@@ -24,13 +43,14 @@ export function useAuth() {
         // For this simulation, its presence is enough.
         setIsAuthenticated(true);
         setAdminName(name);
+        syncProfile(name); // Fetch full profile info
       }
     } catch (error) {
         console.error("Could not access localStorage:", error);
     } finally {
         setIsLoading(false);
     }
-  }, []);
+  }, [syncProfile]);
 
   const login = useCallback(async (name, username, password) => {
     try {
@@ -41,8 +61,8 @@ export function useAuth() {
       ]);
       
       // 2. Check if the provided admin name exists in the management team
-      const isMember = managementTeam.some(member => member.name.toLowerCase() === name.toLowerCase());
-      if (!isMember) {
+      const memberProfile = managementTeam.find(member => member.name.toLowerCase() === name.toLowerCase());
+      if (!memberProfile) {
         console.log(`Login failed: Admin name "${name}" not found in management team.`);
         return false;
       }
@@ -61,6 +81,7 @@ export function useAuth() {
       localStorage.setItem(ADMIN_NAME_KEY, name);
       setIsAuthenticated(true);
       setAdminName(name);
+      setAdminProfile(memberProfile);
       return true;
 
     } catch (error) {
@@ -78,6 +99,7 @@ export function useAuth() {
     } finally {
        setIsAuthenticated(false);
        setAdminName(null);
+       setAdminProfile(null);
        router.replace('/admin/login');
     }
   }, [router]);
@@ -86,6 +108,7 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     adminName,
+    adminProfile,
     login,
     logout,
   };

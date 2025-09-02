@@ -3,9 +3,12 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users } from 'lucide-react';
+import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/use-auth';
+
+const topLevelRoles = ['Regulator', 'Co-Founder'];
 
 const adminSections = [
   {
@@ -71,35 +74,51 @@ const adminSections = [
     icon: Shield,
     id: 'security-log',
   },
+  {
+    title: 'Admin Profile',
+    description: 'View upload analytics for the team.',
+    href: '/admin/profile',
+    icon: ProfileIcon,
+    id: 'admin-profile',
+    role: 'topLevel'
+  }
 ];
 
 export default function AdminDashboardPage() {
   const { suggestions } = useMovieStore();
+  const { adminProfile } = useAuth();
   const suggestionCount = suggestions.length;
+  
+  const canViewProfile = adminProfile && topLevelRoles.includes(adminProfile.info);
 
   return (
     <div className="container mx-auto py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {adminSections.map((section) => (
-          <Link href={section.href} key={section.title} className="group">
-            <Card className="h-full hover:border-primary transition-[transform,border-color] duration-300 ease-in-out transform hover:-translate-y-1">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <section.icon className="h-8 w-8 text-primary" />
-                <div className="flex-1">
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{section.title}</span>
-                    {section.id === 'suggestions-box' && suggestionCount > 0 && (
-                       <Badge variant="destructive" className="animate-pulse">
-                        {suggestionCount}
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription>{section.description}</CardDescription>
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
+        {adminSections.map((section) => {
+          if (section.role === 'topLevel' && !canViewProfile) {
+            return null;
+          }
+          return (
+            <Link href={section.href} key={section.title} className="group">
+              <Card className="h-full hover:border-primary transition-[transform,border-color] duration-300 ease-in-out transform hover:-translate-y-1">
+                <CardHeader className="flex flex-row items-center gap-4">
+                  <section.icon className="h-8 w-8 text-primary" />
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{section.title}</span>
+                      {section.id === 'suggestions-box' && suggestionCount > 0 && (
+                        <Badge variant="destructive" className="animate-pulse">
+                          {suggestionCount}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription>{section.description}</CardDescription>
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

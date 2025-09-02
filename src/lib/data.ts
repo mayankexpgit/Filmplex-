@@ -41,6 +41,7 @@ export interface Movie {
   posterUrl: string;
   year: number;
   createdAt?: string; // For sorting by upload date
+  uploadedBy?: string; // Name of the admin who uploaded it
   cardInfoText?: string;
   genre: string;
   language?: string;
@@ -87,6 +88,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq27gApcjBveAabcF.jpg',
     year: 2010,
     createdAt: new Date('2024-01-01T10:00:00Z').toISOString(),
+    uploadedBy: 'dev.Mayank',
     cardInfoText: 'Inception (2010)',
     genre: 'Sci-Fi, Action',
     language: 'English',
@@ -124,6 +126,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
     year: 2008,
     createdAt: new Date('2024-01-02T11:00:00Z').toISOString(),
+    uploadedBy: 'dev.Bittu',
     cardInfoText: 'The Dark Knight (2008)',
     genre: 'Action, Crime, Drama',
     language: 'English',
@@ -155,6 +158,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/g8Io_s3fKx3eQdJtgoi4StkWa2f.jpg',
     year: 2024,
     createdAt: new Date('2024-01-03T12:00:00Z').toISOString(),
+    uploadedBy: 'dev.Mayank',
     cardInfoText: 'Sakamoto Days - New Episodes',
     genre: 'Anime, Action, Comedy',
     language: 'Japanese',

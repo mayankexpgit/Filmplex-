@@ -4,11 +4,13 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
 import FilmpilexLoader from '@/components/ui/filmplex-loader';
+
+const topLevelRoles = ['Regulator', 'Co-Founder'];
 
 export default function AdminLayout({
   children,
@@ -16,7 +18,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isInitialized } = useMovieStore();
-  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout, adminProfile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -47,6 +49,7 @@ export default function AdminLayout({
     );
   }
 
+  const canViewProfile = adminProfile && topLevelRoles.includes(adminProfile.info);
 
   return (
     <div className="bg-background min-h-screen text-foreground">
@@ -57,6 +60,14 @@ export default function AdminLayout({
             <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
           <div className="flex items-center gap-4">
+            {canViewProfile && (
+              <Button variant="outline" asChild>
+                <Link href="/admin/profile">
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  My Profile
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" asChild>
               <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />

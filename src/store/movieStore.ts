@@ -203,8 +203,16 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
 
 
 const addSecurityLogEntry = async (action: string): Promise<void> => {
+    // Attempt to get admin name from localStorage, fallback to a generic name
+    let adminName = 'admin_user';
+    try {
+        adminName = localStorage.getItem('filmplex_admin_name') || 'admin_user';
+    } catch(e) {
+        console.error("Could not access localStorage for security log.");
+    }
+
     const newLog = {
-        admin: 'admin_user', // This should be dynamic in a real multi-user system
+        admin: adminName,
         action,
         timestamp: new Date().toLocaleString(),
     };
@@ -217,14 +225,22 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
     }
 };
 
-export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
-  const movieWithTimestamp = {
+export const addMovie = async (movieData: Omit<Movie, 'id' | 'uploadedBy'>): Promise<void> => {
+  let adminName = 'unknown_admin';
+  try {
+      adminName = localStorage.getItem('filmplex_admin_name') || 'unknown_admin';
+  } catch(e) {
+      console.error("Could not access localStorage for uploader name.");
+  }
+  
+  const movieWithMetadata = {
     ...movieData,
     createdAt: new Date().toISOString(),
+    uploadedBy: adminName,
     reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
   };
-  const newId = await dbAddMovie(movieWithTimestamp);
-  const newMovie = { id: newId, ...movieWithTimestamp } as Movie;
+  const newId = await dbAddMovie(movieWithMetadata);
+  const newMovie = { id: newId, ...movieWithMetadata } as Movie;
 
   useMovieStore.setState(state => ({
     allMovies: [newMovie, ...state.allMovies],
@@ -234,9 +250,14 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
 };
 
 export const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
-  await dbUpdateMovie(id, updatedMovieData);
+  // IMPORTANT: Do not update uploadedBy or createdAt fields on edit.
+  const updateData = { ...updatedMovieData };
+  delete updateData.uploadedBy;
+  delete updateData.createdAt;
 
-  const applyUpdate = (movie: Movie) => movie.id === id ? { ...movie, ...updatedMovieData } : movie;
+  await dbUpdateMovie(id, updateData);
+
+  const applyUpdate = (movie: Movie) => movie.id === id ? { ...movie, ...updateData } : movie;
 
   useMovieStore.setState(state => ({
     allMovies: state.allMovies.map(applyUpdate),
