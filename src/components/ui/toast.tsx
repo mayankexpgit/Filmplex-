@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
-import { X } from "lucide-react"
+import { X, CheckCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -32,6 +33,8 @@ const toastVariants = cva(
         default: "border bg-background text-foreground",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
+        success:
+          "success group border-green-500 bg-background text-foreground",
       },
     },
     defaultVariants: {
@@ -50,7 +53,11 @@ const Toast = React.forwardRef<
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
       {...props}
-    />
+    >
+      {variant === 'success' && <div className="absolute left-0 top-0 h-full w-1.5 bg-green-500 animate-pulse" />}
+      {variant === 'success' && <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-green-500" />}
+      <div className={cn(variant === 'success' && "pl-8")}>{props.children}</div>
+    </ToastPrimitives.Root>
   )
 })
 Toast.displayName = ToastPrimitives.Root.displayName

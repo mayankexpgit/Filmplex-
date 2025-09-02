@@ -221,9 +221,9 @@ export default function UploadMovie() {
     setSearchResults([]);
     setIsFetchingAI(true);
     try {
-        toast({
-            title: 'Fetching Details...',
-            description: `Getting full details for the selected content...`,
+        const { id: toastId } = toast({
+          title: 'Fetching Details...',
+          description: 'AI is generating content. Please wait.',
         });
         
         const result = await getMovieDetails({ tmdbId, type });
@@ -250,8 +250,10 @@ export default function UploadMovie() {
         }));
 
         toast({
+            id: toastId,
+            variant: 'success',
             title: 'Success!',
-            description: 'Content details have been auto-filled.',
+            description: 'Content details have been collected.',
         });
     } catch (error: any) {
         console.error("AI auto-fill failed:", error);
