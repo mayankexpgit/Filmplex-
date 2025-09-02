@@ -58,6 +58,8 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
   const [isPending, startTransition] = useTransition();
 
   const sortedMovies = useMemo(() => {
+    // Sort all movies received from the store by creation date, descending.
+    // This ensures the newest movies appear first.
     return [...movies].sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -67,9 +69,11 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
 
 
   const filteredMovies = useMemo(() => {
+    // Start with the full, sorted list of movies.
     let currentMovies = sortedMovies;
     const lowerCaseGenre = selectedGenre.toLowerCase();
 
+    // Apply genre filter
     if (smartFilterTags[selectedGenre]) {
         const tagsToMatch = smartFilterTags[selectedGenre];
         currentMovies = currentMovies.filter((movie) =>
@@ -87,12 +91,14 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
       );
     }
     
+    // Apply search query filter
     if (searchQuery) {
       currentMovies = currentMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
+    // Apply quality filter
     if (selectedQuality !== 'all') {
         currentMovies = currentMovies.filter((movie) => {
             const quality = getQualityBadge(movie);

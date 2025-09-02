@@ -45,16 +45,13 @@ export const fetchAdminCredentials = async (): Promise<AdminCredentials> => {
 // --- Movie Functions ---
 
 export const fetchMovies = async (): Promise<Movie[]> => {
-  const moviesCollection = collection(db, 'movies');
-  const movieQuery = query(moviesCollection, orderBy('createdAt', 'desc'));
-  const movieSnapshot = await getDocs(movieQuery);
+  // Fetch all documents from the 'movies' collection without any specific query or limit.
+  // This ensures that every single movie in the database is retrieved.
+  const moviesCollectionRef = collection(db, 'movies');
+  const movieSnapshot = await getDocs(moviesCollectionRef);
   let movieList = movieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
   
-  if (movieList.length === 0) {
-    movieList = await seedDatabase();
-  }
-
-  // Ensure every movie has a reactions object
+  // Ensure every movie has a reactions object to prevent runtime errors
   movieList.forEach(movie => {
     if (!movie.reactions) {
       movie.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
