@@ -69,14 +69,8 @@ const getMovieDetailsFlow = ai.defineFlow(
   },
   async (input) => {
     
-    let tmdbData;
-    try {
-      // Step 1: Get factual data from TMDb API using the TMDb ID
-      tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
-    } catch (error: any) {
-        // Re-throw with a more user-friendly message
-        throw new Error(error.message || 'Could not fetch movie details. Please check the title/year or fill manually.');
-    }
+    // Step 1: Get factual data from TMDb API using the TMDb ID
+    const tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
 
     // Step 2: Use the factual data to generate creative content with the LLM
     const creativeInput: MovieDetailsOutput = {
@@ -108,5 +102,11 @@ const getMovieDetailsFlow = ai.defineFlow(
 
 
 export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDetailsOutput> {
-  return getMovieDetailsFlow(input);
+  try {
+    return await getMovieDetailsFlow(input);
+  } catch (error: any) {
+    // Re-throw with a more user-friendly message
+    console.error("Error in getMovieDetails flow: ", error);
+    throw new Error(error.message || 'Could not fetch movie details. Please check the ID or fill manually.');
+  }
 }
