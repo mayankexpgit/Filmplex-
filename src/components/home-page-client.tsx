@@ -91,7 +91,6 @@ export function HomePageClient() {
   
   useEffect(() => {
     if (!isInitialized) {
-      // Fetch public data only
       fetchInitialData(false);
     }
   }, [isInitialized]);
