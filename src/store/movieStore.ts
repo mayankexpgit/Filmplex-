@@ -59,6 +59,7 @@ type QualityFilter = 'all' | '4k' | 'hd';
 
 interface MovieState {
   // Movies
+  allMovies: Movie[];
   featuredMovies: Movie[];
   latestReleases: Movie[];
   searchQuery: string;
@@ -95,6 +96,7 @@ interface MovieState {
 // =================================================================
 export const useMovieStore = create<MovieState>((set, get) => ({
   // --- Initial State ---
+  allMovies: [],
   featuredMovies: [],
   latestReleases: [],
   searchQuery: '',
@@ -130,6 +132,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       });
 
     return {
+      allMovies: updateMovieInList(state.allMovies),
       latestReleases: updateMovieInList(state.latestReleases),
       featuredMovies: updateMovieInList(state.featuredMovies)
     };
@@ -149,7 +152,7 @@ let isFetchingData = false;
  */
 export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
   const { isInitialized } = useMovieStore.getState();
-  if (isInitialized || isFetchingData) {
+  if (isInitialized) {
     return;
   }
   isFetchingData = true;
@@ -168,8 +171,9 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
     ]);
 
     const stateUpdate: Partial<MovieState> = {
-      featuredMovies: allMovies.filter((movie: Movie) => movie.isFeatured),
+      allMovies: allMovies,
       latestReleases: allMovies,
+      featuredMovies: allMovies.filter((movie: Movie) => movie.isFeatured),
       notifications,
       contactInfo,
       managementTeam,
@@ -223,6 +227,7 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   const newMovie = { id: newId, ...movieWithTimestamp } as Movie;
 
   useMovieStore.setState(state => ({
+    allMovies: [newMovie, ...state.allMovies],
     latestReleases: [newMovie, ...state.latestReleases]
   }));
   await addSecurityLogEntry(`Uploaded Movie: "${movieData.title}"`);
@@ -234,8 +239,9 @@ export const updateMovie = async (id: string, updatedMovieData: Partial<Movie>):
   const applyUpdate = (movie: Movie) => movie.id === id ? { ...movie, ...updatedMovieData } : movie;
 
   useMovieStore.setState(state => ({
+    allMovies: state.allMovies.map(applyUpdate),
     latestReleases: state.latestReleases.map(applyUpdate),
-    featuredMovies: state.featuredMovies.map(applyUpdate).filter(m => m.isFeatured)
+    featuredMovies: state.allMovies.map(applyUpdate).filter(m => m.isFeatured)
   }));
   
   const movieTitle = updatedMovieData.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
@@ -252,6 +258,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
   if (movie) {
     await dbDeleteMovie(id);
     useMovieStore.setState(state => ({
+        allMovies: state.allMovies.filter(m => m.id !== id),
         latestReleases: state.latestReleases.filter(m => m.id !== id),
         featuredMovies: state.featuredMovies.filter(m => m.id !== id)
     }));

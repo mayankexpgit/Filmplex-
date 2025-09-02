@@ -48,7 +48,7 @@ interface MovieCardLargeProps {
   featuredMovies: Movie[];
 }
 
-export default function MovieCardLarge({ movies, featuredMovies }: MovieCardLargeProps) {
+export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
   const { searchQuery, selectedGenre, selectedQuality } = useMovieStore((state) => ({
     searchQuery: state.searchQuery,
     selectedGenre: state.selectedGenre,
@@ -57,19 +57,19 @@ export default function MovieCardLarge({ movies, featuredMovies }: MovieCardLarg
   const [visibleMoviesCount, setVisibleMoviesCount] = useState(MOVIES_PER_PAGE);
   const [isPending, startTransition] = useTransition();
 
-  const allMovies = useMemo(() => {
-    const combined = [...featuredMovies, ...movies];
-    const unique = combined.filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-    );
-    return unique.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
-  }, [movies, featuredMovies]);
+  const sortedMovies = useMemo(() => {
+    return [...movies].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+    });
+  }, [movies]);
+
 
   const filteredMovies = useMemo(() => {
-    let currentMovies = allMovies;
+    let currentMovies = sortedMovies;
     const lowerCaseGenre = selectedGenre.toLowerCase();
 
-    // Smart filter logic for genres
     if (smartFilterTags[selectedGenre]) {
         const tagsToMatch = smartFilterTags[selectedGenre];
         currentMovies = currentMovies.filter((movie) =>
@@ -80,7 +80,6 @@ export default function MovieCardLarge({ movies, featuredMovies }: MovieCardLarg
             )
         );
     }
-    // Regular genre filter
     else if (selectedGenre && selectedGenre !== 'All Genres') {
       currentMovies = currentMovies.filter((movie) =>
         (movie.genre?.toLowerCase().includes(lowerCaseGenre)) ||
@@ -88,14 +87,12 @@ export default function MovieCardLarge({ movies, featuredMovies }: MovieCardLarg
       );
     }
     
-    // Filter by search query
     if (searchQuery) {
       currentMovies = currentMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filter by quality
     if (selectedQuality !== 'all') {
         currentMovies = currentMovies.filter((movie) => {
             const quality = getQualityBadge(movie);
@@ -106,7 +103,7 @@ export default function MovieCardLarge({ movies, featuredMovies }: MovieCardLarg
     }
 
     return currentMovies;
-  }, [allMovies, searchQuery, selectedGenre, selectedQuality]);
+  }, [sortedMovies, searchQuery, selectedGenre, selectedQuality]);
 
   const moviesToShow = useMemo(() => {
     return filteredMovies.slice(0, visibleMoviesCount);
