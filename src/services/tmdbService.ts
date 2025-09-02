@@ -1,11 +1,65 @@
 
 'use server';
 
-import axios from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY; 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
+// --- API Key Management ---
+const getTMDbKeys = (): string[] => {
+    const keys: string[] = [];
+    for (let i = 1; i <= 5; i++) {
+        const key = process.env[`TMDB_API_KEY_${i}`];
+        if (key) {
+            keys.push(key);
+        }
+    }
+    return keys;
+};
+
+const tmdbKeys = getTMDbKeys();
+let currentKeyIndex = 0;
+
+/**
+ * Makes a request to the TMDb API with automatic key rotation.
+ * If a request fails due to an invalid key or rate limiting, it retries with the next available key.
+ * @param config - The Axios request configuration.
+ * @param retries - The number of remaining retries (should match the number of keys).
+ * @returns The response data from the TMDb API.
+ */
+const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length): Promise<any> => {
+    if (tmdbKeys.length === 0) {
+        throw new Error('No TMDb API keys are configured. Please add at least one TMDB_API_KEY_ to your .env file.');
+    }
+    if (retries <= 0) {
+        throw new Error('All TMDb API keys failed. Please check your keys and their usage limits.');
+    }
+
+    try {
+        const key = tmdbKeys[currentKeyIndex];
+        const response = await axios({
+            ...config,
+            params: {
+                ...config.params,
+                api_key: key,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 429)) {
+            // 401: Invalid API Key, 429: Rate Limit Exceeded. Rotate key and retry.
+            console.warn(`TMDb key at index ${currentKeyIndex} failed. Rotating to the next key.`);
+            currentKeyIndex = (currentKeyIndex + 1) % tmdbKeys.length;
+            return tmdbRequest(config, retries - 1);
+        }
+        // For other errors, re-throw them.
+        console.error('An unexpected error occurred while fetching from TMDb:', error);
+        throw error;
+    }
+};
+
+
+// --- Types ---
 export type ContentType = 'movie' | 'tv';
 
 export interface TMDbSearchResult {
@@ -35,24 +89,28 @@ export interface FormattedTMDbData {
 
 // Helper function to fetch pages for a given content type
 const fetchPages = async (title: string, type: ContentType, fetchAll: boolean): Promise<any[]> => {
-    const endpoint = type === 'movie' ? 'movie' : 'tv';
+    const endpoint = `/search/${type === 'movie' ? 'movie' : 'tv'}`;
     let allResults: any[] = [];
 
-    const initialResponse = await axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
-        params: { api_key: TMDB_API_KEY, query: title, include_adult: false, page: 1 },
+    const initialData = await tmdbRequest({
+        url: `https://api.themoviedb.org/3${endpoint}`,
+        method: 'GET',
+        params: { query: title, include_adult: false, page: 1 },
     });
     
-    allResults = initialResponse.data.results;
+    allResults = initialData.results;
     
     if (fetchAll) {
-      const totalPages = initialResponse.data.total_pages;
+      const totalPages = initialData.total_pages;
 
       if (totalPages > 1) {
           const pagePromises = [];
           for (let i = 2; i <= totalPages; i++) {
               pagePromises.push(
-                  axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
-                      params: { api_key: TMDB_API_KEY, query: title, include_adult: false, page: i },
+                  tmdbRequest({
+                      url: `https://api.themoviedb.org/3${endpoint}`,
+                      method: 'GET',
+                      params: { query: title, include_adult: false, page: i },
                   })
               );
           }
@@ -60,7 +118,7 @@ const fetchPages = async (title: string, type: ContentType, fetchAll: boolean): 
           try {
             const responses = await Promise.all(pagePromises);
             responses.forEach(response => {
-                allResults = allResults.concat(response.data.results);
+                allResults = allResults.concat(response.results);
             });
           } catch (error) {
             console.warn("Failed to fetch all pages, returning partial results.", error);
@@ -68,13 +126,12 @@ const fetchPages = async (title: string, type: ContentType, fetchAll: boolean): 
       }
     }
 
-
     return allResults;
 };
 
 
 export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = false): Promise<TMDbSearchResult[]> => {
-    if (!TMDB_API_KEY) {
+    if (tmdbKeys.length === 0) {
         throw new Error('TMDb API key is not configured.');
     }
     const lowerCaseTitle = title.toLowerCase();
@@ -149,21 +206,22 @@ const getTrailerUrl = (videos: any[]): string | undefined => {
 
 
 export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentType): Promise<FormattedTMDbData> => {
-    if (!TMDB_API_KEY) {
+    if (tmdbKeys.length === 0) {
         throw new Error('TMDb API key is not configured.');
     }
 
     let details;
     try {
-        const detailsResponse = await axios.get(`https://api.themoviedb.org/3/${type}/${tmdbId}`, {
+        details = await tmdbRequest({
+            url: `https://api.themoviedb.org/3/${type}/${tmdbId}`,
+            method: 'GET',
             params: {
-                api_key: TMDB_API_KEY,
                 append_to_response: 'credits,videos',
             },
         });
-        details = detailsResponse.data;
     } catch (error) {
-        throw new Error('Movie or TV show not found in TMDb with the provided ID.');
+        // The tmdbRequest will handle retries, so if it fails here, all keys have failed.
+        throw new Error('Movie or TV show not found in TMDb or all API keys failed.');
     }
     
     const releaseDateStr = details.release_date || details.first_air_date;
@@ -200,5 +258,3 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
         numberOfEpisodes: details.number_of_episodes, // For series
     };
 };
-
-    
