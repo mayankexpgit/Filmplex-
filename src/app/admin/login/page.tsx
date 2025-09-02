@@ -63,7 +63,7 @@ export default function LoginPage() {
               <Input
                 id="adminName"
                 type="text"
-                placeholder="e.g. dev.Mayank"
+                placeholder="Enter your admin name"
                 value={adminName}
                 onChange={(e) => setAdminName(e.target.value)}
                 required
