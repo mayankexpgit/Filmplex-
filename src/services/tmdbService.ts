@@ -107,7 +107,7 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
     const releaseDate = new Date(details.release_date || details.first_air_date);
     const genres = details.genres.map((g: any) => g.name).join(', ');
     const rating = parseFloat(details.vote_average?.toFixed(1)) || 0;
-    const poster = details.poster_path ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}` : '';
+    const poster = details.poster_path ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}` : 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image';
     
     let creators: string[] = [];
     if (type === 'movie') {
