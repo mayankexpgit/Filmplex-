@@ -8,16 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase } from 'lucide-react';
-import type { ManagementMember, AdminTask } from '@/lib/data';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp } from 'lucide-react';
+import type { ManagementMember, AdminTask, Movie } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '../ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format, addWeeks, setHours, setMinutes, setSeconds } from 'date-fns';
+import { format, addWeeks, setHours, setMinutes, setSeconds, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
+import { Badge } from '../ui/badge';
 
 const adminRoles = [
     'Regulator',
@@ -31,6 +32,47 @@ const adminRoles = [
 
 const MANAGEMENT_KEY = 'Manager29@role';
 const topLevelRoles = ['Regulator', 'Co-Founder'];
+
+const isUploadCompleted = (movie: Movie): boolean => {
+    if (movie.contentType === 'movie') {
+        return !!movie.downloadLinks && movie.downloadLinks.some(link => link.url);
+    }
+    if (movie.contentType === 'series') {
+        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link.url));
+        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link.url);
+        return !!(hasEpisodeLinks || hasSeasonLinks);
+    }
+    return false;
+};
+
+// Performance calculation logic
+const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]): number => {
+    const adminMovies = allMovies.filter(movie => movie.uploadedBy === admin.name);
+    const completedMovies = adminMovies.filter(isUploadCompleted);
+    const now = new Date();
+    const lastWeekMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now, { weekStartsOn: 1 }), end: now }));
+
+    // 1. Task Completion (Weight: 5 points)
+    let taskScore = 0;
+    if (admin.task) {
+        const progress = Math.min(100, (completedMovies.length / admin.task.targetUploads) * 100);
+        taskScore = (progress / 100) * 5;
+    } else {
+        // Neutral score if no task is assigned
+        taskScore = 2.5; 
+    }
+
+    // 2. Total Uploads (Weight: 3 points)
+    // Scale: 0 uploads = 0 points, 50+ uploads = 3 points
+    const totalUploadsScore = Math.min(3, (completedMovies.length / 50) * 3);
+
+    // 3. Recent Activity (Weight: 2 points)
+    // Scale: 0 uploads last week = 0 points, 5+ uploads = 2 points
+    const recentActivityScore = Math.min(2, (lastWeekMovies.length / 5) * 2);
+
+    const finalScore = taskScore + totalUploadsScore + recentActivityScore;
+    return Math.round(finalScore * 10) / 10; // Round to one decimal place
+};
 
 function TaskManagerDialog({ member, onTaskSet }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; }) {
     const [targetUploads, setTargetUploads] = useState<number>(member.task?.targetUploads || 10);
@@ -140,7 +182,10 @@ export default function ManagementManager() {
   const { toast } = useToast();
   const [addPending, startAddTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
-  const managementTeam = useMovieStore((state) => state.managementTeam);
+  const { managementTeam, allMovies } = useMovieStore(state => ({
+      managementTeam: state.managementTeam,
+      allMovies: state.allMovies
+  }));
   const { adminProfile } = useAuth();
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ManagementMember | null>(null);
@@ -254,6 +299,12 @@ export default function ManagementManager() {
 
   const isFormDisabled = addPending || !isUnlocked || !canManageTeam;
 
+  const getPerformanceBadgeVariant = (score: number): "destructive" | "secondary" | "success" => {
+    if (score < 4) return "destructive";
+    if (score < 7.5) return "secondary";
+    return "success";
+  }
+
   return (
     <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
       <div className="space-y-8">
@@ -305,46 +356,52 @@ export default function ManagementManager() {
             <CardHeader>
                 <CardTitle>Current Team</CardTitle>
                 <CardDescription>
-                    This is the current list of management team members.
-                    {canManageTeam ? " Task assignment is always available, but adding/removing requires the management key." : ""}
+                    This is the current list of management team members with their performance score.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {sortedTeam.length === 0 ? (
                     <p className="text-muted-foreground text-center">No team members added yet.</p>
                 ) : (
-                    sortedTeam.map(member => (
-                        <div key={member.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                            <div className="flex items-center gap-4">
-                              <User className="h-6 w-6 text-primary" />
-                              <div>
-                                  <p className="font-semibold">{member.name}</p>
-                                  <p className="text-sm text-muted-foreground">{member.info}</p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              {canManageTeam && (
+                    sortedTeam.map(member => {
+                        const performanceScore = calculatePerformanceScore(member, allMovies);
+                        return (
+                            <div key={member.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                                <div className="flex items-center gap-4">
+                                <User className="h-6 w-6 text-primary" />
+                                <div>
+                                    <p className="font-semibold">{member.name}</p>
+                                    <p className="text-sm text-muted-foreground">{member.info}</p>
+                                </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                <Badge variant={getPerformanceBadgeVariant(performanceScore)} className="flex items-center gap-1.5">
+                                    <TrendingUp className="h-3.5 w-3.5" />
+                                    <span>{performanceScore.toFixed(1)} / 10</span>
+                                </Badge>
+                                {canManageTeam && (
+                                    <Button 
+                                    variant="outline" 
+                                    size="icon" 
+                                    onClick={() => {setSelectedMember(member); setIsTaskDialogOpen(true)}}
+                                    >
+                                        <Briefcase className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                {isUnlocked && canManageTeam && (
                                 <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => {setSelectedMember(member); setIsTaskDialogOpen(true)}}
+                                    variant="destructive" 
+                                    size="icon" 
+                                    onClick={() => handleDeleteMember(member.id, member.name)}
+                                    disabled={deletePending}
                                 >
-                                    <Briefcase className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
-                              )}
-                              {isUnlocked && canManageTeam && (
-                               <Button 
-                                  variant="destructive" 
-                                  size="icon" 
-                                  onClick={() => handleDeleteMember(member.id, member.name)}
-                                  disabled={deletePending}
-                               >
-                                  <Trash2 className="h-4 w-4" />
-                               </Button>
-                             )}
+                                )}
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        )
+                    })
                 )}
             </CardContent>
             {canManageTeam && (
