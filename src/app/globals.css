@@ -117,6 +117,19 @@
     @apply absolute inset-px rounded-md z-0;
     background: radial-gradient(hsl(var(--background)), hsl(var(--background)/0.9));
   }
+
+  .btn-shine {
+    @apply relative overflow-hidden;
+  }
+  .btn-shine::before {
+    content: '';
+    @apply absolute -top-full -left-full w-[250%] h-[400%] bg-gradient-to-r from-transparent via-white/30 to-transparent;
+    transform: rotate(45deg);
+    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+  }
+  .btn-shine:hover::before {
+    @apply -top-1/2 left-1/2;
+  }
 }
 
 @keyframes rotate {
