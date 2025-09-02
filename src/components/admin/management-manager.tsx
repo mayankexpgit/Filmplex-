@@ -206,7 +206,7 @@ export default function ManagementManager() {
         setIsUnlocked(true);
         toast({
             title: 'Controls Unlocked',
-            description: 'You can now delete team members.',
+            description: 'You can now add or remove team members.',
         });
     } else {
         toast({
@@ -252,6 +252,7 @@ export default function ManagementManager() {
     }
   }
 
+  const isFormDisabled = addPending || !isUnlocked || !canManageTeam;
 
   return (
     <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
@@ -260,7 +261,7 @@ export default function ManagementManager() {
           <CardHeader>
             <CardTitle>Add New Team Member</CardTitle>
             <CardDescription>
-              Add a new member to the management team with a specific role. Each role can only be assigned once.
+              Add or remove members. Requires the management key to be unlocked. Each role can only be assigned once.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -271,12 +272,12 @@ export default function ManagementManager() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. John Doe"
-                disabled={addPending || !canManageTeam}
+                disabled={isFormDisabled}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="member-role">Role</Label>
-               <Select value={selectedRole} onValueChange={setSelectedRole} disabled={addPending || !canManageTeam}>
+               <Select value={selectedRole} onValueChange={setSelectedRole} disabled={isFormDisabled}>
                   <SelectTrigger id="member-role">
                       <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -291,11 +292,12 @@ export default function ManagementManager() {
                   </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAddMember} disabled={addPending || availableRoles.length === 0 || !canManageTeam}>
+            <Button onClick={handleAddMember} disabled={isFormDisabled || availableRoles.length === 0}>
               {addPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
               {addPending ? 'Adding...' : 'Add Member'}
             </Button>
-            {!canManageTeam && <p className="text-xs text-destructive mt-2">You do not have permission to add members.</p>}
+            {!canManageTeam && <p className="text-xs text-destructive mt-2">You do not have permission to manage the team.</p>}
+            {canManageTeam && !isUnlocked && <p className="text-xs text-muted-foreground mt-2">Unlock controls below to add members.</p>}
           </CardContent>
         </Card>
         
@@ -304,7 +306,7 @@ export default function ManagementManager() {
                 <CardTitle>Current Team</CardTitle>
                 <CardDescription>
                     This is the current list of management team members.
-                    {canManageTeam ? " Deletion and task assignment requires a management key." : ""}
+                    {canManageTeam ? " Task assignment is always available, but adding/removing requires the management key." : ""}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -353,17 +355,17 @@ export default function ManagementManager() {
                     </div>
                 ) : (
                     <div className="w-full space-y-2">
-                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Deletion Controls</Label>
+                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Add/Remove Controls</Label>
                         <div className="flex gap-2">
                             <Input 
                                 id="management-key" 
                                 type="password"
-                                placeholder="Enter management key to delete members..."
+                                placeholder="Enter management key..."
                                 value={managementKey}
                                 onChange={(e) => setManagementKey(e.target.value)}
                             />
                             <Button variant="outline" onClick={handleUnlock}>
-                                <KeyRound className="mr-2 h-4 w-4" />
+                                <Unlock className="mr-2 h-4 w-4" />
                                 Unlock
                             </Button>
                         </div>

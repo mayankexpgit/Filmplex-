@@ -7,7 +7,7 @@ import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, Messa
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
-import { Progress } from '../ui/progress';
+import { Progress } from '@/components/ui/progress';
 import { format, parseISO } from 'date-fns';
 import { useMemo } from 'react';
 import type { Movie } from '@/lib/data';
