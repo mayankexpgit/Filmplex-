@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format, addWeeks, setHours, setMinutes, setSeconds, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addWeeks, setHours, setMinutes, setSeconds, isWithinInterval, startOfWeek } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '../ui/badge';
 
@@ -75,6 +75,7 @@ const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]):
 };
 
 function TaskManagerDialog({ member, onTaskSet }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; }) {
+    const { toast } = useToast();
     const [targetUploads, setTargetUploads] = useState<number>(member.task?.targetUploads || 10);
     const [timeframe, setTimeframe] = useState<'daily' | 'weekly'>(member.task?.timeframe || 'weekly');
     const [deadline, setDeadline] = useState<Date | undefined>(member.task?.deadline ? new Date(member.task.deadline) : undefined);
@@ -348,7 +349,7 @@ export default function ManagementManager() {
               {addPending ? 'Adding...' : 'Add Member'}
             </Button>
             {!canManageTeam && <p className="text-xs text-destructive mt-2">You do not have permission to manage the team.</p>}
-            {canManageTeam && !isUnlocked && <p className="text-xs text-muted-foreground mt-2">Unlock controls below to add members.</p>}
+            {canManageTeam && !isUnlocked && <p className="text-xs text-muted-foreground mt-2">Unlock controls below to add or remove members.</p>}
           </CardContent>
         </Card>
         
@@ -437,3 +438,5 @@ export default function ManagementManager() {
     </Dialog>
   );
 }
+
+    
