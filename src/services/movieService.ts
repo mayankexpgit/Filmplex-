@@ -13,7 +13,8 @@ import {
   setDoc,
   query,
   orderBy,
-  increment
+  increment,
+  limit
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
 import { initialMovies } from '@/lib/data';
@@ -45,7 +46,8 @@ export const fetchAdminCredentials = async (): Promise<AdminCredentials> => {
 
 export const fetchMovies = async (): Promise<Movie[]> => {
   const moviesCollection = collection(db, 'movies');
-  const movieSnapshot = await getDocs(moviesCollection);
+  const movieQuery = query(moviesCollection, orderBy('createdAt', 'desc'));
+  const movieSnapshot = await getDocs(movieQuery);
   let movieList = movieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
   
   if (movieList.length === 0) {
@@ -65,10 +67,7 @@ export const fetchMovies = async (): Promise<Movie[]> => {
 
 export const addMovie = async (movie: Omit<Movie, 'id'>): Promise<string> => {
   const moviesCollection = collection(db, 'movies');
-  const docRef = await addDoc(moviesCollection, {
-      ...movie,
-      reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 } // Add default reactions
-  });
+  const docRef = await addDoc(moviesCollection, movie);
   return docRef.id;
 };
 
@@ -103,8 +102,7 @@ export const fetchComments = async (movieId: string): Promise<Comment[]> => {
     } as Comment));
 };
 
-export const fetchAllComments = async (): Promise<Comment[]> => {
-    const movies = await fetchMovies();
+export const fetchAllComments = async (movies: Movie[]): Promise<Comment[]> => {
     const allComments: Comment[] = [];
     for (const movie of movies) {
         const comments = await fetchComments(movie.id);

@@ -77,14 +77,7 @@ export function HomePageClient() {
     setSelectedGenre,
     featuredMovies,
     latestReleases,
-  } = useMovieStore((state) => ({
-    isInitialized: state.isInitialized,
-    searchQuery: state.searchQuery,
-    setSearchQuery: state.setSearchQuery,
-    setSelectedGenre: state.setSelectedGenre,
-    featuredMovies: state.featuredMovies,
-    latestReleases: state.latestReleases,
-  }));
+  } = useMovieStore();
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [isPending, startTransition] = useTransition();

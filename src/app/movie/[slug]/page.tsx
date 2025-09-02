@@ -177,6 +177,20 @@ export default function MovieDetailPage() {
     }
   }, [isInitialized, latestReleases, featuredMovies, slug]);
 
+  useEffect(() => {
+    if (movie) {
+      try {
+        const reacted = localStorage.getItem(`reacted_${movie.id}`);
+        if (reacted === 'true') {
+          setHasReacted(true);
+        }
+      } catch (error) {
+        console.error("Could not access localStorage:", error);
+      }
+    }
+  }, [movie]);
+
+
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
   }

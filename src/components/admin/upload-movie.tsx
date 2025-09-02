@@ -90,7 +90,7 @@ export default function UploadMovie() {
 
   useEffect(() => {
     const movieId = searchParams.get('id');
-    if (movieId && movies.length > 0) {
+    if (movieId) {
       const movieToEdit = movies.find(m => m.id === movieId);
       if (movieToEdit) {
         setFormData({
@@ -280,8 +280,8 @@ export default function UploadMovie() {
         if (formData.id) {
           await updateMovie(formData.id, movieData);
           toast({ title: 'Success!', description: `"${formData.title}" has been updated.` });
+          router.push('/admin/movie-list');
         } else {
-          const { id, ...newMovieData } = movieData;
           await addMovie(newMovieData as Omit<Movie, 'id'>);
           toast({ title: 'Success!', description: `"${formData.title}" has been added.` });
         }

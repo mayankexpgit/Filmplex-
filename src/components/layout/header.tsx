@@ -19,8 +19,8 @@ import {
   SheetTrigger,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { useMovieStore, fetchInitialData } from '@/store/movieStore';
-import { useEffect, useState } from 'react';
+import { useMovieStore } from '@/store/movieStore';
+import { useState } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
@@ -28,13 +28,7 @@ import SuggestionForm from '../suggestion-form';
 import type { ManagementMember } from '@/lib/data';
 
 function UpcomingReleasesPanel() {
-  const { notifications, isInitialized } = useMovieStore();
-
-  useEffect(() => {
-    if (!isInitialized) {
-      fetchInitialData(false);
-    }
-  }, [isInitialized]);
+  const notifications = useMovieStore((state) => state.notifications);
 
   return (
     <Sheet>
@@ -119,15 +113,8 @@ const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: strin
 }
 
 function ManagementPanel() {
-    const { managementTeam, isInitialized } = useMovieStore();
+    const managementTeam = useMovieStore((state) => state.managementTeam);
     const [messagingMember, setMessagingMember] = useState<ManagementMember | null>(null);
-    
-    useEffect(() => {
-        if (!isInitialized) {
-            fetchInitialData(false);
-        }
-    }, [isInitialized]);
-
 
     return (
         <>
@@ -187,13 +174,7 @@ function ManagementPanel() {
 }
 
 function HelpCenterPanel() {
-  const { contactInfo, isInitialized } = useMovieStore();
-  
-  useEffect(() => {
-    if (!isInitialized) {
-      fetchInitialData(false);
-    }
-  }, [isInitialized]);
+  const contactInfo = useMovieStore((state) => state.contactInfo);
   
   return (
      <Sheet>
