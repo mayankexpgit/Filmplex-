@@ -10,11 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, LogIn, ArrowLeft } from 'lucide-react';
+import { Loader2, LogIn, ArrowLeft, UserSquare } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShieldAlert } from 'lucide-react';
 
 export default function LoginPage() {
+  const [adminName, setAdminName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,15 +29,15 @@ export default function LoginPage() {
     setError('');
 
     startTransition(async () => {
-      const success = await login(username, password);
+      const success = await login(adminName, username, password);
       if (success) {
         toast({
           title: 'Login Successful',
-          description: 'Welcome back to the admin dashboard.',
+          description: `Welcome back, ${adminName}.`,
         });
         router.replace('/admin');
       } else {
-        setError('Invalid username or password. Please try again.');
+        setError('Invalid credentials or admin name not found in the team. Please try again.');
       }
     });
   };
@@ -57,6 +58,18 @@ export default function LoginPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="adminName">Admin Name</Label>
+              <Input
+                id="adminName"
+                type="text"
+                placeholder="e.g. dev.Mayank"
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                required
+                disabled={isPending}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
