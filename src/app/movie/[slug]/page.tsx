@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import MovieCardSmall from '@/components/movie-card-small';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { formatDistanceToNow } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { createSlug } from '@/lib/utils';
@@ -98,6 +98,14 @@ function CommentsSection({ movieId }: { movieId: string }) {
         }
     };
 
+    const formatTimestamp = (timestamp: string) => {
+        try {
+            return formatDistanceToNow(parseISO(timestamp), { addSuffix: true });
+        } catch (error) {
+            return 'just now'; // Fallback for invalid date format
+        }
+    };
+
     return (
         <section className="w-full max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Leave a Comment</h2>
@@ -136,7 +144,7 @@ function CommentsSection({ movieId }: { movieId: string }) {
                                 <div className="flex items-center justify-between">
                                     <p className="font-semibold text-foreground">@{comment.user}</p>
                                     <p className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                                        {formatTimestamp(comment.timestamp)}
                                     </p>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-1">{comment.text}</p>
@@ -212,6 +220,8 @@ export default function MovieDetailPage() {
   }
 
   const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
+  
+  const formattedReleaseDate = movie.releaseDate ? format(parseISO(movie.releaseDate), 'MMMM d, yyyy') : null;
 
   return (
     <div className="bg-background min-h-screen text-foreground">
@@ -244,9 +254,12 @@ export default function MovieDetailPage() {
             <InfoRow label="Genre" value={movie.genre} />
             <InfoRow label="Stars" value={movie.stars} />
             <InfoRow label="Creator" value={movie.creator} />
+            <InfoRow label="Release Date" value={formattedReleaseDate} />
+            <InfoRow label="Country" value={movie.country} />
             <InfoRow label="Language" value={movie.language} />
             <InfoRow label="Quality" value={movie.quality} />
-            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.episodes?.length} />}
+            {movie.contentType === 'movie' && <InfoRow label="Runtime" value={movie.runtime ? `${movie.runtime} min` : null} />}
+            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.numberOfEpisodes} />}
           </div>
           
           <Separator className="my-4 w-full" />

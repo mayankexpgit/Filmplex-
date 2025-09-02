@@ -67,6 +67,10 @@ const initialFormState: FormData = {
   creator: '',
   quality: '',
   contentType: 'movie',
+  runtime: undefined,
+  releaseDate: undefined,
+  country: undefined,
+  numberOfEpisodes: undefined,
   downloadLinks: [{ quality: '1080p', url: '', size: '' }],
   episodes: [],
   seasonDownloadLinks: [],
@@ -219,14 +223,14 @@ export default function UploadMovie() {
     try {
         toast({
             title: 'Fetching Details...',
-            description: `Getting full details for the selected movie...`,
+            description: `Getting full details for the selected content...`,
         });
         
         const result = await getMovieDetails({ tmdbId, type });
 
         setFormData(prev => ({
             ...prev,
-            contentType: type, // Set the content type based on selection
+            contentType: type,
             title: result.title,
             year: result.year,
             posterUrl: result.posterUrl,
@@ -239,11 +243,15 @@ export default function UploadMovie() {
             description: result.description,
             cardInfoText: result.cardInfoText,
             trailerUrl: result.trailerUrl,
+            runtime: result.runtime,
+            releaseDate: result.releaseDate,
+            country: result.country,
+            numberOfEpisodes: result.numberOfEpisodes,
         }));
 
         toast({
             title: 'Success!',
-            description: 'Movie details have been auto-filled.',
+            description: 'Content details have been auto-filled.',
         });
     } catch (error: any) {
         console.error("AI auto-fill failed:", error);
@@ -269,6 +277,7 @@ export default function UploadMovie() {
         movieData.downloadLinks = (formData.downloadLinks || []).filter(link => link.url.trim() !== '');
         delete movieData.episodes;
         delete movieData.seasonDownloadLinks;
+        delete movieData.numberOfEpisodes;
       } else {
         movieData.episodes = (formData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link.url.trim() !== '')})).filter(ep => ep.downloadLinks.length > 0);
         movieData.seasonDownloadLinks = (formData.seasonDownloadLinks || []).filter(link => link.url.trim() !== '');
@@ -282,7 +291,7 @@ export default function UploadMovie() {
           toast({ title: 'Success!', description: `"${formData.title}" has been updated.` });
           router.push('/admin/movie-list');
         } else {
-          await addMovie(newMovieData as Omit<Movie, 'id'>);
+          await addMovie(movieData as Omit<Movie, 'id'>);
           toast({ title: 'Success!', description: `"${formData.title}" has been added.` });
         }
         resetForm();
@@ -359,6 +368,27 @@ export default function UploadMovie() {
                         <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isFormDisabled} />
                     </div>
                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="release-date">Release Date</Label>
+                        <Input id="release-date" value={formData.releaseDate || ''} onChange={(e) => handleInputChange('releaseDate', e.target.value)} placeholder="e.g. 2024-07-15" disabled={isFormDisabled} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="movie-country">Country</Label>
+                        <Input id="movie-country" value={formData.country || ''} onChange={(e) => handleInputChange('country', e.target.value)} placeholder="e.g. US" disabled={isFormDisabled} />
+                    </div>
+                </div>
+                {formData.contentType === 'movie' ? (
+                     <div className="space-y-2">
+                        <Label htmlFor="movie-runtime">Runtime (minutes)</Label>
+                        <Input id="movie-runtime" type="number" value={formData.runtime || ''} onChange={(e) => handleInputChange('runtime', Number(e.target.value))} disabled={isFormDisabled} />
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <Label htmlFor="series-episodes">Total Episodes</Label>
+                        <Input id="series-episodes" type="number" value={formData.numberOfEpisodes || ''} onChange={(e) => handleInputChange('numberOfEpisodes', Number(e.target.value))} disabled={isFormDisabled} />
+                    </div>
+                )}
                 <div className="space-y-2">
                     <Label htmlFor="movie-language">Language</Label>
                     <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isFormDisabled} />

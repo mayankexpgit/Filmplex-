@@ -26,6 +26,10 @@ export interface FormattedTMDbData {
   imdbRating: number;
   posterUrl: string;
   trailerUrl?: string;
+  runtime?: number;
+  releaseDate?: string;
+  country?: string;
+  numberOfEpisodes?: number;
 }
 
 export const searchMoviesOnTMDb = async (title: string): Promise<TMDbSearchResult[]> => {
@@ -104,7 +108,8 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
         throw new Error('Movie or TV show not found in TMDb with the provided ID.');
     }
     
-    const releaseDate = new Date(details.release_date || details.first_air_date);
+    const releaseDateStr = details.release_date || details.first_air_date;
+    const releaseDate = new Date(releaseDateStr);
     const genres = details.genres.map((g: any) => g.name).join(', ');
     const rating = parseFloat(details.vote_average?.toFixed(1)) || 0;
     const poster = details.poster_path ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}` : 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image';
@@ -118,6 +123,8 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
     
     const actors = details.credits?.cast.slice(0, 3).map((p: any) => p.name) || [];
     const trailer = getTrailerUrl(details.videos?.results);
+    const country = details.origin_country?.[0] || details.production_countries?.[0]?.iso_3166_1 || 'N/A';
+
 
     return {
         title: details.title || details.name,
@@ -129,5 +136,9 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
         imdbRating: rating,
         posterUrl: poster,
         trailerUrl: trailer,
+        runtime: details.runtime, // For movies
+        releaseDate: releaseDateStr,
+        country: country,
+        numberOfEpisodes: details.number_of_episodes, // For series
     };
 };

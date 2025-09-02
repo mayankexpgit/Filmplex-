@@ -56,14 +56,20 @@ export interface Movie {
   creator?: string;
   quality?: string;
   qualityBadge?: 'HD' | '4K' | 'none';
+  runtime?: number; // in minutes
+  releaseDate?: string; // full date
+  country?: string;
   
   contentType: 'movie' | 'series';
   
+  // Movie-specific
   downloadLinks?: DownloadLink[];
   
+  // Series-specific
   episodes?: Episode[];
   seasonDownloadLinks?: DownloadLink[];
-  
+  numberOfEpisodes?: number;
+
   reactions?: Reactions;
 }
 
