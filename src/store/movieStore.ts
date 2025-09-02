@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask } from '@/lib/data';
 import {
@@ -413,3 +414,20 @@ export const updateManagementMemberTask = async (id: string, task: AdminTask): P
       await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${task.deadline}`);
     }
 }
+
+export const removeManagementMemberTask = async (id: string): Promise<void> => {
+    await dbUpdateManagementMember(id, { task: null });
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.map(member => {
+            if (member.id === id) {
+                const { task, ...rest } = member;
+                return rest;
+            }
+            return member;
+        }),
+    }));
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    if (member) {
+      await addSecurityLogEntry(`Removed task for ${member.name}.`);
+    }
+};

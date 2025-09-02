@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask } from '@/store/movieStore';
+import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask } from '@/store/movieStore';
 import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp } from 'lucide-react';
 import type { ManagementMember, AdminTask, Movie } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -74,12 +74,13 @@ const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]):
     return Math.round(finalScore * 10) / 10; // Round to one decimal place
 };
 
-function TaskManagerDialog({ member, onTaskSet }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; }) {
+function TaskManagerDialog({ member, onTaskSet, onTaskRemove }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; onTaskRemove: (id: string) => void; }) {
     const { toast } = useToast();
     const [targetUploads, setTargetUploads] = useState<number>(member.task?.targetUploads || 10);
     const [timeframe, setTimeframe] = useState<'daily' | 'weekly'>(member.task?.timeframe || 'weekly');
     const [deadline, setDeadline] = useState<Date | undefined>(member.task?.deadline ? new Date(member.task.deadline) : undefined);
     const [isPending, startTransition] = useTransition();
+    const [isRemovePending, startRemoveTransition] = useTransition();
 
     const handleSetDefaultDeadline = (selectedTimeframe: 'daily' | 'weekly') => {
         const now = new Date();
@@ -117,11 +118,17 @@ function TaskManagerDialog({ member, onTaskSet }: { member: ManagementMember; on
         });
     }
 
+    const handleRemoveTask = () => {
+        startRemoveTransition(() => {
+            onTaskRemove(member.id);
+        });
+    }
+
     return (
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Set Task for {member.name.split('.').pop()}</DialogTitle>
-                <DialogDescription>Assign an upload target and deadline for this team member.</DialogDescription>
+                <DialogTitle>Manage Task for {member.name.split('.').pop()}</DialogTitle>
+                <DialogDescription>Set, update, or remove an upload target for this team member.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -164,16 +171,28 @@ function TaskManagerDialog({ member, onTaskSet }: { member: ManagementMember; on
                     </Popover>
                 </div>
             </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <DialogClose asChild>
-                    <Button onClick={handleSaveTask} disabled={isPending}>
-                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Set Task
-                    </Button>
-                </DialogClose>
+            <DialogFooter className="sm:justify-between">
+                <div>
+                     {member.task && (
+                        <DialogClose asChild>
+                            <Button variant="destructive" onClick={handleRemoveTask} disabled={isRemovePending}>
+                                {isRemovePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Remove Task
+                            </Button>
+                        </DialogClose>
+                     )}
+                </div>
+                <div className="flex gap-2">
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                        <Button onClick={handleSaveTask} disabled={isPending}>
+                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {member.task ? 'Update Task' : 'Set Task'}
+                        </Button>
+                    </DialogClose>
+                </div>
             </DialogFooter>
         </DialogContent>
     );
@@ -294,6 +313,23 @@ export default function ManagementManager() {
             variant: 'destructive',
             title: 'Database Error',
             description: 'Could not set the task.',
+        });
+    }
+  }
+
+  const handleTaskRemove = async (memberId: string) => {
+    try {
+        await removeManagementMemberTask(memberId);
+        toast({
+            title: 'Task Removed!',
+            description: 'The task has been successfully removed.',
+        });
+        setIsTaskDialogOpen(false);
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Database Error',
+            description: 'Could not remove the task.',
         });
     }
   }
@@ -434,9 +470,7 @@ export default function ManagementManager() {
         </Card>
 
       </div>
-      {selectedMember && <TaskManagerDialog member={selectedMember} onTaskSet={handleTaskSet} />}
+      {selectedMember && <TaskManagerDialog member={selectedMember} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} />}
     </Dialog>
   );
 }
-
-    

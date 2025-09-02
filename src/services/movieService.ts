@@ -1,3 +1,4 @@
+
 'use server';
 import { db } from '@/lib/firebase';
 import {
@@ -13,7 +14,8 @@ import {
   query,
   orderBy,
   increment,
-  limit
+  limit,
+  deleteField,
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
@@ -162,9 +164,13 @@ export const addManagementMember = async (member: Omit<ManagementMember, 'id'>):
     return docRef.id;
 };
 
-export const updateManagementMember = async (id: string, updates: Partial<ManagementMember>): Promise<void> => {
+export const updateManagementMember = async (id: string, updates: Partial<ManagementMember> | { task: null }): Promise<void> => {
   const memberDoc = doc(db, 'management', id);
-  await updateDoc(memberDoc, updates);
+  // If task is explicitly set to null, we want to remove the field.
+  const finalUpdates = (updates as any).task === null 
+    ? { ...updates, task: deleteField() } 
+    : updates;
+  await updateDoc(memberDoc, finalUpdates);
 };
 
 
