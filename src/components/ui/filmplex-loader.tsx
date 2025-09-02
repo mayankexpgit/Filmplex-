@@ -8,7 +8,7 @@ const FilmpilexLoader: React.FC = () => {
   const logoText = "FILMPLEX";
 
   return (
-    <div className={cn("filmplex-loader flex flex-col items-center justify-center gap-4 p-8 fetched")}>
+    <div className={cn("filmplex-loader flex flex-col items-center justify-center gap-4 p-8")}>
       <div className="text-5xl font-bold flex items-center overflow-hidden">
         {logoText.split('').map((char, index) => {
           const isSpecial = char === 'F' || char === 'X';
@@ -40,7 +40,7 @@ const FilmpilexLoader: React.FC = () => {
         })}
       </div>
       <div className="relative w-64 h-1 mt-2 bg-secondary rounded-full overflow-hidden">
-        <div className="loader-line absolute left-0 top-0 h-full bg-primary rounded-full" />
+        <div className="loader-line absolute inset-0 h-full bg-primary rounded-full" />
       </div>
     </div>
   );

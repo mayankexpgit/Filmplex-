@@ -131,29 +131,20 @@
 /* FILMPLEX Loader Animations */
 @keyframes letter-anim {
   0% { transform: translateY(-50px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-50px); opacity: 0; }
 }
 
-@keyframes line-anim {
-  0% { width: 0; }
-  100% { width: 100%; }
-}
-
-@keyframes fade-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes line-pulse {
+  0%, 100% { transform: scaleX(0.1); opacity: 0.5; }
+  50% { transform: scaleX(1); opacity: 1; }
 }
 
 .filmplex-loader .loader-char {
-  animation: letter-anim 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation: letter-anim 2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
 }
 
-.filmplex-loader.fetched .loader-line {
-  animation: line-anim 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  animation-delay: 0.8s; /* Stagger after letter animation */
-}
-
-.filmplex-loader.fetched .loader-status {
-  animation: fade-in 0.5s ease-in-out forwards;
-  animation-delay: 1.5s; /* Stagger after line animation */
+.filmplex-loader .loader-line {
+  animation: line-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transform-origin: center;
 }

@@ -19,7 +19,7 @@ import { Badge } from './ui/badge';
 import FilmpilexLoader from '@/components/ui/filmplex-loader';
 
 
-function HomePageSkeleton() {
+function HomePageLoader() {
   return (
     <div className="flex items-center justify-center min-h-[80vh] bg-background">
         <FilmpilexLoader />
@@ -62,8 +62,9 @@ export function HomePageClient() {
   const [isPending, startTransition] = useTransition();
   
   useEffect(() => {
+    // Fetch data only if it hasn't been initialized yet.
     if (!isInitialized) {
-      fetchInitialData(false);
+      fetchInitialData(false); // false for public user
     }
   }, [isInitialized]);
   
@@ -80,10 +81,12 @@ export function HomePageClient() {
     });
   }
 
+  // Render the loader if the store is not yet initialized.
   if (!isInitialized) {
-     return <HomePageSkeleton />;
+     return <HomePageLoader />;
   }
 
+  // Render the main content once data is available.
   return (
     <div className="container mx-auto py-8 md:py-12 space-y-8">
       
