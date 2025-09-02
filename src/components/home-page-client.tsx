@@ -89,6 +89,7 @@ export function HomePageClient() {
   }, [isInitialized]);
   
   useEffect(() => {
+    // Sync local search with global state if global state is cleared
     if(!searchQuery) {
         setLocalSearch('');
     }
@@ -131,6 +132,7 @@ export function HomePageClient() {
                   className="pl-10 w-full bg-transparent border-0 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
           </div>
           <Button onClick={handleSearch} className="h-11 px-4">
@@ -158,7 +160,7 @@ export function HomePageClient() {
         
         <StreamingLogos />
 
-        <MovieCardLarge movies={latestReleases} featuredMovies={featuredMovies} />
+        <MovieCardLarge movies={latestReleases} />
       </section>
     </div>
   );

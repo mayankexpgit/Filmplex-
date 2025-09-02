@@ -45,7 +45,6 @@ const getQualityBadge = (movie: Movie): '4K' | 'HD' | null => {
 
 interface MovieCardLargeProps {
   movies: Movie[];
-  featuredMovies: Movie[];
 }
 
 export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
@@ -71,11 +70,11 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
   const filteredMovies = useMemo(() => {
     // Start with the full, sorted list of movies.
     let currentMovies = sortedMovies;
-    const lowerCaseGenre = selectedGenre.toLowerCase();
-
+    
     // Apply genre filter
-    if (smartFilterTags[selectedGenre]) {
-        const tagsToMatch = smartFilterTags[selectedGenre];
+    if (selectedGenre && selectedGenre !== 'All Genres') {
+        const lowerCaseGenre = selectedGenre.toLowerCase();
+        const tagsToMatch = smartFilterTags[selectedGenre] || [lowerCaseGenre];
         currentMovies = currentMovies.filter((movie) =>
             tagsToMatch.some(tag => 
                 (movie.genre?.toLowerCase().includes(tag)) ||
@@ -83,12 +82,6 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
                 (movie.language?.toLowerCase().includes(tag))
             )
         );
-    }
-    else if (selectedGenre && selectedGenre !== 'All Genres') {
-      currentMovies = currentMovies.filter((movie) =>
-        (movie.genre?.toLowerCase().includes(lowerCaseGenre)) ||
-        (movie.tags?.some(tag => tag.toLowerCase() === lowerCaseGenre))
-      );
     }
     
     // Apply search query filter

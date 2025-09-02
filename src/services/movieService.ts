@@ -17,7 +17,6 @@ import {
   limit
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
-import { initialMovies } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
 
 
@@ -222,31 +221,4 @@ export const addNotification = async (notification: Omit<Notification, 'id'>): P
 export const deleteNotification = async (id: string): Promise<void> => {
     const notificationDoc = doc(db, 'notifications', id);
     await deleteDoc(notificationDoc);
-};
-
-
-// --- Database Seeding ---
-
-export const seedDatabase = async (): Promise<Movie[]> => {
-  const moviesCollection = collection(db, 'movies');
-  const batch = writeBatch(db);
-  
-  const moviesToSeed = initialMovies.map(movie => {
-    if (!movie.reactions) {
-      return {
-        ...movie,
-        reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
-      };
-    }
-    return movie;
-  });
-
-  moviesToSeed.forEach((movie) => {
-    const docRef = doc(db, 'movies', movie.id);
-    batch.set(docRef, movie);
-  });
-  
-  await batch.commit();
-  console.log('Database seeded successfully!');
-  return moviesToSeed;
 };
