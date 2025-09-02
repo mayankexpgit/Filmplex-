@@ -264,7 +264,7 @@ export default function MovieDetailPage() {
           {movie.screenshots && movie.screenshots.length > 0 && (
             <section className="w-full mb-8">
               <h2 className="text-2xl font-bold mb-4 text-center">: Screen-Shots :</h2>
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center">
                 {movie.screenshots.map((src, index) => (
                   <div key={index} className="relative w-full max-w-2xl overflow-hidden rounded-lg">
                     <Image
