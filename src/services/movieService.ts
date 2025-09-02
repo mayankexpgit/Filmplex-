@@ -44,7 +44,7 @@ export const fetchAdminCredentials = async (): Promise<AdminCredentials> => {
 // --- Movie Functions ---
 
 export const fetchMovies = async (): Promise<Movie[]> => {
-  // Fetch all documents from the 'movies' collection without any specific query or limit.
+  // Fetch all documents from the 'movies' collection without any specific query.
   // This ensures that every single movie in the database is retrieved.
   const moviesCollectionRef = collection(db, 'movies');
   const movieSnapshot = await getDocs(moviesCollectionRef);
