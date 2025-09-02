@@ -6,7 +6,7 @@ import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
 import { useMovieStore, fetchInitialData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download, Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send } from 'lucide-react';
+import { Download, Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import MovieCardSmall from '@/components/movie-card-small';
@@ -186,15 +186,18 @@ export default function MovieDetailPage() {
     setHasReacted(true);
   }
 
-  const InfoRow = ({ label, value }: { label: string, value?: string | number | null }) => {
+  const InfoItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value?: string | number | null }) => {
     if (!value && typeof value !== 'number') return null;
     return (
-      <p className="text-base text-foreground">
-        <span className="font-semibold">{label}: </span>
-        {value}
-      </p>
-    )
-  }
+      <div className="flex items-center gap-3 bg-secondary/50 p-3 rounded-lg">
+        <Icon className="w-6 h-6 text-primary flex-shrink-0" />
+        <div className="flex-grow">
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{value}</p>
+        </div>
+      </div>
+    );
+  };
 
   const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
   
@@ -227,17 +230,17 @@ export default function MovieDetailPage() {
 
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
-          <div className="flex flex-col items-center text-center space-y-2 mb-6">
-            <InfoRow label="TMDb Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
-            <InfoRow label="Genre" value={movie.genre} />
-            <InfoRow label="Stars" value={movie.stars} />
-            <InfoRow label="Creator" value={movie.creator} />
-            <InfoRow label="Release Date" value={formattedReleaseDate} />
-            <InfoRow label="Country" value={movie.country} />
-            <InfoRow label="Language" value={movie.language} />
-            <InfoRow label="Quality" value={movie.quality} />
-            {movie.contentType === 'movie' && <InfoRow label="Runtime" value={movie.runtime ? `${movie.runtime} min` : null} />}
-            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.numberOfEpisodes} />}
+          <div className="w-full grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <InfoItem icon={Star} label="TMDb Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : 'N/A'} />
+            <InfoItem icon={LayoutGrid} label="Genre" value={movie.genre} />
+            <InfoItem icon={Users} label="Stars" value={movie.stars} />
+            <InfoItem icon={Video} label="Creator" value={movie.creator} />
+            <InfoItem icon={CalendarDays} label="Release Date" value={formattedReleaseDate} />
+            <InfoItem icon={Globe} label="Country" value={movie.country} />
+            <InfoItem icon={Languages} label="Language" value={movie.language} />
+            <InfoItem icon={BadgeCheck} label="Quality" value={movie.quality} />
+            {movie.contentType === 'movie' && <InfoItem icon={Clock} label="Runtime" value={movie.runtime ? `${movie.runtime} min` : null} />}
+            {movie.contentType === 'series' && <InfoItem icon={ListVideo} label="Total Episodes" value={movie.numberOfEpisodes} />}
           </div>
           
           <Separator className="my-4 w-full" />
