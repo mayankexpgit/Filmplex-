@@ -1,4 +1,3 @@
-
 'use server';
 import { db } from '@/lib/firebase';
 import {
@@ -16,7 +15,7 @@ import {
   increment,
   limit
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
 
 
@@ -162,6 +161,12 @@ export const addManagementMember = async (member: Omit<ManagementMember, 'id'>):
     const docRef = await addDoc(teamCollection, member);
     return docRef.id;
 };
+
+export const updateManagementMember = async (id: string, updates: Partial<ManagementMember>): Promise<void> => {
+  const memberDoc = doc(db, 'management', id);
+  await updateDoc(memberDoc, updates);
+};
+
 
 export const deleteManagementMember = async (id: string): Promise<void> => {
     const memberDoc = doc(db, 'management', id);
