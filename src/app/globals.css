@@ -122,13 +122,17 @@
     @apply relative overflow-hidden;
   }
   .btn-shine::before {
-    content: '';
-    @apply absolute -top-full -left-full w-[250%] h-[400%] bg-gradient-to-r from-transparent via-white/30 to-transparent;
-    transform: rotate(45deg);
-    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+    content: "";
+    @apply absolute top-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent;
+    left: -100%;
+    transition: left 0.8s ease-in-out;
   }
   .btn-shine:hover::before {
-    @apply -top-1/2 left-1/2;
+    @apply left-full;
+  }
+
+  .animate-bounce-y {
+    animation: bounce-y 1s infinite;
   }
 }
 
@@ -140,6 +144,18 @@
     transform: rotate(360deg);
   }
 }
+
+@keyframes bounce-y {
+  0%, 100% {
+    transform: translateY(-15%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
 
 /* FILMPLEX Loader Animations */
 @keyframes letter-anim {

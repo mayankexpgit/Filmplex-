@@ -286,10 +286,12 @@ export default function MovieDetailPage() {
               <h2 className="text-2xl font-bold mb-4 text-center">Download Links</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="btn-shine justify-between">
+                  <Button key={index} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
                     <a href={link.url} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
-                        <Download />
+                        <span className="inline-block group-hover/button:animate-bounce-y">
+                          <Download />
+                        </span>
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -312,10 +314,12 @@ export default function MovieDetailPage() {
                             <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}{ep.title && `: ${ep.title}`}</h3>
                             <div className="space-y-3 flex flex-col items-center">
                                 {ep.downloadLinks.map((link, linkIndex) => (
-                                     <Button key={linkIndex} asChild variant="default" size="lg" className="btn-shine justify-between">
+                                     <Button key={linkIndex} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
                                         <a href={link.url} target="_blank" rel="noopener noreferrer">
                                             <div className="flex items-center gap-4">
-                                                <Download />
+                                                <span className="inline-block group-hover/button:animate-bounce-y">
+                                                    <Download />
+                                                </span>
                                                 <span>{link.quality} {link.size && `(${link.size})`}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -337,10 +341,12 @@ export default function MovieDetailPage() {
               <h2 className="text-2xl font-bold mb-4 text-center">Download Full Season</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.seasonDownloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="btn-shine justify-between">
+                  <Button key={index} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
                     <a href={link.url} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center gap-4">
-                        <Download />
+                        <span className="inline-block group-hover/button:animate-bounce-y">
+                          <Download />
+                        </span>
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
                       <div className="flex items-center gap-2">
