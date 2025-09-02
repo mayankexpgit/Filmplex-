@@ -367,7 +367,7 @@ export default function MovieDetailPage() {
           {movie.description && (
             <section className="mb-8 w-full">
               <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Description</h2>
-              <div TB_DIVERSE_MOCK_PROMPT
+              <div
                 className="prose prose-lg prose-invert max-w-none leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: movie.description.replace(/\n/g, '<br />') }}
               />
