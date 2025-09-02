@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
+import { Switch } from '../ui/switch';
 
 
 type FormData = Partial<Movie> & {
@@ -91,6 +92,7 @@ export default function UploadMovie() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<TMDbSearchResult[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showExactMatches, setShowExactMatches] = useState(false);
 
   useEffect(() => {
     const movieId = searchParams.get('id');
@@ -201,6 +203,7 @@ export default function UploadMovie() {
     }
     setIsSearching(true);
     setIsDialogOpen(true);
+    setShowExactMatches(false); // Reset filter on new search
     try {
       const results = await searchMoviesOnTMDb(formData.title);
       setSearchResults(results);
@@ -315,6 +318,11 @@ export default function UploadMovie() {
   };
 
   const isFormDisabled = isPending || isFetchingAI || isSearching;
+
+  const displayedSearchResults = showExactMatches
+    ? searchResults.filter(item => item.title.toLowerCase() === formData.title?.toLowerCase())
+    : searchResults;
+
 
   return (
     <>
@@ -589,20 +597,24 @@ export default function UploadMovie() {
               We found these matching your title. Please select the correct one.
             </DialogDescription>
           </DialogHeader>
+          <div className="flex items-center space-x-2 mt-2">
+            <Switch id="exact-match-toggle" checked={showExactMatches} onCheckedChange={setShowExactMatches} />
+            <Label htmlFor="exact-match-toggle">Show exact matches only</Label>
+          </div>
           <div className="mt-4">
             {isSearching ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : searchResults.length === 0 ? (
+            ) : displayedSearchResults.length === 0 ? (
                <div className="text-center h-48 flex flex-col justify-center items-center">
                  <p className="font-semibold">No Results Found</p>
-                 <p className="text-sm text-muted-foreground">Try a different title or check for spelling errors.</p>
+                 <p className="text-sm text-muted-foreground">Try a different title or toggle the exact match filter.</p>
                </div>
             ) : (
               <ScrollArea className="h-[60vh]">
                 <div className="space-y-4 pr-4">
-                  {searchResults.map((item) => (
+                  {displayedSearchResults.map((item) => (
                     <div
                       key={`${item.type}-${item.id}`}
                       onClick={() => handleMovieSelect(item.id, item.type)}
@@ -728,3 +740,5 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
         </div>
     )
 }
+
+    
