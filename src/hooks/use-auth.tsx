@@ -16,6 +16,20 @@ export function useAuth() {
   const [adminProfile, setAdminProfile] = useState<ManagementMember | null>(null);
   const router = useRouter();
 
+  const logout = useCallback(() => {
+    try {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(ADMIN_NAME_KEY);
+    } catch (error) {
+       console.error("Could not access localStorage:", error);
+    } finally {
+       setIsAuthenticated(false);
+       setAdminName(null);
+       setAdminProfile(null);
+       router.replace('/admin/login');
+    }
+  }, [router]);
+
   const syncProfile = useCallback(async (name: string) => {
     try {
       const team = await fetchManagementTeam();
@@ -30,7 +44,7 @@ export function useAuth() {
        console.error("Could not sync admin profile:", error);
        logout();
     }
-  }, []);
+  }, [logout]);
 
 
   useEffect(() => {
@@ -89,20 +103,6 @@ export function useAuth() {
       return false;
     }
   }, []);
-
-  const logout = useCallback(() => {
-    try {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(ADMIN_NAME_KEY);
-    } catch (error) {
-       console.error("Could not access localStorage:", error);
-    } finally {
-       setIsAuthenticated(false);
-       setAdminName(null);
-       setAdminProfile(null);
-       router.replace('/admin/login');
-    }
-  }, [router]);
 
   return {
     isAuthenticated,
