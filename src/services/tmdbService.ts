@@ -33,50 +33,56 @@ export interface FormattedTMDbData {
 }
 
 
-// Helper function to fetch all pages for a given content type
-const fetchAllPages = async (title: string, type: ContentType): Promise<any[]> => {
+// Helper function to fetch pages for a given content type
+const fetchPages = async (title: string, type: ContentType, fetchAll: boolean): Promise<any[]> => {
     const endpoint = type === 'movie' ? 'movie' : 'tv';
     let allResults: any[] = [];
 
-    // First, fetch page 1 to get total pages
     const initialResponse = await axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
         params: { api_key: TMDB_API_KEY, query: title, include_adult: false, page: 1 },
     });
     
     allResults = initialResponse.data.results;
-    const totalPages = initialResponse.data.total_pages;
+    
+    if (fetchAll) {
+      const totalPages = initialResponse.data.total_pages;
 
-    // If there are more pages, create promises to fetch them all in parallel
-    if (totalPages > 1) {
-        const pagePromises = [];
-        for (let i = 2; i <= totalPages; i++) {
-            pagePromises.push(
-                axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
-                    params: { api_key: TMDB_API_KEY, query: title, include_adult: false, page: i },
-                })
-            );
-        }
-        
-        const responses = await Promise.all(pagePromises);
-        responses.forEach(response => {
-            allResults = allResults.concat(response.data.results);
-        });
+      if (totalPages > 1) {
+          const pagePromises = [];
+          for (let i = 2; i <= totalPages; i++) {
+              pagePromises.push(
+                  axios.get(`https://api.themoviedb.org/3/search/${endpoint}`, {
+                      params: { api_key: TMDB_API_KEY, query: title, include_adult: false, page: i },
+                  })
+              );
+          }
+          
+          try {
+            const responses = await Promise.all(pagePromises);
+            responses.forEach(response => {
+                allResults = allResults.concat(response.data.results);
+            });
+          } catch (error) {
+            console.warn("Failed to fetch all pages, returning partial results.", error);
+          }
+      }
     }
+
 
     return allResults;
 };
 
 
-export const searchMoviesOnTMDb = async (title: string): Promise<TMDbSearchResult[]> => {
+export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = false): Promise<TMDbSearchResult[]> => {
     if (!TMDB_API_KEY) {
         throw new Error('TMDb API key is not configured.');
     }
     const lowerCaseTitle = title.toLowerCase();
 
-    // Fetch all pages for both movies and TV shows in parallel
+    // Fetch pages for both movies and TV shows in parallel based on the fetchAll flag
     const [movieResults, tvResults] = await Promise.all([
-        fetchAllPages(title, 'movie'),
-        fetchAllPages(title, 'tv'),
+        fetchPages(title, 'movie', fetchAll),
+        fetchPages(title, 'tv', fetchAll),
     ]);
 
     const movies = movieResults.map((item: any) => ({
@@ -194,3 +200,5 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
         numberOfEpisodes: details.number_of_episodes, // For series
     };
 };
+
+    

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles, Search } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -93,6 +93,9 @@ export default function UploadMovie() {
   const [searchResults, setSearchResults] = useState<TMDbSearchResult[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showExactMatches, setShowExactMatches] = useState(false);
+  const [searchAllPages, setSearchAllPages] = useState(false);
+  const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+
 
   useEffect(() => {
     const movieId = searchParams.get('id');
@@ -192,20 +195,12 @@ export default function UploadMovie() {
       handleInputChange('episodes', newEpisodes);
   }
   
-  const handleSearchClick = async () => {
-    if (!formData.title) {
-      toast({
-        variant: 'destructive',
-        title: 'Title Required',
-        description: 'Please enter a movie title before searching.',
-      });
-      return;
-    }
+  const proceedWithSearch = async () => {
     setIsSearching(true);
     setIsDialogOpen(true);
-    setShowExactMatches(false); // Reset filter on new search
+    setShowExactMatches(false);
     try {
-      const results = await searchMoviesOnTMDb(formData.title);
+      const results = await searchMoviesOnTMDb(formData.title!, searchAllPages);
       setSearchResults(results);
     } catch (error: any) {
       toast({
@@ -218,6 +213,23 @@ export default function UploadMovie() {
       setIsSearching(false);
     }
   };
+
+  const handleSearchClick = () => {
+    if (!formData.title) {
+      toast({
+        variant: 'destructive',
+        title: 'Title Required',
+        description: 'Please enter a movie title before searching.',
+      });
+      return;
+    }
+    if (searchAllPages) {
+      setIsWarningDialogOpen(true);
+    } else {
+      proceedWithSearch();
+    }
+  };
+
 
   const handleMovieSelect = async (tmdbId: number, type: ContentType) => {
     setIsDialogOpen(false);
@@ -594,12 +606,18 @@ export default function UploadMovie() {
           <DialogHeader>
             <DialogTitle>Select Movie or Series</DialogTitle>
             <DialogDescription>
-              We found these matching your title. Please select the correct one.
+              Select the correct content. Use filters below for a better search experience.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center space-x-2 mt-2">
-            <Switch id="exact-match-toggle" checked={showExactMatches} onCheckedChange={setShowExactMatches} />
-            <Label htmlFor="exact-match-toggle">Show exact matches only</Label>
+          <div className="space-y-2 mt-2">
+             <div className="flex items-center space-x-2">
+                <Switch id="search-all-pages" checked={searchAllPages} onCheckedChange={setSearchAllPages} />
+                <Label htmlFor="search-all-pages">Search all pages</Label>
+              </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="exact-match-toggle" checked={showExactMatches} onCheckedChange={setShowExactMatches} />
+              <Label htmlFor="exact-match-toggle">Show exact matches only</Label>
+            </div>
           </div>
           <div className="mt-4">
             {isSearching ? (
@@ -609,7 +627,7 @@ export default function UploadMovie() {
             ) : displayedSearchResults.length === 0 ? (
                <div className="text-center h-48 flex flex-col justify-center items-center">
                  <p className="font-semibold">No Results Found</p>
-                 <p className="text-sm text-muted-foreground">Try a different title or toggle the exact match filter.</p>
+                 <p className="text-sm text-muted-foreground">Try a different title or adjust filters.</p>
                </div>
             ) : (
               <ScrollArea className="h-[60vh]">
@@ -644,6 +662,28 @@ export default function UploadMovie() {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className='flex items-center gap-2'>
+              <AlertTriangle className="text-primary h-6 w-6" />
+              Confirm Full Search
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Searching all pages may consume a significant number of API requests.
+              It is recommended to use this only when you cannot find your content on the first page.
+              <br /><br />
+              Do you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setIsWarningDialogOpen(false); proceedWithSearch(); }}>
+              Yes, search all pages
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -740,5 +780,7 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
         </div>
     )
 }
+
+    
 
     
