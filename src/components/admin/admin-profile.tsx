@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import type { ManagementMember, Movie } from '@/lib/data';
@@ -8,12 +9,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Badge } from '../ui/badge';
 import { Calendar, CheckCircle, Clock, Target, Hourglass } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
+
+const topLevelRoles = ['Regulator', 'Co-Founder'];
 
 const getDisplayName = (fullName: string) => {
     if (!fullName) return '';
@@ -38,7 +41,7 @@ const isUploadCompleted = (movie: Movie): boolean => {
 
 function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
     
-    const { adminMovies, completedMovies, pendingMovies } = useMemo(() => {
+    const { completedMovies, pendingMovies } = useMemo(() => {
         const allAdminMovies = movies
             .filter(movie => movie.uploadedBy === admin.name)
             .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
@@ -46,7 +49,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         const completed = allAdminMovies.filter(isUploadCompleted);
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m));
 
-        return { adminMovies: allAdminMovies, completedMovies: completed, pendingMovies: pending };
+        return { completedMovies: completed, pendingMovies: pending };
     }, [admin, movies]);
     
     const now = new Date();
@@ -153,15 +156,20 @@ export default function AdminProfile() {
     const { managementTeam, allMovies } = useMovieStore();
     const [selectedAdminName, setSelectedAdminName] = useState<string | undefined>(undefined);
 
+    const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
+
+    useEffect(() => {
+      // When the component loads, if there's an admin profile,
+      // set the selected admin to the currently logged-in admin.
+      if (adminProfile && !selectedAdminName) {
+        setSelectedAdminName(adminProfile.name);
+      }
+    }, [adminProfile, selectedAdminName]);
+
     const handleAdminChange = (name: string) => {
         setSelectedAdminName(name);
     }
     
-    // Set default selected admin to the current user if they are a top-level user
-    if (!selectedAdminName && adminProfile) {
-        setSelectedAdminName(adminProfile.name);
-    }
-
     const selectedAdmin = useMemo(() => {
         return managementTeam.find(m => m.name === selectedAdminName);
     }, [selectedAdminName, managementTeam]);
@@ -180,25 +188,32 @@ export default function AdminProfile() {
             <CardHeader>
                 <CardTitle>Admin Profile &amp; Analytics</CardTitle>
                 <CardDescription>
-                    {`Joined on ${format(new Date(selectedAdmin?.timestamp || Date.now()), 'MMMM d, yyyy')}`}
+                    {`Viewing profile for ${selectedAdmin ? getDisplayName(selectedAdmin.name) : '...'}. Joined on ${selectedAdmin ? format(new Date(selectedAdmin.timestamp), 'MMMM d, yyyy') : '...'}`}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                     <Select value={selectedAdminName} onValueChange={handleAdminChange}>
-                        <SelectTrigger className="w-[280px]">
-                            <SelectValue placeholder="Select an admin to view stats" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {managementTeam.map(member => (
-                                <SelectItem key={member.id} value={member.name}>
-                                    {getDisplayName(member.name)} <span className="text-xs text-muted-foreground ml-2">({member.info})</span>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    {selectedAdmin && <Badge variant="secondary">{selectedAdmin.info}</Badge>}
-                </div>
+                 {isTopLevelAdmin ? (
+                    <div className="flex items-center gap-4">
+                        <Select value={selectedAdminName} onValueChange={handleAdminChange}>
+                            <SelectTrigger className="w-[280px]">
+                                <SelectValue placeholder="Select an admin to view stats" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {managementTeam.map(member => (
+                                    <SelectItem key={member.id} value={member.name}>
+                                        {getDisplayName(member.name)} <span className="text-xs text-muted-foreground ml-2">({member.info})</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {selectedAdmin && <Badge variant="secondary">{selectedAdmin.info}</Badge>}
+                    </div>
+                 ) : (
+                    <div className="flex items-center gap-4">
+                        <h3 className="text-lg font-semibold">{getDisplayName(adminProfile.name)}</h3>
+                        <Badge variant="secondary">{adminProfile.info}</Badge>
+                    </div>
+                 )}
                 
                 <Separator />
 

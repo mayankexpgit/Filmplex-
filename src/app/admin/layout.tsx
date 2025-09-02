@@ -12,8 +12,6 @@ import FilmpilexLoader from '@/components/ui/filmplex-loader';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 
-const topLevelRoles = ['Regulator', 'Co-Founder'];
-
 export default function AdminLayout({
   children,
 }: {
@@ -69,8 +67,6 @@ export default function AdminLayout({
     );
   }
 
-  const canViewProfile = adminProfile && topLevelRoles.includes(adminProfile.info);
-
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -80,14 +76,12 @@ export default function AdminLayout({
             <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
           <div className="flex items-center gap-4">
-            {canViewProfile && (
-              <Button variant="outline" asChild>
-                <Link href="/admin/profile">
-                  <UserCircle className="mr-2 h-4 w-4" />
-                  My Profile
-                </Link>
-              </Button>
-            )}
+            <Button variant="outline" asChild>
+              <Link href="/admin/profile">
+                <UserCircle className="mr-2 h-4 w-4" />
+                My Profile
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />

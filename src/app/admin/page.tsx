@@ -84,7 +84,6 @@ const adminSections = [
     href: '/admin/profile',
     icon: ProfileIcon,
     id: 'admin-profile',
-    role: 'topLevel'
   }
 ];
 
@@ -151,10 +150,7 @@ function AdminTaskCard() {
 
 export default function AdminDashboardPage() {
   const { suggestions } = useMovieStore();
-  const { adminProfile } = useAuth();
   const suggestionCount = suggestions.length;
-  
-  const canViewProfile = adminProfile && topLevelRoles.includes(adminProfile.info);
 
   return (
     <div className="container mx-auto py-8 md:py-12">
@@ -162,11 +158,7 @@ export default function AdminDashboardPage() {
         
         <AdminTaskCard />
 
-        {adminSections.map((section) => {
-          if (section.role === 'topLevel' && !canViewProfile) {
-            return null;
-          }
-          return (
+        {adminSections.map((section) => (
             <Link href={section.href} key={section.title} className="group">
               <Card className="h-full hover:border-primary transition-[transform,border-color] duration-300 ease-in-out transform hover:-translate-y-1">
                 <CardHeader className="flex flex-row items-center gap-4">
@@ -185,8 +177,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
               </Card>
             </Link>
-          );
-        })}
+          ))}
       </div>
     </div>
   );
