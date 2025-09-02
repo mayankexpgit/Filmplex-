@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, Target, Hourglass } from 'lucide-react';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase } from 'lucide-react';
 import type { ManagementMember, AdminTask } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
@@ -15,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format, addDays, addWeeks, setHours, setMinutes, setSeconds } from 'date-fns';
+import { format, addWeeks, setHours, setMinutes, setSeconds } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 
 const adminRoles = [
@@ -49,12 +50,18 @@ function TaskManagerDialog({ member, onTaskSet }: { member: ManagementMember; on
 
     const handleTimeframeChange = (value: 'daily' | 'weekly') => {
         setTimeframe(value);
-        handleSetDefaultDeadline(value);
+        if(!deadline) { // Only set default if no deadline is set
+            handleSetDefaultDeadline(value);
+        }
     }
     
     const handleSaveTask = () => {
-        if (!deadline) {
-            alert("Please set a deadline.");
+        if (!deadline || !targetUploads) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Please set a target and a deadline.',
+            });
             return;
         }
         const task: AdminTask = {
@@ -313,15 +320,17 @@ export default function ManagementManager() {
                                   <p className="text-sm text-muted-foreground">{member.info}</p>
                               </div>
                             </div>
-                            {isUnlocked && canManageTeam && (
-                              <div className="flex gap-2">
+                            <div className="flex gap-2">
+                              {canManageTeam && (
                                 <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => {setSelectedMember(member); setIsTaskDialogOpen(true)}}
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => {setSelectedMember(member); setIsTaskDialogOpen(true)}}
                                 >
                                     <Briefcase className="h-4 w-4" />
                                 </Button>
+                              )}
+                              {isUnlocked && canManageTeam && (
                                <Button 
                                   variant="destructive" 
                                   size="icon" 
@@ -330,8 +339,8 @@ export default function ManagementManager() {
                                >
                                   <Trash2 className="h-4 w-4" />
                                </Button>
-                               </div>
                              )}
+                            </div>
                         </div>
                     ))
                 )}
@@ -344,12 +353,12 @@ export default function ManagementManager() {
                     </div>
                 ) : (
                     <div className="w-full space-y-2">
-                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Controls</Label>
+                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Deletion Controls</Label>
                         <div className="flex gap-2">
                             <Input 
                                 id="management-key" 
                                 type="password"
-                                placeholder="Enter management key..."
+                                placeholder="Enter management key to delete members..."
                                 value={managementKey}
                                 onChange={(e) => setManagementKey(e.target.value)}
                             />

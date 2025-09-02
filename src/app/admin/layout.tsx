@@ -4,11 +4,13 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut, UserCircle } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
 import FilmpilexLoader from '@/components/ui/filmplex-loader';
+import { useToast } from '@/hooks/use-toast';
+import { format, parseISO } from 'date-fns';
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
 
@@ -21,6 +23,7 @@ export default function AdminLayout({
   const { isAuthenticated, isLoading, logout, adminProfile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
@@ -34,6 +37,23 @@ export default function AdminLayout({
       fetchInitialData(true);
     }
   }, [isAuthenticated, isInitialized]);
+
+  useEffect(() => {
+    if (adminProfile?.task) {
+      const deadline = format(parseISO(adminProfile.task.deadline), 'PP');
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            <span>New Task Assigned!</span>
+          </div>
+        ),
+        description: `Your target is ${adminProfile.task.targetUploads} uploads by ${deadline}.`,
+        duration: 10000, 
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminProfile]);
   
   // If we are on the login page, let it render without the layout shell
   if (pathname === '/admin/login') {
