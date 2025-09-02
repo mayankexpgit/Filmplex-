@@ -36,6 +36,7 @@ export const searchMoviesOnTMDb = async (title: string): Promise<TMDbSearchResul
     if (!TMDB_API_KEY) {
         throw new Error('TMDb API key is not configured.');
     }
+    const lowerCaseTitle = title.toLowerCase();
 
     const [movieResponse, tvResponse] = await Promise.all([
         axios.get('https://api.themoviedb.org/3/search/movie', {
@@ -64,9 +65,28 @@ export const searchMoviesOnTMDb = async (title: string): Promise<TMDbSearchResul
         popularity: item.popularity
     }));
     
-    // Combine and sort by popularity
     const combinedResults = [...movies, ...tvShows];
-    combinedResults.sort((a, b) => b.popularity - a.popularity);
+    
+    // Smart sorting: Prioritize exact and close matches
+    combinedResults.sort((a, b) => {
+        const titleA = a.title.toLowerCase();
+        const titleB = b.title.toLowerCase();
+
+        const isAExact = titleA === lowerCaseTitle;
+        const isBExact = titleB === lowerCaseTitle;
+
+        if (isAExact && !isBExact) return -1;
+        if (!isAExact && isBExact) return 1;
+
+        const aStartsWith = titleA.startsWith(lowerCaseTitle);
+        const bStartsWith = titleB.startsWith(lowerCaseTitle);
+
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+
+        // Fallback to popularity for other results
+        return b.popularity - a.popularity;
+    });
 
     return combinedResults;
 };
