@@ -28,7 +28,7 @@ import { Badge } from '../ui/badge';
 
 export default function MovieList() {
   const { toast } = useToast();
-  const movies = useMovieStore((state) => state.latestReleases);
+  const movies = useMovieStore((state) => state.allMovies);
   const featuredMoviesCount = useMovieStore((state) => state.featuredMovies.length);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -98,10 +98,16 @@ export default function MovieList() {
   }
 
   const filteredMovies = useMemo(() => {
+    const sortedMovies = [...movies].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+    });
+
     if (!searchQuery) {
-      return movies;
+      return sortedMovies;
     }
-    return movies.filter((movie) =>
+    return sortedMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
   }, [movies, searchQuery]);
