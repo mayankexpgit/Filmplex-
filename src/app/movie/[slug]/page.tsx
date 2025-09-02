@@ -9,41 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Download, Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import MovieCardSmall from '@/components/movie-card-small';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { createSlug } from '@/lib/utils';
+import FilmpilexLoader from '@/components/ui/filmplex-loader';
 
 function MoviePageLoader() {
     return (
-        <div>
-            <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
-                <div className="container max-w-screen-2xl">
-                    {/* Replace the component with a simple skeleton to avoid crashing */}
-                    <div className="flex space-x-2 overflow-hidden">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="flex-shrink-0 w-full basis-1/5">
-                            <Skeleton className="aspect-[2/3] w-full" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </header>
-            <main className="container mx-auto py-8 md:py-12">
-                <div className="max-w-4xl mx-auto flex flex-col items-center">
-                    <Skeleton className="w-full max-w-sm aspect-[2/3] rounded-lg mb-8" />
-                    <Skeleton className="h-10 w-3/4 mb-6" />
-                    <div className="space-y-3 w-1/2 mb-6">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-5/6" />
-                        <Skeleton className="h-4 w-full" />
-                    </div>
-                </div>
-            </main>
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <FilmpilexLoader />
         </div>
     )
 }
@@ -165,7 +143,7 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
 }
 
 export default function MovieDetailPage() {
-  const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
+  const { isInitialized, allMovies, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
   const params = useParams();
@@ -179,11 +157,10 @@ export default function MovieDetailPage() {
 
   useEffect(() => {
     if (isInitialized && slug) {
-      const allMovies = [...latestReleases, ...featuredMovies];
       const foundMovie = allMovies.find(m => createSlug(m.title, m.year) === slug);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, slug]);
+  }, [isInitialized, allMovies, slug]);
 
   useEffect(() => {
     if (movie) {
@@ -243,6 +220,7 @@ export default function MovieDetailPage() {
               alt={`Poster for ${movie.title}`}
               fill
               className="object-cover"
+              sizes="(max-width: 640px) 90vw, 384px"
               data-ai-hint="movie poster"
             />
           </div>
