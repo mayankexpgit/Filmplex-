@@ -22,6 +22,14 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
   const [movieName, setMovieName] = useState('');
   const [comment, setComment] = useState('');
 
+  const getDisplayName = (fullName: string | undefined) => {
+    if (!fullName) return '';
+    if (fullName.includes('.')) {
+        return fullName.split('.').pop() || fullName;
+    }
+    return fullName;
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!movieName.trim()) {
@@ -64,7 +72,7 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
           id="suggestion-movie-name"
           value={movieName}
           onChange={(e) => setMovieName(e.target.value)}
-          placeholder={recipient ? `Message to ${recipient.name}` : "e.g. The Matrix"}
+          placeholder={recipient ? `Message to ${getDisplayName(recipient.name)}` : "e.g. The Matrix"}
           disabled={isPending}
         />
       </div>
@@ -74,7 +82,7 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
           id="suggestion-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder={recipient ? `Write your message to ${recipient.name}...` : "Any specific details? e.g. 'Please upload in 4K quality'"}
+          placeholder={recipient ? `Write your message to ${getDisplayName(recipient.name)}...` : "Any specific details? e.g. 'Please upload in 4K quality'"}
           rows={5}
           disabled={isPending}
         />

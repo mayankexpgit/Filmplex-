@@ -116,6 +116,13 @@ function ManagementPanel() {
     const managementTeam = useMovieStore((state) => state.managementTeam);
     const [messagingMember, setMessagingMember] = useState<ManagementMember | null>(null);
 
+    const getDisplayName = (fullName: string) => {
+        if (fullName.includes('.')) {
+            return fullName.split('.').pop() || fullName;
+        }
+        return fullName;
+    }
+
     return (
         <>
             <Sheet>
@@ -139,7 +146,7 @@ function ManagementPanel() {
                                     <div key={member.id} className="p-3 bg-secondary/50 rounded-lg">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h3 className="font-semibold">{member.name}</h3>
+                                                <h3 className="font-semibold">{getDisplayName(member.name)}</h3>
                                                 <p className="text-sm text-muted-foreground">{member.info}</p>
                                             </div>
                                             <Button onClick={() => setMessagingMember(member)}>
@@ -158,9 +165,9 @@ function ManagementPanel() {
              <Sheet open={!!messagingMember} onOpenChange={(isOpen) => !isOpen && setMessagingMember(null)}>
                 <SheetContent className="w-[400px]">
                     <SheetHeader>
-                    <SheetTitle>Contact {messagingMember?.name}</SheetTitle>
+                    <SheetTitle>Contact {messagingMember ? getDisplayName(messagingMember.name) : ''}</SheetTitle>
                     <SheetDescription>
-                        Your message will be sent directly to {messagingMember?.name}.
+                        Your message will be sent directly to {messagingMember ? getDisplayName(messagingMember.name) : 'the admin'}.
                     </SheetDescription>
                     </SheetHeader>
                     <SuggestionForm 
