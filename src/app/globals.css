@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -116,6 +117,19 @@
     @apply absolute inset-px rounded-md z-0;
     background: radial-gradient(hsl(var(--background)), hsl(var(--background)/0.9));
   }
+
+  .btn-shine {
+    @apply relative overflow-hidden;
+  }
+  .btn-shine::before {
+    content: "";
+    @apply absolute top-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent;
+    left: -100%;
+    transition: left 0.8s ease-in-out;
+  }
+  .btn-shine:hover::before {
+    @apply left-full;
+  }
 }
 
 @keyframes rotate {
@@ -127,4 +141,35 @@
   }
 }
 
-    
+@keyframes bounce-y {
+  0%, 100% {
+    transform: translateY(-15%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+
+/* FILMPLEX Loader Animations */
+@keyframes letter-anim {
+  0% { transform: translateY(-50px); opacity: 0; }
+  50% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-50px); opacity: 0; }
+}
+
+@keyframes line-pulse {
+  0%, 100% { transform: scaleX(0.1); opacity: 0.5; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+.filmplex-loader .loader-char {
+  animation: letter-anim 2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+}
+
+.filmplex-loader .loader-line {
+  animation: line-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transform-origin: center;
+}

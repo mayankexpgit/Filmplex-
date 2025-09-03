@@ -4,11 +4,13 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
-import { useMovieStore, fetchAdminData } from '@/store/movieStore';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target } from 'lucide-react';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
+import FilmpilexLoader from '@/components/ui/filmplex-loader';
+import { useToast } from '@/hooks/use-toast';
+import { format, parseISO } from 'date-fns';
 
 export default function AdminLayout({
   children,
@@ -16,9 +18,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isInitialized } = useMovieStore();
-  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout, adminProfile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
@@ -28,22 +31,38 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (isAuthenticated && !isInitialized) {
-      fetchAdminData();
+      // Fetch all data, including admin-specific data like suggestions
+      fetchInitialData(true);
     }
   }, [isAuthenticated, isInitialized]);
+
+  useEffect(() => {
+    if (adminProfile?.task) {
+      const deadline = format(parseISO(adminProfile.task.deadline), 'PP');
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            <span>New Task Assigned!</span>
+          </div>
+        ),
+        description: `Your target is ${adminProfile.task.targetUploads} uploads by ${deadline}.`,
+        duration: 10000, 
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminProfile]);
   
   // If we are on the login page, let it render without the layout shell
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
 
-  if (isLoading || !isAuthenticated) {
+
+  if (isLoading || !isAuthenticated || !isInitialized) {
     return (
       <div className="bg-background min-h-screen text-foreground flex items-center justify-center">
-        <div className="space-y-8 max-w-4xl w-full p-4">
-          <CardSkeleton />
-          <CardSkeleton withTable />
-        </div>
+        <FilmpilexLoader />
       </div>
     );
   }
@@ -58,6 +77,12 @@ export default function AdminLayout({
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" asChild>
+              <Link href="/admin/profile">
+                <UserCircle className="mr-2 h-4 w-4" />
+                My Profile
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Site
@@ -71,50 +96,8 @@ export default function AdminLayout({
         </div>
       </header>
       <main>
-        {!isInitialized ? (
-          <div className="container mx-auto py-8 md:py-12">
-            <div className="space-y-8 max-w-4xl mx-auto">
-              <CardSkeleton />
-              <CardSkeleton withTable />
-            </div>
-          </div>
-        ) : (
-          children
-        )}
+        {children}
       </main>
     </div>
   );
 }
-
-const CardSkeleton = ({ withTable = false }) => (
-  <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-    <Skeleton className="h-8 w-1/2" />
-    <Skeleton className="h-4 w-3/4" />
-    <div className="space-y-4 pt-4">
-      {withTable ? (
-        <>
-          <div className="flex justify-between">
-            <Skeleton className="h-10 w-1/3" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-          <Skeleton className="h-10 w-28" />
-        </>
-      )}
-    </div>
-  </div>
-);

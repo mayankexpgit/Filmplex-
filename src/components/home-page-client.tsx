@@ -1,9 +1,9 @@
+
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { useMovieStore, fetchMovieData } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import MovieCardLarge from '@/components/movie-card-large';
-import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Menu, Search, Film, Loader2 } from 'lucide-react';
@@ -16,33 +16,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import MovieCardSmall from './movie-card-small';
 import { Badge } from './ui/badge';
+import FilmpilexLoader from '@/components/ui/filmplex-loader';
 
 
-function CarouselSkeleton() {
+function HomePageLoader() {
   return (
-    <div className="space-y-8">
-      <div className="relative w-full">
-        <div className="flex space-x-2 overflow-hidden">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-full basis-1/5">
-              <Skeleton className="aspect-[2/3] w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function GridSkeleton() {
-  return (
-    <div className="space-y-8">
-      <Skeleton className="h-9 w-64" />
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-        {[...Array(12)].map((_, i) => (
-          <Skeleton key={i} className="aspect-[2/3] w-full" />
-        ))}
-      </div>
+    <div className="flex items-center justify-center min-h-[80vh] bg-background">
+        <FilmpilexLoader />
     </div>
   );
 }
@@ -74,23 +54,22 @@ export function HomePageClient() {
     searchQuery,
     setSearchQuery,
     setSelectedGenre,
-  } = useMovieStore((state) => ({
-    isInitialized: state.isInitialized,
-    searchQuery: state.searchQuery,
-    setSearchQuery: state.setSearchQuery,
-    setSelectedGenre: state.setSelectedGenre,
-  }));
+    featuredMovies,
+    latestReleases,
+  } = useMovieStore();
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [isPending, startTransition] = useTransition();
   
   useEffect(() => {
+    // Fetch data only if it hasn't been initialized yet.
     if (!isInitialized) {
-      fetchMovieData();
+      fetchInitialData(false); // false for public user
     }
   }, [isInitialized]);
   
   useEffect(() => {
+    // Sync local search with global state if global state is cleared
     if(!searchQuery) {
         setLocalSearch('');
     }
@@ -102,23 +81,20 @@ export function HomePageClient() {
     });
   }
 
+  // Render the loader if the store is not yet initialized.
   if (!isInitialized) {
-     return (
-      <div className="container mx-auto py-8 md:py-12 space-y-12">
-        <CarouselSkeleton />
-        <GridSkeleton />
-      </div>
-    );
+     return <HomePageLoader />;
   }
 
+  // Render the main content once data is available.
   return (
     <div className="container mx-auto py-8 md:py-12 space-y-8">
       
       <div className="py-4">
-        <MovieCardSmall />
+        <MovieCardSmall movies={featuredMovies} />
       </div>
 
-      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-sm md:text-lg font-bold text-foreground">
+      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-xs md:text-base font-bold text-foreground">
         💥 100% Free Downloads – No Subscriptions, No Charges! 📽️🎉
       </div>
 
@@ -133,6 +109,7 @@ export function HomePageClient() {
                   className="pl-10 w-full bg-transparent border-0 h-11 focus-visible:ring-0 focus-visible:ring-offset-0"
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
           </div>
           <Button onClick={handleSearch} className="h-11 px-4">
@@ -160,7 +137,7 @@ export function HomePageClient() {
         
         <StreamingLogos />
 
-        <MovieCardLarge />
+        <MovieCardLarge movies={latestReleases} />
       </section>
     </div>
   );

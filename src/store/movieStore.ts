@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask } from '@/lib/data';
 import {
   addMovie as dbAddMovie,
   updateMovie as dbUpdateMovie,
@@ -23,6 +24,7 @@ import {
   fetchManagementTeam as dbFetchManagementTeam,
   addManagementMember as dbAddManagementMember,
   deleteManagementMember as dbDeleteManagementMember,
+  updateManagementMember as dbUpdateManagementMember,
 } from '@/services/movieService';
 
 
@@ -58,6 +60,7 @@ type QualityFilter = 'all' | '4k' | 'hd';
 
 interface MovieState {
   // Movies
+  allMovies: Movie[];
   featuredMovies: Movie[];
   latestReleases: Movie[];
   searchQuery: string;
@@ -94,6 +97,7 @@ interface MovieState {
 // =================================================================
 export const useMovieStore = create<MovieState>((set, get) => ({
   // --- Initial State ---
+  allMovies: [],
   featuredMovies: [],
   latestReleases: [],
   searchQuery: '',
@@ -129,6 +133,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       });
 
     return {
+      allMovies: updateMovieInList(state.allMovies),
       latestReleases: updateMovieInList(state.latestReleases),
       featuredMovies: updateMovieInList(state.featuredMovies)
     };
@@ -140,132 +145,153 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 // 2. ASYNCHRONOUS ACTION FUNCTIONS
 // =================================================================
 
-let isFetchingMovies = false;
-export const fetchMovieData = async (): Promise<void> => {
+let isFetchingData = false;
+/**
+ * Fetches all necessary initial data for the app.
+ * Prevents multiple fetches from occurring simultaneously.
+ * @param isAdmin - If true, fetches admin-specific data like suggestions and logs.
+ */
+export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
   const { isInitialized } = useMovieStore.getState();
-  if (isInitialized || isFetchingMovies) {
+  if (isFetchingData || isInitialized) {
     return;
   }
-  isFetchingMovies = true;
+  isFetchingData = true;
+
   try {
-    const [allMovies, notifications, contactInfo, managementTeam] = await Promise.all([
-        dbFetchMovies(),
-        dbFetchNotifications(),
-        dbFetchContactInfo(),
-        dbFetchManagementTeam(),
-    ]);
-    
-    useMovieStore.setState({
-      featuredMovies: allMovies.filter(movie => movie.isFeatured),
-      latestReleases: allMovies,
+    const [
+      allMovies,
       notifications,
       contactInfo,
-      managementTeam,
-      isInitialized: true,
-    });
-  } catch (error) {
-    console.error("Failed to fetch movie data:", error);
-    useMovieStore.setState({ isInitialized: true });
-  } finally {
-    isFetchingMovies = false;
-  }
-};
-
-
-let isFetchingAdmin = false;
-export const fetchAdminData = async (): Promise<void> => {
-   if (isFetchingAdmin) {
-    return;
-  }
-  isFetchingAdmin = true;
-  try {
-     const [contactInfo, suggestions, securityLogs, allMovies, notifications, allComments, managementTeam] = await Promise.all([
-      dbFetchContactInfo(),
-      dbFetchSuggestions(),
-      dbFetchSecurityLogs(),
+      managementTeam
+    ] = await Promise.all([
       dbFetchMovies(),
       dbFetchNotifications(),
-      dbFetchAllComments(),
+      dbFetchContactInfo(),
       dbFetchManagementTeam(),
     ]);
 
-    useMovieStore.setState({
-      contactInfo,
-      suggestions,
-      securityLogs,
-      notifications,
-      allComments,
-      managementTeam,
-      featuredMovies: allMovies.filter(movie => movie.isFeatured),
+    const stateUpdate: Partial<MovieState> = {
+      allMovies: allMovies,
       latestReleases: allMovies,
-      isInitialized: true,
-    });
+      featuredMovies: allMovies.filter((movie: Movie) => movie.isFeatured),
+      notifications,
+      contactInfo,
+      managementTeam,
+    };
+    
+    if (isAdmin) {
+      const [suggestions, securityLogs, allComments] = await Promise.all([
+        dbFetchSuggestions(),
+        dbFetchSecurityLogs(),
+        dbFetchAllComments(allMovies),
+      ]);
+      stateUpdate.suggestions = suggestions;
+      stateUpdate.securityLogs = securityLogs;
+      stateUpdate.allComments = allComments;
+    }
+
+    useMovieStore.setState({ ...stateUpdate, isInitialized: true });
+
   } catch (error) {
-    console.error("Failed to fetch admin data:", error);
-     useMovieStore.setState({ isInitialized: true });
+    console.error("Failed to fetch initial data:", error);
+    // Still set initialized to true to prevent re-fetching on error, but don't set fetching to false
+    useMovieStore.setState({ isInitialized: true });
   } finally {
-    isFetchingAdmin = false;
+    isFetchingData = false;
   }
 };
 
-const addSecurityLog = async (action: string): Promise<void> => {
+
+const addSecurityLogEntry = async (action: string): Promise<void> => {
+    // Attempt to get admin name from localStorage, fallback to a generic name
+    let adminName = 'admin_user';
+    try {
+        adminName = localStorage.getItem('filmplex_admin_name') || 'admin_user';
+    } catch(e) {
+        console.error("Could not access localStorage for security log.");
+    }
+
     const newLog = {
-        admin: 'admin_user',
+        admin: adminName,
         action,
         timestamp: new Date().toLocaleString(),
     };
-    const id = await dbAddSecurityLog(newLog);
-    const existingLogs = useMovieStore.getState().securityLogs;
-    useMovieStore.setState({ securityLogs: [{ id, ...newLog }, ...existingLogs] });
+    try {
+        const id = await dbAddSecurityLog(newLog);
+        const existingLogs = useMovieStore.getState().securityLogs;
+        useMovieStore.setState({ securityLogs: [{ id, ...newLog }, ...existingLogs] });
+    } catch (error) {
+        console.error("Failed to add security log:", error);
+    }
 };
 
-export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
-  const movieWithTimestamp = {
+export const addMovie = async (movieData: Omit<Movie, 'id' | 'uploadedBy'>): Promise<void> => {
+  let adminName = 'unknown_admin';
+  try {
+      adminName = localStorage.getItem('filmplex_admin_name') || 'unknown_admin';
+  } catch(e) {
+      console.error("Could not access localStorage for uploader name.");
+  }
+  
+  const movieWithMetadata = {
     ...movieData,
     createdAt: new Date().toISOString(),
+    uploadedBy: adminName,
+    reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
   };
-  await dbAddMovie(movieWithTimestamp);
-  await addSecurityLog(`Uploaded Movie: "${movieData.title}"`);
-  const allMovies = await dbFetchMovies();
-  useMovieStore.setState({
-    featuredMovies: allMovies.filter(movie => movie.isFeatured),
-    latestReleases: allMovies,
-  });
+  const newId = await dbAddMovie(movieWithMetadata);
+  const newMovie = { id: newId, ...movieWithMetadata } as Movie;
+
+  useMovieStore.setState(state => ({
+    allMovies: [newMovie, ...state.allMovies],
+    latestReleases: [newMovie, ...state.latestReleases]
+  }));
+  await addSecurityLogEntry(`Uploaded Movie: "${movieData.title}"`);
 };
 
-export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
-  await dbUpdateMovie(id, updatedMovie);
-  const movieTitle = updatedMovie.title || useMovieStore.getState().featuredMovies.find(m => m.id === id)?.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
-  if (Object.keys(updatedMovie).length === 1 && 'isFeatured' in updatedMovie) {
-     await addSecurityLog(`Updated featured status for: "${movieTitle}"`);
+export const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
+  // IMPORTANT: Do not update uploadedBy or createdAt fields on edit.
+  const updateData = { ...updatedMovieData };
+  delete updateData.uploadedBy;
+  delete updateData.createdAt;
+
+  await dbUpdateMovie(id, updateData);
+
+  const applyUpdate = (movie: Movie) => movie.id === id ? { ...movie, ...updateData } : movie;
+
+  useMovieStore.setState(state => ({
+    allMovies: state.allMovies.map(applyUpdate),
+    latestReleases: state.latestReleases.map(applyUpdate),
+    featuredMovies: state.allMovies.map(applyUpdate).filter(m => m.isFeatured)
+  }));
+  
+  const movieTitle = updatedMovieData.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
+  
+  if (Object.keys(updatedMovieData).length === 1 && 'isFeatured' in updatedMovieData) {
+     await addSecurityLogEntry(`Updated featured status for: "${movieTitle}"`);
   } else {
-    await addSecurityLog(`Updated Movie: "${movieTitle}"`);
+    await addSecurityLogEntry(`Updated Movie: "${movieTitle}"`);
   }
-  const allMovies = await dbFetchMovies();
-  useMovieStore.setState({
-    featuredMovies: allMovies.filter(movie => movie.isFeatured),
-    latestReleases: allMovies,
-  });
 };
 
 export const deleteMovie = async (id: string): Promise<void> => {
-  const movies = [...useMovieStore.getState().latestReleases, ...useMovieStore.getState().featuredMovies];
-  const movie = movies.find(m => m.id === id);
+  const movie = useMovieStore.getState().latestReleases.find(m => m.id === id);
   if (movie) {
     await dbDeleteMovie(id);
-    await addSecurityLog(`Deleted Movie: "${movie.title}"`);
-    const allMovies = await dbFetchMovies();
-    useMovieStore.setState({
-      featuredMovies: allMovies.filter(movie => movie.isFeatured),
-      latestReleases: allMovies,
-    });
+    useMovieStore.setState(state => ({
+        allMovies: state.allMovies.filter(m => m.id !== id),
+        latestReleases: state.latestReleases.filter(m => m.id !== id),
+        featuredMovies: state.featuredMovies.filter(m => m.id !== id)
+    }));
+    await addSecurityLogEntry(`Deleted Movie: "${movie.title}"`);
   }
 };
 
 export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   await dbUpdateContactInfo(info);
   useMovieStore.setState({ contactInfo: info });
-  await addSecurityLog('Updated Help Center Info');
+  await addSecurityLogEntry('Updated Help Center Info');
 };
 
 export const submitSuggestion = async (movieName: string, comment: string): Promise<void> => {
@@ -275,31 +301,34 @@ export const submitSuggestion = async (movieName: string, comment: string): Prom
     timestamp: new Date().toISOString(),
   };
   const id = await dbAddSuggestion(newSuggestionData);
-  await addSecurityLog(`New suggestion received for: "${movieName}"`);
   useMovieStore.setState(state => ({
     suggestions: [{ id, ...newSuggestionData }, ...state.suggestions],
   }));
+  await addSecurityLogEntry(`New suggestion received for: "${movieName}"`);
 };
 
 export const deleteSuggestion = async (id: string): Promise<void> => {
   await dbDeleteSuggestion(id);
-  await addSecurityLog(`Deleted Suggestion ID: ${id}`);
   useMovieStore.setState((state) => ({
     suggestions: state.suggestions.filter((s) => s.id !== id)
   }));
+  await addSecurityLogEntry(`Deleted Suggestion ID: ${id}`);
 };
 
 export const addNotification = async (notificationData: Omit<Notification, 'id'>): Promise<void> => {
     const id = await dbAddNotification(notificationData);
-    await addSecurityLog(`Added upcoming notification for: "${notificationData.movieTitle}"`);
     useMovieStore.setState((state) => ({
         notifications: [{ ...notificationData, id }, ...state.notifications],
     }));
+    await addSecurityLogEntry(`Added upcoming notification for: "${notificationData.movieTitle}"`);
 };
 
 export const deleteNotification = async (id: string): Promise<void> => {
+    const notif = useMovieStore.getState().notifications.find(n => n.id === id);
     await dbDeleteNotification(id);
-    await addSecurityLog(`Deleted Notification ID: ${id}`);
+    if(notif) {
+      await addSecurityLogEntry(`Deleted Notification for: "${notif.movieTitle}"`);
+    }
     useMovieStore.setState((state) => ({
         notifications: state.notifications.filter((n) => n.id !== id),
     }));
@@ -308,42 +337,97 @@ export const deleteNotification = async (id: string): Promise<void> => {
 // --- Comments and Reactions ---
 
 export const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
-  const comments = await dbFetchComments(movieId);
-  useMovieStore.getState().setComments(comments);
+  try {
+    const comments = await dbFetchComments(movieId);
+    useMovieStore.getState().setComments(comments);
+  } catch (error) {
+    console.error("Failed to fetch comments:", error);
+  }
 };
 
-export const addComment = async (movieId: string, commentData: Omit<Comment, 'id'>): Promise<void> => {
-  const id = await dbAddComment(movieId, commentData);
-  const newComment = { ...commentData, id };
-  useMovieStore.getState().addCommentToState(newComment);
+export const submitComment = async (movieId: string, user: string, text: string): Promise<void> => {
+    const newCommentData = {
+        user,
+        text,
+        timestamp: new Date().toISOString(),
+    };
+    const id = await dbAddComment(movieId, newCommentData);
+    const newComment: Comment = { id, movieId, ...newCommentData };
+    useMovieStore.getState().addCommentToState(newComment);
 };
 
 export const deleteComment = async (movieId: string, commentId: string): Promise<void> => {
-  await dbDeleteComment(movieId, commentId);
-  useMovieStore.setState(state => ({
-    comments: state.comments.filter(c => c.id !== commentId)
-  }));
+    const comment = useMovieStore.getState().comments.find(c => c.id === commentId);
+    await dbDeleteComment(movieId, commentId);
+    useMovieStore.setState(state => ({
+        comments: state.comments.filter(c => c.id !== commentId)
+    }));
+    if (comment) {
+      await addSecurityLogEntry(`Deleted Comment by "${comment.user}" from Movie ID: ${movieId}`);
+    }
 };
 
-export const updateReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
-  await dbUpdateReaction(movieId, reaction);
-  useMovieStore.getState().incrementReaction(movieId, reaction);
+export const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
+    await dbUpdateReaction(movieId, reaction);
+    useMovieStore.getState().incrementReaction(movieId, reaction);
+    try {
+        localStorage.setItem(`reacted_${movieId}`, 'true');
+    } catch (e) {
+        console.error("Could not save reaction state to localStorage", e);
+    }
 };
 
 // --- Management Team ---
 
-export const addManagementMember = async (member: Omit<ManagementMember, 'id'>): Promise<void> => {
-  const id = await dbAddManagementMember(member);
-  useMovieStore.setState(state => ({
-    managementTeam: [...state.managementTeam, { ...member, id }],
-  }));
-  await addSecurityLog(`Added Management Member: "${member.name}"`);
+export const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'timestamp'>): Promise<void> => {
+    const fullMemberData = {
+      ...memberData,
+      timestamp: new Date().toISOString(),
+    };
+    const id = await dbAddManagementMember(fullMemberData);
+    useMovieStore.setState(state => ({
+        managementTeam: [...state.managementTeam, { id, ...fullMemberData }].sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
+    }));
+    await addSecurityLogEntry(`Added management member: "${memberData.name}"`);
 };
 
 export const deleteManagementMember = async (id: string): Promise<void> => {
-  await dbDeleteManagementMember(id);
-  useMovieStore.setState(state => ({
-    managementTeam: state.managementTeam.filter(m => m.id !== id),
-  }));
-  await addSecurityLog(`Deleted Management Member ID: ${id}`);
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    await dbDeleteManagementMember(id);
+    if (member) {
+        await addSecurityLogEntry(`Removed management member: "${member.name}"`);
+    }
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.filter(m => m.id !== id),
+    }));
+};
+
+export const updateManagementMemberTask = async (id: string, task: AdminTask): Promise<void> => {
+    await dbUpdateManagementMember(id, { task });
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.map(member => 
+            member.id === id ? { ...member, task } : member
+        ),
+    }));
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    if (member) {
+      await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${task.deadline}`);
+    }
+}
+
+export const removeManagementMemberTask = async (id: string): Promise<void> => {
+    await dbUpdateManagementMember(id, { task: null });
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.map(member => {
+            if (member.id === id) {
+                const { task, ...rest } = member;
+                return rest;
+            }
+            return member;
+        }),
+    }));
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    if (member) {
+      await addSecurityLogEntry(`Removed task for ${member.name}.`);
+    }
 };

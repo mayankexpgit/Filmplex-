@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles, Search } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
+import { Switch } from '../ui/switch';
 
 
 type FormData = Partial<Movie> & {
@@ -67,6 +68,10 @@ const initialFormState: FormData = {
   creator: '',
   quality: '',
   contentType: 'movie',
+  runtime: undefined,
+  releaseDate: undefined,
+  country: undefined,
+  numberOfEpisodes: undefined,
   downloadLinks: [{ quality: '1080p', url: '', size: '' }],
   episodes: [],
   seasonDownloadLinks: [],
@@ -87,10 +92,14 @@ export default function UploadMovie() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<TMDbSearchResult[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showExactMatches, setShowExactMatches] = useState(false);
+  const [searchAllPages, setSearchAllPages] = useState(false);
+  const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+
 
   useEffect(() => {
     const movieId = searchParams.get('id');
-    if (movieId && movies.length > 0) {
+    if (movieId) {
       const movieToEdit = movies.find(m => m.id === movieId);
       if (movieToEdit) {
         setFormData({
@@ -186,19 +195,12 @@ export default function UploadMovie() {
       handleInputChange('episodes', newEpisodes);
   }
   
-  const handleSearchClick = async () => {
-    if (!formData.title) {
-      toast({
-        variant: 'destructive',
-        title: 'Title Required',
-        description: 'Please enter a movie title before searching.',
-      });
-      return;
-    }
+  const proceedWithSearch = async () => {
     setIsSearching(true);
     setIsDialogOpen(true);
+    setShowExactMatches(false);
     try {
-      const results = await searchMoviesOnTMDb(formData.title);
+      const results = await searchMoviesOnTMDb(formData.title!, searchAllPages);
       setSearchResults(results);
     } catch (error: any) {
       toast({
@@ -212,21 +214,38 @@ export default function UploadMovie() {
     }
   };
 
+  const handleSearchClick = () => {
+    if (!formData.title) {
+      toast({
+        variant: 'destructive',
+        title: 'Title Required',
+        description: 'Please enter a movie title before searching.',
+      });
+      return;
+    }
+    if (searchAllPages) {
+      setIsWarningDialogOpen(true);
+    } else {
+      proceedWithSearch();
+    }
+  };
+
+
   const handleMovieSelect = async (tmdbId: number, type: ContentType) => {
     setIsDialogOpen(false);
     setSearchResults([]);
     setIsFetchingAI(true);
     try {
-        toast({
-            title: 'Fetching Details...',
-            description: `Getting full details for the selected movie...`,
+        const { id: toastId } = toast({
+          title: 'Fetching Details...',
+          description: 'AI is generating content. Please wait.',
         });
         
         const result = await getMovieDetails({ tmdbId, type });
 
         setFormData(prev => ({
             ...prev,
-            contentType: type, // Set the content type based on selection
+            contentType: type,
             title: result.title,
             year: result.year,
             posterUrl: result.posterUrl,
@@ -239,11 +258,17 @@ export default function UploadMovie() {
             description: result.description,
             cardInfoText: result.cardInfoText,
             trailerUrl: result.trailerUrl,
+            runtime: result.runtime,
+            releaseDate: result.releaseDate,
+            country: result.country,
+            numberOfEpisodes: result.numberOfEpisodes,
         }));
 
         toast({
+            id: toastId,
+            variant: 'success',
             title: 'Success!',
-            description: 'Movie details have been auto-filled.',
+            description: 'Content details have been collected.',
         });
     } catch (error: any) {
         console.error("AI auto-fill failed:", error);
@@ -269,6 +294,7 @@ export default function UploadMovie() {
         movieData.downloadLinks = (formData.downloadLinks || []).filter(link => link.url.trim() !== '');
         delete movieData.episodes;
         delete movieData.seasonDownloadLinks;
+        delete movieData.numberOfEpisodes;
       } else {
         movieData.episodes = (formData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link.url.trim() !== '')})).filter(ep => ep.downloadLinks.length > 0);
         movieData.seasonDownloadLinks = (formData.seasonDownloadLinks || []).filter(link => link.url.trim() !== '');
@@ -280,9 +306,9 @@ export default function UploadMovie() {
         if (formData.id) {
           await updateMovie(formData.id, movieData);
           toast({ title: 'Success!', description: `"${formData.title}" has been updated.` });
+          router.push('/admin/movie-list');
         } else {
-          const { id, ...newMovieData } = movieData;
-          await addMovie(newMovieData as Omit<Movie, 'id'>);
+          await addMovie(movieData as Omit<Movie, 'id'>);
           toast({ title: 'Success!', description: `"${formData.title}" has been added.` });
         }
         resetForm();
@@ -304,6 +330,11 @@ export default function UploadMovie() {
   };
 
   const isFormDisabled = isPending || isFetchingAI || isSearching;
+
+  const displayedSearchResults = showExactMatches
+    ? searchResults.filter(item => item.title.toLowerCase() === formData.title?.toLowerCase())
+    : searchResults;
+
 
   return (
     <>
@@ -359,6 +390,27 @@ export default function UploadMovie() {
                         <Input id="movie-year" type="number" value={formData.year || ''} onChange={(e) => handleInputChange('year', Number(e.target.value))} disabled={isFormDisabled} />
                     </div>
                 </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="release-date">Release Date</Label>
+                        <Input id="release-date" value={formData.releaseDate || ''} onChange={(e) => handleInputChange('releaseDate', e.target.value)} placeholder="e.g. 2024-07-15" disabled={isFormDisabled} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="movie-country">Country</Label>
+                        <Input id="movie-country" value={formData.country || ''} onChange={(e) => handleInputChange('country', e.target.value)} placeholder="e.g. US" disabled={isFormDisabled} />
+                    </div>
+                </div>
+                {formData.contentType === 'movie' ? (
+                     <div className="space-y-2">
+                        <Label htmlFor="movie-runtime">Runtime (minutes)</Label>
+                        <Input id="movie-runtime" type="number" value={formData.runtime || ''} onChange={(e) => handleInputChange('runtime', Number(e.target.value))} disabled={isFormDisabled} />
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <Label htmlFor="series-episodes">Total Episodes</Label>
+                        <Input id="series-episodes" type="number" value={formData.numberOfEpisodes || ''} onChange={(e) => handleInputChange('numberOfEpisodes', Number(e.target.value))} disabled={isFormDisabled} />
+                    </div>
+                )}
                 <div className="space-y-2">
                     <Label htmlFor="movie-language">Language</Label>
                     <Input id="movie-language" value={formData.language || ''} onChange={(e) => handleInputChange('language', e.target.value)} placeholder="e.g. English, Hindi" disabled={isFormDisabled} />
@@ -554,23 +606,33 @@ export default function UploadMovie() {
           <DialogHeader>
             <DialogTitle>Select Movie or Series</DialogTitle>
             <DialogDescription>
-              We found these matching your title. Please select the correct one.
+              Select the correct content. Use filters below for a better search experience.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2 mt-2">
+             <div className="flex items-center space-x-2">
+                <Switch id="search-all-pages" checked={searchAllPages} onCheckedChange={setSearchAllPages} />
+                <Label htmlFor="search-all-pages">Search all pages</Label>
+              </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="exact-match-toggle" checked={showExactMatches} onCheckedChange={setShowExactMatches} />
+              <Label htmlFor="exact-match-toggle">Show exact matches only</Label>
+            </div>
+          </div>
           <div className="mt-4">
             {isSearching ? (
               <div className="flex justify-center items-center h-48">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : searchResults.length === 0 ? (
+            ) : displayedSearchResults.length === 0 ? (
                <div className="text-center h-48 flex flex-col justify-center items-center">
                  <p className="font-semibold">No Results Found</p>
-                 <p className="text-sm text-muted-foreground">Try a different title or check for spelling errors.</p>
+                 <p className="text-sm text-muted-foreground">Try a different title or adjust filters.</p>
                </div>
             ) : (
               <ScrollArea className="h-[60vh]">
                 <div className="space-y-4 pr-4">
-                  {searchResults.map((item) => (
+                  {displayedSearchResults.map((item) => (
                     <div
                       key={`${item.type}-${item.id}`}
                       onClick={() => handleMovieSelect(item.id, item.type)}
@@ -600,6 +662,28 @@ export default function UploadMovie() {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className='flex items-center gap-2'>
+              <AlertTriangle className="text-primary h-6 w-6" />
+              Confirm Full Search
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Searching all pages may consume a significant number of API requests.
+              It is recommended to use this only when you cannot find your content on the first page.
+              <br /><br />
+              Do you want to proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setIsWarningDialogOpen(false); proceedWithSearch(); }}>
+              Yes, search all pages
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -696,3 +780,7 @@ function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onL
         </div>
     )
 }
+
+    
+
+    

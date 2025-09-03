@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { submitSuggestion } from '@/store/movieStore';
 import { Label } from './ui/label';
@@ -22,13 +22,13 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
   const [movieName, setMovieName] = useState('');
   const [comment, setComment] = useState('');
 
-  useEffect(() => {
-    if (recipient) {
-      setMovieName(`Message to ${recipient.name}`);
-    } else {
-      setMovieName('');
+  const getDisplayName = (fullName: string | undefined) => {
+    if (!fullName) return '';
+    if (fullName.includes('.')) {
+        return fullName.split('.').pop() || fullName;
     }
-  }, [recipient]);
+    return fullName;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +72,8 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
           id="suggestion-movie-name"
           value={movieName}
           onChange={(e) => setMovieName(e.target.value)}
-          placeholder={recipient ? '' : "e.g. The Matrix"}
-          disabled={isPending || !!recipient}
+          placeholder={recipient ? `Message to ${getDisplayName(recipient.name)}` : "e.g. The Matrix"}
+          disabled={isPending}
         />
       </div>
       <div className="space-y-2">
@@ -82,7 +82,7 @@ export default function SuggestionForm({ onSubmitted, recipient = null }: Sugges
           id="suggestion-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder={recipient ? `Write your message to ${recipient.name}...` : "Any specific details? e.g. 'Please upload in 4K quality'"}
+          placeholder={recipient ? `Write your message to ${getDisplayName(recipient.name)}...` : "Any specific details? e.g. 'Please upload in 4K quality'"}
           rows={5}
           disabled={isPending}
         />

@@ -1,4 +1,5 @@
 
+
 export interface DownloadLink {
   quality: string;
   url: string;
@@ -28,11 +29,18 @@ export interface Comment {
   movieId: string;
 }
 
+export interface AdminTask {
+  targetUploads: number;
+  timeframe: 'daily' | 'weekly';
+  deadline: string; // ISO String
+}
+
 export interface ManagementMember {
     id: string;
     name: string;
     info: string;
     timestamp: string; 
+    task?: AdminTask;
 }
 
 export interface Movie {
@@ -41,6 +49,7 @@ export interface Movie {
   posterUrl: string;
   year: number;
   createdAt?: string; // For sorting by upload date
+  uploadedBy?: string; // Name of the admin who uploaded it
   cardInfoText?: string;
   genre: string;
   language?: string;
@@ -56,15 +65,27 @@ export interface Movie {
   creator?: string;
   quality?: string;
   qualityBadge?: 'HD' | '4K' | 'none';
+  runtime?: number; // in minutes
+  releaseDate?: string; // full date
+  country?: string;
   
   contentType: 'movie' | 'series';
   
+  // Movie-specific
   downloadLinks?: DownloadLink[];
   
+  // Series-specific
   episodes?: Episode[];
   seasonDownloadLinks?: DownloadLink[];
-  
+  numberOfEpisodes?: number;
+
   reactions?: Reactions;
+}
+
+export interface DownloadRecord {
+    id: string;
+    movieId: string;
+    timestamp: string; // ISO String
 }
 
 export interface Notification {
@@ -81,6 +102,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq27gApcjBveAabcF.jpg',
     year: 2010,
     createdAt: new Date('2024-01-01T10:00:00Z').toISOString(),
+    uploadedBy: 'dev.Mayank',
     cardInfoText: 'Inception (2010)',
     genre: 'Sci-Fi, Action',
     language: 'English',
@@ -100,7 +122,7 @@ export const initialMovies: Movie[] = [
     synopsis: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.',
     trailerUrl: 'https://www.youtube.com/watch?v=YoHD9XEInc0',
     description: `
-      <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p & 480p BluRay | Watch Online on FILMPLEX</strong>
+      <strong>Download Inception (2010) Dual Audio [Hindi-English] 1080p, 720p &amp; 480p BluRay | Watch Online on FILMPLEX</strong>
       <br>
       <h4>REVIEW:</h4>
       <p>Inception is a true masterpiece from Christopher Nolan. This isn\'t your typical heist film; it\'s smart, mysterious, and visually stunning, making every scene absolutely electric. The tension is next-level, and the way the story unfolds keeps you hooked right until the jaw-dropping finale. To top it off, the performances by Leonardo DiCaprio are outstanding. It\'s a film that genuinely makes you think and leaves you wanting more.</p>
@@ -118,6 +140,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
     year: 2008,
     createdAt: new Date('2024-01-02T11:00:00Z').toISOString(),
+    uploadedBy: 'dev.Bittu',
     cardInfoText: 'The Dark Knight (2008)',
     genre: 'Action, Crime, Drama',
     language: 'English',
@@ -149,6 +172,7 @@ export const initialMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w500/g8Io_s3fKx3eQdJtgoi4StkWa2f.jpg',
     year: 2024,
     createdAt: new Date('2024-01-03T12:00:00Z').toISOString(),
+    uploadedBy: 'dev.Mayank',
     cardInfoText: 'Sakamoto Days - New Episodes',
     genre: 'Anime, Action, Comedy',
     language: 'Japanese',

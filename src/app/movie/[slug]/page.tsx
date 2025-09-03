@@ -3,40 +3,36 @@
 
 import { useEffect, useState } from 'react';
 import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
-import { useMovieStore, fetchMovieData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Download, Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send } from 'lucide-react';
+import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import MovieCardSmall from '@/components/movie-card-small';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { formatDistanceToNow } from 'date-fns';
+import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { createSlug } from '@/lib/utils';
+import FilmpilexLoader from '@/components/ui/filmplex-loader';
+import { recordDownload } from '@/services/movieService';
+
+// Custom Download Icon SVG component
+const DownloadIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" className="animate-[bounce-y_1s_infinite]" />
+        <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+);
+
 
 function MoviePageLoader() {
     return (
-        <div>
-            <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
-                <div className="container max-w-screen-2xl">
-                    <MovieCardSmall />
-                </div>
-            </header>
-            <main className="container mx-auto py-8 md:py-12">
-                <div className="max-w-4xl mx-auto flex flex-col items-center">
-                    <Skeleton className="w-full max-w-sm aspect-[2/3] rounded-lg mb-8" />
-                    <Skeleton className="h-10 w-3/4 mb-6" />
-                    <div className="space-y-3 w-1/2 mb-6">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-5/6" />
-                        <Skeleton className="h-4 w-full" />
-                    </div>
-                </div>
-            </main>
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <FilmpilexLoader />
         </div>
     )
 }
@@ -91,6 +87,14 @@ function CommentsSection({ movieId }: { movieId: string }) {
         }
     };
 
+    const formatTimestamp = (timestamp: string) => {
+        try {
+            return formatDistanceToNow(parseISO(timestamp), { addSuffix: true });
+        } catch (error) {
+            return 'just now'; // Fallback for invalid date format
+        }
+    };
+
     return (
         <section className="w-full max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Leave a Comment</h2>
@@ -129,7 +133,7 @@ function CommentsSection({ movieId }: { movieId: string }) {
                                 <div className="flex items-center justify-between">
                                     <p className="font-semibold text-foreground">@{comment.user}</p>
                                     <p className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
+                                        {formatTimestamp(comment.timestamp)}
                                     </p>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-1">{comment.text}</p>
@@ -150,7 +154,7 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
 }
 
 export default function MovieDetailPage() {
-  const { isInitialized, latestReleases, featuredMovies } = useMovieStore();
+  const { isInitialized, allMovies, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
   const params = useParams();
@@ -158,20 +162,39 @@ export default function MovieDetailPage() {
 
   useEffect(() => {
     if (!isInitialized) {
-      fetchMovieData();
+      fetchInitialData(false);
     }
   }, [isInitialized]);
 
   useEffect(() => {
     if (isInitialized && slug) {
-      const allMovies = [...latestReleases, ...featuredMovies];
       const foundMovie = allMovies.find(m => createSlug(m.title, m.year) === slug);
       setMovie(foundMovie);
     }
-  }, [isInitialized, latestReleases, featuredMovies, slug]);
+  }, [isInitialized, allMovies, slug]);
+
+  useEffect(() => {
+    if (movie) {
+      try {
+        const reacted = localStorage.getItem(`reacted_${movie.id}`);
+        if (reacted === 'true') {
+          setHasReacted(true);
+        }
+      } catch (error) {
+        console.error("Could not access localStorage:", error);
+      }
+    }
+  }, [movie]);
+
 
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
+  }
+
+  const handleDownloadClick = () => {
+    if(movie?.id) {
+        recordDownload(movie.id);
+    }
   }
 
   const handleReactionClick = (reaction: keyof Reactions) => {
@@ -180,23 +203,28 @@ export default function MovieDetailPage() {
     setHasReacted(true);
   }
 
-  const InfoRow = ({ label, value }: { label: string, value?: string | number | null }) => {
+  const InfoItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value?: string | number | null }) => {
     if (!value && typeof value !== 'number') return null;
     return (
-      <p className="text-base text-foreground">
-        <span className="font-semibold">{label}: </span>
-        {value}
-      </p>
-    )
-  }
+      <div className="flex items-center gap-3 bg-secondary/50 p-3 rounded-lg">
+        <Icon className="w-6 h-6 text-primary flex-shrink-0" />
+        <div className="flex-grow">
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{value}</p>
+        </div>
+      </div>
+    );
+  };
 
   const trailerEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
+  
+  const formattedReleaseDate = movie.releaseDate ? format(parseISO(movie.releaseDate), 'MMMM d, yyyy') : null;
 
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
         <div className="container max-w-screen-2xl">
-           <MovieCardSmall />
+           <MovieCardSmall movies={featuredMovies} />
         </div>
       </header>
       <main className="container mx-auto py-8 md:py-12">
@@ -212,20 +240,24 @@ export default function MovieDetailPage() {
               alt={`Poster for ${movie.title}`}
               fill
               className="object-cover"
+              sizes="(max-width: 640px) 90vw, 384px"
               data-ai-hint="movie poster"
             />
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold text-center mb-6">{movie.title} ({movie.year})</h1>
           
-          <div className="flex flex-col items-center text-center space-y-2 mb-6">
-            <InfoRow label="TMDb Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : null} />
-            <InfoRow label="Genre" value={movie.genre} />
-            <InfoRow label="Stars" value={movie.stars} />
-            <InfoRow label="Creator" value={movie.creator} />
-            <InfoRow label="Language" value={movie.language} />
-            <InfoRow label="Quality" value={movie.quality} />
-            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.episodes?.length} />}
+          <div className="w-full grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <InfoItem icon={Star} label="TMDb Rating" value={movie.imdbRating ? `${movie.imdbRating}/10` : 'N/A'} />
+            <InfoItem icon={LayoutGrid} label="Genre" value={movie.genre} />
+            <InfoItem icon={Users} label="Stars" value={movie.stars} />
+            <InfoItem icon={Video} label="Creator" value={movie.creator} />
+            <InfoItem icon={CalendarDays} label="Release Date" value={formattedReleaseDate} />
+            <InfoItem icon={Globe} label="Country" value={movie.country} />
+            <InfoItem icon={Languages} label="Language" value={movie.language} />
+            <InfoItem icon={BadgeCheck} label="Quality" value={movie.quality} />
+            {movie.contentType === 'movie' && <InfoItem icon={Clock} label="Runtime" value={movie.runtime ? `${movie.runtime} min` : null} />}
+            {movie.contentType === 'series' && <InfoItem icon={ListVideo} label="Total Episodes" value={movie.numberOfEpisodes} />}
           </div>
           
           <Separator className="my-4 w-full" />
@@ -249,7 +281,7 @@ export default function MovieDetailPage() {
           {movie.screenshots && movie.screenshots.length > 0 && (
             <section className="w-full mb-8">
               <h2 className="text-2xl font-bold mb-4 text-center">: Screen-Shots :</h2>
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center">
                 {movie.screenshots.map((src, index) => (
                   <div key={index} className="relative w-full max-w-2xl overflow-hidden rounded-lg">
                     <Image
@@ -271,10 +303,10 @@ export default function MovieDetailPage() {
               <h2 className="text-2xl font-bold mb-4 text-center">Download Links</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  <Button key={index} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={handleDownloadClick}>
                       <div className="flex items-center gap-4">
-                        <Download />
+                        <DownloadIcon />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -297,10 +329,10 @@ export default function MovieDetailPage() {
                             <h3 className="text-lg font-semibold mb-3">Episode {ep.episodeNumber}{ep.title && `: ${ep.title}`}</h3>
                             <div className="space-y-3 flex flex-col items-center">
                                 {ep.downloadLinks.map((link, linkIndex) => (
-                                     <Button key={linkIndex} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
-                                        <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                     <Button key={linkIndex} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
+                                        <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={handleDownloadClick}>
                                             <div className="flex items-center gap-4">
-                                                <Download />
+                                                <DownloadIcon />
                                                 <span>{link.quality} {link.size && `(${link.size})`}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -322,10 +354,10 @@ export default function MovieDetailPage() {
               <h2 className="text-2xl font-bold mb-4 text-center">Download Full Season</h2>
               <div className="space-y-3 flex flex-col items-center">
                 {movie.seasonDownloadLinks.map((link, index) => (
-                  <Button key={index} asChild variant="default" size="lg" className="justify-between hover:brightness-110">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                  <Button key={index} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={handleDownloadClick}>
                       <div className="flex items-center gap-4">
-                        <Download />
+                        <DownloadIcon />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -352,7 +384,7 @@ export default function MovieDetailPage() {
           {movie.description && (
             <section className="mb-8 w-full">
               <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Description</h2>
-              <div 
+              <div
                 className="prose prose-lg prose-invert max-w-none leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: movie.description.replace(/\n/g, '<br />') }}
               />

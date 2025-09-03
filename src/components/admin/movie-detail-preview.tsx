@@ -60,9 +60,12 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
             <InfoRow label="Genre" value={movie.genre} />
             <InfoRow label="Stars" value={movie.stars} />
             <InfoRow label="Creator" value={movie.creator} />
-            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.episodes?.length} />}
+            <InfoRow label="Release Date" value={movie.releaseDate} />
+            <InfoRow label="Country" value={movie.country} />
             <InfoRow label="Language" value={movie.language} />
             <InfoRow label="Quality" value={movie.quality} />
+            {movie.contentType === 'movie' && <InfoRow label="Runtime" value={movie.runtime ? `${movie.runtime} min` : null} />}
+            {movie.contentType === 'series' && <InfoRow label="Total Episodes" value={movie.numberOfEpisodes} />}
           </div>
 
           <Separator className="my-4 w-full" />

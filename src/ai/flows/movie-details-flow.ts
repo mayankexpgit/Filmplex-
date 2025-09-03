@@ -31,7 +31,11 @@ const MovieDetailsOutputSchema = z.object({
   description: z.string().describe('A longer, more detailed description of the movie, formatted in HTML.'),
   cardInfoText: z.string().describe("A detailed info string for the movie card. It must follow this exact format and include as much detail as possible: 'Filmplex – {{title}} ({{year}}) [Source (e.g. BluRay)] [Audio Languages (e.g., Hindi + English)] [Available Qualities (e.g., 1080p, 720p)] | [Extra details like Dual Audio, x264, 10Bit HEVC] | [Content Type, e.g., Movie, Anime Movie, Series]'. The string should be long and descriptive."),
   posterUrl: z.string().describe("The URL of the movie poster."),
-  trailerUrl: z.string().optional().describe("The URL of the movie trailer.")
+  trailerUrl: z.string().optional().describe("The URL of the movie trailer."),
+  runtime: z.number().optional().describe('The runtime of the movie in minutes.'),
+  releaseDate: z.string().optional().describe('The full release date of the movie (e.g., "2023-10-26").'),
+  country: z.string().optional().describe('The country of origin for the movie.'),
+  numberOfEpisodes: z.number().optional().describe('The total number of episodes for a series.'),
 });
 export type MovieDetailsOutput = z.infer<typeof MovieDetailsOutputSchema>;
 
@@ -49,6 +53,9 @@ Director: {{creator}}
 Actors: {{stars}}
 Original Plot: {{synopsis}}
 Trailer URL: {{trailerUrl}}
+Runtime: {{runtime}} minutes
+Release Date: {{releaseDate}}
+Country: {{country}}
 
 Your tasks:
 1.  **Synopsis**: Refine the provided plot into a compelling one-paragraph synopsis. Do not make up facts.
@@ -69,14 +76,8 @@ const getMovieDetailsFlow = ai.defineFlow(
   },
   async (input) => {
     
-    let tmdbData;
-    try {
-      // Step 1: Get factual data from TMDb API using the TMDb ID
-      tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
-    } catch (error: any) {
-        // Re-throw with a more user-friendly message
-        throw new Error(error.message || 'Could not fetch movie details. Please check the title/year or fill manually.');
-    }
+    // Step 1: Get factual data from TMDb API using the TMDb ID
+    const tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
 
     // Step 2: Use the factual data to generate creative content with the LLM
     const creativeInput: MovieDetailsOutput = {
@@ -108,5 +109,11 @@ const getMovieDetailsFlow = ai.defineFlow(
 
 
 export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDetailsOutput> {
-  return getMovieDetailsFlow(input);
+  try {
+    return await getMovieDetailsFlow(input);
+  } catch (error: any) {
+    // Re-throw with a more user-friendly message
+    console.error("Error in getMovieDetails flow: ", error);
+    throw new Error(error.message || 'Could not fetch movie details. Please check the ID or fill manually.');
+  }
 }

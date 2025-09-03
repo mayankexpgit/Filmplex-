@@ -13,10 +13,11 @@ import {
   setDoc,
   query,
   orderBy,
-  increment
+  increment,
+  limit,
+  deleteField,
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions, ManagementMember } from '@/lib/data';
-import { initialMovies } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
 
 
@@ -44,15 +45,13 @@ export const fetchAdminCredentials = async (): Promise<AdminCredentials> => {
 // --- Movie Functions ---
 
 export const fetchMovies = async (): Promise<Movie[]> => {
-  const moviesCollection = collection(db, 'movies');
-  const movieSnapshot = await getDocs(moviesCollection);
+  // Fetch all documents from the 'movies' collection without any specific query.
+  // This ensures that every single movie in the database is retrieved.
+  const moviesCollectionRef = collection(db, 'movies');
+  const movieSnapshot = await getDocs(moviesCollectionRef);
   let movieList = movieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
   
-  if (movieList.length === 0) {
-    movieList = await seedDatabase();
-  }
-
-  // Ensure every movie has a reactions object
+  // Ensure every movie has a reactions object to prevent runtime errors
   movieList.forEach(movie => {
     if (!movie.reactions) {
       movie.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
@@ -65,10 +64,7 @@ export const fetchMovies = async (): Promise<Movie[]> => {
 
 export const addMovie = async (movie: Omit<Movie, 'id'>): Promise<string> => {
   const moviesCollection = collection(db, 'movies');
-  const docRef = await addDoc(moviesCollection, {
-      ...movie,
-      reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 } // Add default reactions
-  });
+  const docRef = await addDoc(moviesCollection, movie);
   return docRef.id;
 };
 
@@ -103,8 +99,7 @@ export const fetchComments = async (movieId: string): Promise<Comment[]> => {
     } as Comment));
 };
 
-export const fetchAllComments = async (): Promise<Comment[]> => {
-    const movies = await fetchMovies();
+export const fetchAllComments = async (movies: Movie[]): Promise<Comment[]> => {
     const allComments: Comment[] = [];
     for (const movie of movies) {
         const comments = await fetchComments(movie.id);
@@ -169,6 +164,16 @@ export const addManagementMember = async (member: Omit<ManagementMember, 'id'>):
     return docRef.id;
 };
 
+export const updateManagementMember = async (id: string, updates: Partial<ManagementMember> | { task: null }): Promise<void> => {
+  const memberDoc = doc(db, 'management', id);
+  // If task is explicitly set to null, we want to remove the field.
+  const finalUpdates = (updates as any).task === null 
+    ? { ...updates, task: deleteField() } 
+    : updates;
+  await updateDoc(memberDoc, finalUpdates);
+};
+
+
 export const deleteManagementMember = async (id: string): Promise<void> => {
     const memberDoc = doc(db, 'management', id);
     await deleteDoc(memberDoc);
@@ -229,29 +234,18 @@ export const deleteNotification = async (id: string): Promise<void> => {
     await deleteDoc(notificationDoc);
 };
 
+// --- Download Analytics Functions ---
+export const recordDownload = async (movieId: string): Promise<void> => {
+    const downloadsCollection = collection(db, 'downloads');
+    await addDoc(downloadsCollection, {
+        movieId: movieId,
+        timestamp: new Date().toISOString()
+    });
+}
 
-// --- Database Seeding ---
-
-export const seedDatabase = async (): Promise<Movie[]> => {
-  const moviesCollection = collection(db, 'movies');
-  const batch = writeBatch(db);
-  
-  const moviesToSeed = initialMovies.map(movie => {
-    if (!movie.reactions) {
-      return {
-        ...movie,
-        reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
-      };
-    }
-    return movie;
-  });
-
-  moviesToSeed.forEach((movie) => {
-    const docRef = doc(db, 'movies', movie.id);
-    batch.set(docRef, movie);
-  });
-  
-  await batch.commit();
-  console.log('Database seeded successfully!');
-  return moviesToSeed;
-};
+export const fetchDownloadAnalytics = async (): Promise<DownloadRecord[]> => {
+    const downloadsCollection = collection(db, 'downloads');
+    const q = query(downloadsCollection, orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DownloadRecord));
+}

@@ -43,32 +43,39 @@ const getQualityBadge = (movie: Movie): '4K' | 'HD' | null => {
     return null;
   };
 
-export default function MovieCardLarge() {
-  const allMovies: Movie[] = useMovieStore((state) => [
-    ...state.featuredMovies,
-    ...state.latestReleases,
-  ]);
-  const searchQuery = useMovieStore((state) => state.searchQuery);
-  const selectedGenre = useMovieStore((state) => state.selectedGenre);
-  const selectedQuality = useMovieStore((state) => state.selectedQuality);
+interface MovieCardLargeProps {
+  movies: Movie[];
+}
+
+export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
+  const { searchQuery, selectedGenre, selectedQuality } = useMovieStore((state) => ({
+    searchQuery: state.searchQuery,
+    selectedGenre: state.selectedGenre,
+    selectedQuality: state.selectedQuality,
+  }));
   const [visibleMoviesCount, setVisibleMoviesCount] = useState(MOVIES_PER_PAGE);
   const [isPending, startTransition] = useTransition();
 
-  const uniqueMovies = useMemo(() => {
-    const unique = allMovies.filter(
-      (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-    );
-    return unique.sort((a, b) => b.year - a.year);
-  }, [allMovies]);
+  const sortedMovies = useMemo(() => {
+    // Sort all movies received from the store by creation date, descending.
+    // This ensures the newest movies appear first.
+    return [...movies].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+    });
+  }, [movies]);
+
 
   const filteredMovies = useMemo(() => {
-    let movies = uniqueMovies;
-    const lowerCaseGenre = selectedGenre.toLowerCase();
-
-    // Smart filter logic for genres
-    if (smartFilterTags[selectedGenre]) {
-        const tagsToMatch = smartFilterTags[selectedGenre];
-        movies = movies.filter((movie) =>
+    // Start with the full, sorted list of movies.
+    let currentMovies = sortedMovies;
+    
+    // Apply genre filter
+    if (selectedGenre && selectedGenre !== 'All Genres') {
+        const lowerCaseGenre = selectedGenre.toLowerCase();
+        const tagsToMatch = smartFilterTags[selectedGenre] || [lowerCaseGenre];
+        currentMovies = currentMovies.filter((movie) =>
             tagsToMatch.some(tag => 
                 (movie.genre?.toLowerCase().includes(tag)) ||
                 (movie.tags?.some(t => t.toLowerCase().includes(tag))) ||
@@ -76,24 +83,17 @@ export default function MovieCardLarge() {
             )
         );
     }
-    // Regular genre filter
-    else if (selectedGenre && selectedGenre !== 'All Genres') {
-      movies = movies.filter((movie) =>
-        (movie.genre?.toLowerCase().includes(lowerCaseGenre)) ||
-        (movie.tags?.some(tag => tag.toLowerCase() === lowerCaseGenre))
-      );
-    }
     
-    // Filter by search query (which is now AI-corrected)
+    // Apply search query filter
     if (searchQuery) {
-      movies = movies.filter((movie) =>
+      currentMovies = currentMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filter by quality
+    // Apply quality filter
     if (selectedQuality !== 'all') {
-        movies = movies.filter((movie) => {
+        currentMovies = currentMovies.filter((movie) => {
             const quality = getQualityBadge(movie);
             if (selectedQuality === '4k') return quality === '4K';
             if (selectedQuality === 'hd') return quality === 'HD';
@@ -101,8 +101,8 @@ export default function MovieCardLarge() {
         });
     }
 
-    return movies;
-  }, [uniqueMovies, searchQuery, selectedGenre, selectedQuality]);
+    return currentMovies;
+  }, [sortedMovies, searchQuery, selectedGenre, selectedQuality]);
 
   const moviesToShow = useMemo(() => {
     return filteredMovies.slice(0, visibleMoviesCount);
