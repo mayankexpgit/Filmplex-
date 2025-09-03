@@ -4,17 +4,19 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
-import type { ManagementMember, Movie } from '@/lib/data';
+import type { ManagementMember, Movie, DownloadRecord } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, formatISO } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
+import { fetchDownloadAnalytics } from '@/services/movieService';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
 
@@ -36,6 +38,127 @@ const isUploadCompleted = (movie: Movie): boolean => {
         return !!(hasEpisodeLinks || hasSeasonLinks);
     }
     return false;
+}
+
+function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
+    const [analyticsData, setAnalyticsData] = useState<{ date: string; downloads: number }[]>([]);
+    const [topMovies, setTopMovies] = useState<{ title: string; count: number }[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const processAnalytics = async () => {
+            setIsLoading(true);
+            const downloadRecords = await fetchDownloadAnalytics();
+
+            // Process data for the line chart (last 7 days)
+            const last7Days = Array.from({ length: 7 }, (_, i) => {
+                const d = subDays(new Date(), i);
+                return format(d, 'yyyy-MM-dd');
+            }).reverse();
+
+            const dailyCounts: { [key: string]: number } = last7Days.reduce((acc, date) => {
+                acc[date] = 0;
+                return acc;
+            }, {} as { [key: string]: number });
+
+            downloadRecords.forEach(record => {
+                const recordDate = format(parseISO(record.timestamp), 'yyyy-MM-dd');
+                if (dailyCounts[recordDate] !== undefined) {
+                    dailyCounts[recordDate]++;
+                }
+            });
+
+            const chartData = last7Days.map(date => ({
+                date: format(new Date(date), 'MMM d'),
+                downloads: dailyCounts[date]
+            }));
+            setAnalyticsData(chartData);
+
+            // Process data for top 5 downloaded movies
+            const movieDownloadCounts: { [key: string]: number } = {};
+            downloadRecords.forEach(record => {
+                movieDownloadCounts[record.movieId] = (movieDownloadCounts[record.movieId] || 0) + 1;
+            });
+            
+            const top5 = Object.entries(movieDownloadCounts)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5)
+                .map(([movieId, count]) => {
+                    const movie = allMovies.find(m => m.id === movieId);
+                    return { title: movie?.title || 'Unknown Movie', count };
+                });
+
+            setTopMovies(top5);
+            setIsLoading(false);
+        };
+
+        processAnalytics();
+    }, [allMovies]);
+
+    if (isLoading) {
+        return (
+            <Card>
+                <CardHeader><CardTitle>Download Analytics</CardTitle></CardHeader>
+                <CardContent className="h-64 flex items-center justify-center">
+                    <FilmpilexLoader />
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <BarChart2 className="h-6 w-6" />
+                    Download Analytics
+                </CardTitle>
+                <CardDescription>Real-time download statistics for your content.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">Downloads in Last 7 Days</h3>
+                    <div className="h-[250px] w-full">
+                        <ResponsiveContainer>
+                            <LineChart data={analyticsData}>
+                                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2}/>
+                                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
+                                <Line type="monotone" dataKey="downloads" stroke="hsl(var(--primary))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--primary))"}} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                 <Separator />
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">Top 5 Downloaded Movies</h3>
+                    {topMovies.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Rank</TableHead>
+                                    <TableHead>Movie Title</TableHead>
+                                    <TableHead className="text-right">Downloads</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {topMovies.map((movie, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{movie.title}</TableCell>
+                                        <TableCell className="text-right font-bold">{movie.count}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <p className="text-center text-muted-foreground py-4">No download data available yet.</p>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
 }
 
 
@@ -184,6 +307,7 @@ export default function AdminProfile() {
     }
 
     return (
+      <div className="space-y-8">
         <Card>
             <CardHeader>
                 <CardTitle>Admin Profile &amp; Analytics</CardTitle>
@@ -226,7 +350,10 @@ export default function AdminProfile() {
                 )}
             </CardContent>
         </Card>
+
+        {isTopLevelAdmin && (
+            <DownloadAnalytics allMovies={allMovies} />
+        )}
+      </div>
     )
 }
-
-    

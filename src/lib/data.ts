@@ -82,6 +82,12 @@ export interface Movie {
   reactions?: Reactions;
 }
 
+export interface DownloadRecord {
+    id: string;
+    movieId: string;
+    timestamp: string; // ISO String
+}
+
 export interface Notification {
   id: string;
   movieTitle: string;

@@ -17,13 +17,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
 import { createSlug } from '@/lib/utils';
 import FilmpilexLoader from '@/components/ui/filmplex-loader';
+import { recordDownload } from '@/services/movieService';
 
 // Custom Download Icon SVG component
 const DownloadIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
         <polyline points="7 10 12 15 17 10" className="animate-[bounce-y_1s_infinite]" />
-        <line x1="12" x2="12" y1="15" y2="3" className="animate-[bounce-y_1s_infinite]" />
+        <line x1="12" x2="12" y1="15" y2="3" />
     </svg>
 );
 
@@ -190,6 +191,12 @@ export default function MovieDetailPage() {
     return <MoviePageLoader />;
   }
 
+  const handleDownloadClick = () => {
+    if(movie?.id) {
+        recordDownload(movie.id);
+    }
+  }
+
   const handleReactionClick = (reaction: keyof Reactions) => {
     if (hasReacted) return;
     submitReaction(movie.id, reaction);
@@ -297,7 +304,7 @@ export default function MovieDetailPage() {
               <div className="space-y-3 flex flex-col items-center">
                 {movie.downloadLinks.map((link, index) => (
                   <Button key={index} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={handleDownloadClick}>
                       <div className="flex items-center gap-4">
                         <DownloadIcon />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>
@@ -323,7 +330,7 @@ export default function MovieDetailPage() {
                             <div className="space-y-3 flex flex-col items-center">
                                 {ep.downloadLinks.map((link, linkIndex) => (
                                      <Button key={linkIndex} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
-                                        <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                        <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={handleDownloadClick}>
                                             <div className="flex items-center gap-4">
                                                 <DownloadIcon />
                                                 <span>{link.quality} {link.size && `(${link.size})`}</span>
@@ -348,7 +355,7 @@ export default function MovieDetailPage() {
               <div className="space-y-3 flex flex-col items-center">
                 {movie.seasonDownloadLinks.map((link, index) => (
                   <Button key={index} asChild variant="default" size="lg" className="btn-shine group/button justify-between w-full max-w-xs">
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={handleDownloadClick}>
                       <div className="flex items-center gap-4">
                         <DownloadIcon />
                         <span>{link.quality} {link.size && `(${link.size})`}</span>

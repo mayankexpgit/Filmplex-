@@ -17,7 +17,7 @@ import {
   limit,
   deleteField,
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
 
 
@@ -233,3 +233,19 @@ export const deleteNotification = async (id: string): Promise<void> => {
     const notificationDoc = doc(db, 'notifications', id);
     await deleteDoc(notificationDoc);
 };
+
+// --- Download Analytics Functions ---
+export const recordDownload = async (movieId: string): Promise<void> => {
+    const downloadsCollection = collection(db, 'downloads');
+    await addDoc(downloadsCollection, {
+        movieId: movieId,
+        timestamp: new Date().toISOString()
+    });
+}
+
+export const fetchDownloadAnalytics = async (): Promise<DownloadRecord[]> => {
+    const downloadsCollection = collection(db, 'downloads');
+    const q = query(downloadsCollection, orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DownloadRecord));
+}
