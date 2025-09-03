@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'image.tmdb.org',
       },
+      {
+        protocol: 'https',
+        hostname: 'media.themoviedb.org',
+      },
        {
         protocol: 'https',
         hostname: 'placehold.co',
@@ -40,3 +44,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+    
