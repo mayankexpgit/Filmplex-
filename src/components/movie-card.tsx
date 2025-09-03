@@ -112,7 +112,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   if (variant === 'small' || variant === 'featured') {
      return (
-       <Link href={linkHref}>
+       <Link href={linkHref} passHref>
          {smallVariantContent}
        </Link>
     );
@@ -120,7 +120,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
 
   // Large variant
   return (
-    <Link href={linkHref}>
+    <Link href={linkHref} passHref>
       {cardContent}
     </Link>
   );

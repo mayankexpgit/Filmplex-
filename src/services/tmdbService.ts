@@ -73,7 +73,7 @@ export interface TMDbSearchResult {
 export interface FormattedTMDbData {
   title: string;
   year: number;
-  genre:string;
+  genre: string;
   creator: string;
   stars: string;
   synopsis: string;
@@ -85,21 +85,6 @@ export interface FormattedTMDbData {
   country?: string;
   numberOfEpisodes?: number;
 }
-
-const getPosterUrl = (path: string | null): string => {
-    if (!path) {
-        return 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image';
-    }
-    // Check if the path is a full URL from another service (like an old entry)
-    if (path.startsWith('http')) {
-        return path;
-    }
-    // Determine which base URL to use
-    const baseUrl = path.includes('media.themoviedb.org') 
-        ? '' // path is already a full URL in some cases
-        : 'https://image.tmdb.org/t/p/w500';
-    return `${baseUrl}${path}`;
-};
 
 
 // Helper function to fetch pages for a given content type
@@ -161,7 +146,7 @@ export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = fals
         id: item.id,
         title: item.title,
         year: item.release_date ? new Date(item.release_date).getFullYear().toString() : 'N/A',
-        posterUrl: getPosterUrl(item.poster_path),
+        posterUrl: item.poster_path ? `${TMDB_IMAGE_BASE_URL}${item.poster_path}` : 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image',
         type: 'movie' as ContentType,
         popularity: item.popularity
     }));
@@ -170,7 +155,7 @@ export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = fals
         id: item.id,
         title: item.name,
         year: item.first_air_date ? new Date(item.first_air_date).getFullYear().toString() : 'N/A',
-        posterUrl: getPosterUrl(item.poster_path),
+        posterUrl: item.poster_path ? `${TMDB_IMAGE_BASE_URL}${item.poster_path}` : 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image',
         type: 'tv' as ContentType,
         popularity: item.popularity
     }));
@@ -243,7 +228,7 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
     const releaseDate = releaseDateStr ? new Date(releaseDateStr) : new Date();
     const genres = details.genres.map((g: any) => g.name).join(', ');
     const rating = parseFloat(details.vote_average?.toFixed(1)) || 0;
-    const poster = getPosterUrl(details.poster_path);
+    const poster = details.poster_path ? `${TMDB_IMAGE_BASE_URL}${details.poster_path}` : 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image';
     
     let creators: string[] = [];
     if (type === 'movie') {
