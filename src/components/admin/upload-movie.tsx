@@ -308,12 +308,13 @@ export default function UploadMovie() {
     setIsDialogOpen(false);
     setSearchResults([]);
     setIsFetchingAI(true);
+    
+    const { dismiss } = toast({
+      title: 'Fetching Details...',
+      description: 'AI is generating content. Please wait.',
+    });
+
     try {
-        const { id: toastId } = toast({
-          title: 'Fetching Details...',
-          description: 'AI is generating content. Please wait.',
-        });
-        
         const result = await getMovieDetails({ tmdbId, type });
 
         setFormData(prev => ({
@@ -337,13 +338,14 @@ export default function UploadMovie() {
             numberOfEpisodes: result.numberOfEpisodes,
         }));
 
+        dismiss();
         toast({
-            id: toastId,
             variant: 'success',
             title: 'Success!',
             description: 'Content details have been collected.',
         });
     } catch (error: any) {
+        dismiss();
         console.error("AI auto-fill failed:", error);
         toast({
             variant: 'destructive',
@@ -611,7 +613,7 @@ export default function UploadMovie() {
                     onChange={(e) => handleInputChange('synopsis', e.target.value)} 
                     disabled={isFormDisabled} 
                     rows={5}
-                    placeholder="Provide a brief synopsis of the movie/series..."
+                    placeholder="Provide a brief synopsis of the movie/tv..."
                   />
                 </div>
 
@@ -731,5 +733,6 @@ export default function UploadMovie() {
     </>
   );
 }
+
 
 
