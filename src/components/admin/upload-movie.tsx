@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
+import { cn } from '@/lib/utils';
 
 
 type FormData = Partial<Movie> & {
@@ -166,6 +167,7 @@ export default function UploadMovie() {
   const [showExactMatches, setShowExactMatches] = useState(false);
   const [searchAllPages, setSearchAllPages] = useState(false);
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
 
   useEffect(() => {
@@ -412,11 +414,14 @@ export default function UploadMovie() {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className={cn(
+        "grid grid-cols-1 gap-8",
+        showPreview && "lg:grid-cols-2"
+      )}>
         <Card className="lg:max-h-[85vh] flex flex-col">
           <CardHeader>
             <CardTitle>{formData.id ? 'Edit Content' : 'Upload Content'}</CardTitle>
-            <CardDescription>Fill in the details and see a live preview on the right.</CardDescription>
+            <CardDescription>Fill in the details. Use the preview button to see your changes live.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow overflow-hidden">
             <ScrollArea className="h-full pr-6">
@@ -634,8 +639,16 @@ export default function UploadMovie() {
             </ScrollArea>
           </CardContent>
           <CardFooter className="justify-between border-t pt-4">
-              <div>
+              <div className="flex gap-2">
                   {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isFormDisabled}>Cancel Edit</Button>}
+                   <Button 
+                    variant="outline" 
+                    onClick={() => setShowPreview(!showPreview)} 
+                    disabled={isFormDisabled}
+                  >
+                    {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                    {showPreview ? 'Hide Preview' : 'Show Preview'}
+                  </Button>
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -660,11 +673,13 @@ export default function UploadMovie() {
           </CardFooter>
         </Card>
         
-        <div className="hidden lg:block lg:max-h-[85vh] overflow-hidden rounded-lg border">
-          <ScrollArea className="h-full">
-            <MovieDetailPreview movie={formData as Movie} />
-          </ScrollArea>
-        </div>
+        {showPreview && (
+          <div className="lg:max-h-[85vh] overflow-hidden rounded-lg border">
+            <ScrollArea className="h-full">
+              <MovieDetailPreview movie={formData as Movie} />
+            </ScrollArea>
+          </div>
+        )}
       </div>
       
        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -730,3 +745,5 @@ export default function UploadMovie() {
     </>
   );
 }
+
+    
