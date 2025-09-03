@@ -73,7 +73,7 @@ export interface TMDbSearchResult {
 export interface FormattedTMDbData {
   title: string;
   year: number;
-  genre: string;
+  genre:string;
   creator: string;
   stars: string;
   synopsis: string;
@@ -273,5 +273,3 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
         numberOfEpisodes: details.number_of_episodes, // For series
     };
 };
-
-    
