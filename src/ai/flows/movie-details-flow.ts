@@ -89,7 +89,11 @@ const getMovieDetailsFlow = ai.defineFlow(
       cardInfoText: '',
     };
 
-    const { output: creativeOutput } = await creativePrompt(creativeInput);
+    const { output: creativeOutput } = await ai.generate({
+        prompt: creativePrompt,
+        model: 'googleai/gemini-2.0-flash',
+        input: creativeInput,
+    });
     
     if (!creativeOutput) {
         throw new Error("AI failed to generate creative content.");
