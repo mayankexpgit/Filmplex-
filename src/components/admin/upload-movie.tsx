@@ -167,7 +167,7 @@ export default function UploadMovie() {
   const [showExactMatches, setShowExactMatches] = useState(false);
   const [searchAllPages, setSearchAllPages] = useState(false);
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
 
 
   useEffect(() => {
@@ -745,5 +745,3 @@ export default function UploadMovie() {
     </>
   );
 }
-
-    
