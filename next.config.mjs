@@ -8,9 +8,8 @@ const nextConfig = {
       },
     ],
   },
-  devServer: {
-    allowedDevOrigins: ['https://*.cloudworkstations.dev'],
-  },
+  // devServer removed because Next.js build doesn't support it
 };
 
 export default nextConfig;
+
