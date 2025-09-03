@@ -1,47 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    allowedDevOrigins: ["*.cloudworkstations.dev"],
   },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'image.tmdb.org',
-      },
-      {
-        protocol: 'https',
-        hostname: 'media.themoviedb.org',
-      },
-       {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'upload.wikimedia.org',
-      },
-      {
-        protocol: 'https',
-        hostname: 'logos-world.net',
-      },
-      {
-        protocol: 'https',
-        hostname: 'www.edigitalagency.com.au',
-      },
-      {
-        protocol: 'https',
-        hostname: 'www.filmibeat.com',
-      }
+      { protocol: 'https', hostname: 'image.tmdb.org' },
+      { protocol: 'https', hostname: 'media.themoviedb.org' },
+      { protocol: 'https', hostname: 'upload.wikimedia.org' },
+      { protocol: 'https', hostname: 'logos-world.net' },
+      { protocol: 'https', hostname: 'www.edigitalagency.com.au' },
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'www.filmibeat.com' },
+      { protocol: 'https', hostname: 'assets-in.bmscdn.com' },
     ],
   },
-  experimental: {
-    // This is required to allow the Next.js dev server to accept requests from the Firebase Studio preview.
-    allowedDevOrigins: ['**.cloudworkstations.dev'],
-  }
 };
 
 export default nextConfig;
