@@ -8,8 +8,6 @@ const nextConfig = {
       },
     ],
   },
-  // devServer removed because Next.js build doesn't support it
 };
 
 export default nextConfig;
-
