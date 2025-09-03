@@ -9,9 +9,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, formatISO } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
@@ -44,58 +44,113 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     const [analyticsData, setAnalyticsData] = useState<{ date: string; downloads: number }[]>([]);
     const [topMovies, setTopMovies] = useState<{ title: string; count: number }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | 'all'>('7d');
+    const [allDownloadRecords, setAllDownloadRecords] = useState<DownloadRecord[]>([]);
 
     useEffect(() => {
-        const processAnalytics = async () => {
+        const fetchAllData = async () => {
             setIsLoading(true);
-            const downloadRecords = await fetchDownloadAnalytics();
+            const records = await fetchDownloadAnalytics();
+            setAllDownloadRecords(records);
+            setIsLoading(false);
+        }
+        fetchAllData();
+    }, []);
 
-            // Process data for the line chart (last 7 days)
-            const last7Days = Array.from({ length: 7 }, (_, i) => {
-                const d = subDays(new Date(), i);
+    useEffect(() => {
+        if (isLoading) return;
+        
+        const now = new Date();
+        let startDate: Date;
+
+        switch (timeFilter) {
+            case '7d':
+                startDate = subDays(now, 6);
+                break;
+            case '30d':
+                startDate = subDays(now, 29);
+                break;
+            case 'all':
+                startDate = allDownloadRecords.length > 0 ? parseISO(allDownloadRecords[allDownloadRecords.length - 1].timestamp) : now;
+                break;
+        }
+
+        const filteredRecords = allDownloadRecords.filter(record => {
+            const recordDate = parseISO(record.timestamp);
+            return timeFilter === 'all' || isWithinInterval(recordDate, { start: startDate, end: endOfToday() });
+        });
+        
+        // Process data for the line chart
+        const dailyCounts: { [key: string]: number } = {};
+        
+        if (timeFilter !== 'all') {
+            const dateRange = Array.from({ length: timeFilter === '7d' ? 7 : 30 }, (_, i) => {
+                const d = subDays(now, i);
                 return format(d, 'yyyy-MM-dd');
             }).reverse();
 
-            const dailyCounts: { [key: string]: number } = last7Days.reduce((acc, date) => {
-                acc[date] = 0;
-                return acc;
-            }, {} as { [key: string]: number });
-
-            downloadRecords.forEach(record => {
+            dateRange.forEach(date => { dailyCounts[date] = 0; });
+            
+            filteredRecords.forEach(record => {
                 const recordDate = format(parseISO(record.timestamp), 'yyyy-MM-dd');
                 if (dailyCounts[recordDate] !== undefined) {
                     dailyCounts[recordDate]++;
                 }
             });
-
-            const chartData = last7Days.map(date => ({
+             const chartData = Object.entries(dailyCounts).map(([date, downloads]) => ({
                 date: format(new Date(date), 'MMM d'),
-                downloads: dailyCounts[date]
+                downloads,
             }));
             setAnalyticsData(chartData);
 
-            // Process data for top 5 downloaded movies
-            const movieDownloadCounts: { [key: string]: number } = {};
-            downloadRecords.forEach(record => {
-                movieDownloadCounts[record.movieId] = (movieDownloadCounts[record.movieId] || 0) + 1;
+        } else { // Handle "All Time" grouping by month
+            const monthlyCounts: { [key: string]: number } = {};
+            filteredRecords.forEach(record => {
+                const monthKey = format(parseISO(record.timestamp), 'yyyy-MM');
+                monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
             });
-            
-            const top5 = Object.entries(movieDownloadCounts)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 5)
-                .map(([movieId, count]) => {
-                    const movie = allMovies.find(m => m.id === movieId);
-                    return { title: movie?.title || 'Unknown Movie', count };
-                });
+            const chartData = Object.entries(monthlyCounts).sort(([a], [b]) => a.localeCompare(b)).map(([month, downloads]) => ({
+                date: format(new Date(month + '-02'), 'MMM yy'), // Using day 02 to avoid timezone issues
+                downloads
+            }));
+            setAnalyticsData(chartData);
+        }
 
-            setTopMovies(top5);
-            setIsLoading(false);
-        };
+        // Process data for top 5 downloaded movies for the selected period
+        const movieDownloadCounts: { [key: string]: number } = {};
+        filteredRecords.forEach(record => {
+            movieDownloadCounts[record.movieId] = (movieDownloadCounts[record.movieId] || 0) + 1;
+        });
+        
+        const top5 = Object.entries(movieDownloadCounts)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([movieId, count]) => {
+                const movie = allMovies.find(m => m.id === movieId);
+                return { title: movie?.title || 'Unknown Movie', count };
+            });
 
-        processAnalytics();
-    }, [allMovies]);
+        setTopMovies(top5);
 
-    if (isLoading) {
+    }, [timeFilter, allMovies, isLoading, allDownloadRecords]);
+    
+    const totalDownloads = useMemo(() => {
+         const now = new Date();
+        let startDate: Date;
+
+        switch (timeFilter) {
+            case '7d': startDate = subDays(now, 6); break;
+            case '30d': startDate = subDays(now, 29); break;
+            case 'all': return allDownloadRecords.length;
+        }
+        
+        return allDownloadRecords.filter(record => 
+            isWithinInterval(parseISO(record.timestamp), { start: startDate, end: endOfToday() })
+        ).length;
+
+    }, [timeFilter, allDownloadRecords]);
+
+    if (isLoading && allDownloadRecords.length === 0) {
         return (
             <Card>
                 <CardHeader><CardTitle>Download Analytics</CardTitle></CardHeader>
@@ -109,25 +164,46 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <BarChart2 className="h-6 w-6" />
-                    Download Analytics
-                </CardTitle>
-                <CardDescription>Real-time download statistics for your content.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <BarChart2 className="h-6 w-6" />
+                            Download Analytics
+                        </CardTitle>
+                        <CardDescription>Total downloads this period: <span className="font-bold text-foreground">{totalDownloads}</span></CardDescription>
+                    </div>
+                     <Select value={timeFilter} onValueChange={(val: '7d' | '30d' | 'all') => setTimeFilter(val)}>
+                        <SelectTrigger className="w-[180px]">
+                             <History className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Select period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="7d">Last 7 Days</SelectItem>
+                            <SelectItem value="30d">Last 30 Days</SelectItem>
+                            <SelectItem value="all">All Time</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
-                    <h3 className="text-lg font-semibold mb-2">Downloads in Last 7 Days</h3>
+                    <h3 className="text-lg font-semibold mb-2">Downloads Over Time</h3>
                     <div className="h-[250px] w-full">
-                        <ResponsiveContainer>
-                            <LineChart data={analyticsData}>
-                                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2}/>
-                                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
-                                <Line type="monotone" dataKey="downloads" stroke="hsl(var(--primary))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--primary))"}} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                         {analyticsData.length > 0 ? (
+                            <ResponsiveContainer>
+                                <LineChart data={analyticsData}>
+                                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2}/>
+                                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}/>
+                                    <Line type="monotone" dataKey="downloads" stroke="hsl(var(--primary))" strokeWidth={2} dot={{r: 4, fill: "hsl(var(--primary))"}} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                No download data for this period.
+                            </div>
+                        )}
                     </div>
                 </div>
                  <Separator />
@@ -153,7 +229,7 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
                             </TableBody>
                         </Table>
                     ) : (
-                        <p className="text-center text-muted-foreground py-4">No download data available yet.</p>
+                        <p className="text-center text-muted-foreground py-4">No download data available for this period.</p>
                     )}
                 </div>
             </CardContent>
