@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -44,6 +45,7 @@ import { Switch } from '../ui/switch';
 
 type FormData = Partial<Movie> & {
     tagsString?: string;
+    contentType: 'movie' | 'series';
 };
 
 const qualityOptions = ['4K', '2160p', '1080p', '720p', '480p'];
@@ -78,9 +80,79 @@ const initialFormState: FormData = {
 };
 
 
+function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled }: { index: number, link: DownloadLink, onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void, onRemoveLink: (index: number) => void, disabled: boolean }) {
+  return (
+    <div className="p-3 border rounded-lg space-y-3 bg-secondary/50">
+      <div className="flex justify-between items-center">
+        <p className="font-semibold text-sm">Link #{index + 1}</p>
+        <Button variant="ghost" size="icon" onClick={() => onRemoveLink(index)} disabled={disabled}>
+            <XCircle className="h-5 w-5 text-destructive" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="space-y-1">
+          <Label htmlFor={`quality-${index}`} className="text-xs">Quality</Label>
+          <Select
+              value={link.quality}
+              onValueChange={(value) => onLinkChange(index, 'quality', value)}
+              disabled={disabled}
+            >
+              <SelectTrigger id={`quality-${index}`}>
+                  <SelectValue placeholder="Select quality" />
+              </SelectTrigger>
+              <SelectContent>
+                  {qualityOptions.map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
+              </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`url-${index}`} className="text-xs">URL</Label>
+          <Input id={`url-${index}`} value={link.url} onChange={e => onLinkChange(index, 'url', e.target.value)} disabled={disabled} placeholder="https://..." />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`size-${index}`} className="text-xs">Size</Label>
+          <Input id={`size-${index}`} value={link.size || ''} onChange={e => onLinkChange(index, 'size', e.target.value)} disabled={disabled} placeholder="e.g. 1.2GB" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled, currentEpisodes }: { epIndex: number, episode: Episode, onEpisodeChange: (field: 'episodes', value: Episode[]) => void, onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void, onAddLink: (epIndex: number) => void, onRemoveLink: (epIndex: number, linkIndex: number) => void, onRemoveEpisode: (epIndex: number) => void, disabled: boolean, currentEpisodes: Episode[] }) {
+    
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newEpisodes = [...currentEpisodes];
+        newEpisodes[epIndex] = { ...newEpisodes[epIndex], title: e.target.value };
+        onEpisodeChange('episodes', newEpisodes);
+    }
+    
+    return (
+        <div className="p-3 border rounded-lg space-y-3 bg-secondary/50">
+            <div className="flex justify-between items-center">
+                <p className="font-semibold text-sm">Episode #{episode.episodeNumber}</p>
+                 <Button variant="ghost" size="icon" onClick={() => onRemoveEpisode(epIndex)} disabled={disabled}>
+                    <XCircle className="h-5 w-5 text-destructive" />
+                </Button>
+            </div>
+            <div className="space-y-1">
+                <Label htmlFor={`ep-title-${epIndex}`} className="text-xs">Episode Title</Label>
+                <Input id={`ep-title-${epIndex}`} value={episode.title} onChange={handleTitleChange} disabled={disabled} placeholder="e.g. The Pilot" />
+            </div>
+            <div className="space-y-3 pl-4 border-l-2 border-border">
+                {episode.downloadLinks.map((link, linkIndex) => (
+                    <DownloadLinkEditor key={linkIndex} index={linkIndex} link={link} onLinkChange={(idx, field, val) => onLinkChange(epIndex, idx, field, val)} onRemoveLink={(idx) => onRemoveLink(epIndex, idx)} disabled={disabled} />
+                ))}
+            </div>
+             <Button variant="outline" size="sm" onClick={() => onAddLink(epIndex)} disabled={disabled}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Link for Ep. {episode.episodeNumber}
+            </Button>
+        </div>
+    )
+}
+
 export default function UploadMovie() {
   const { toast } = useToast();
-  const movies = useMovieStore((state) => state.latestReleases);
+  const movies = useMovieStore((state) => state.allMovies);
   const [isPending, startTransition] = useTransition();
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
@@ -109,6 +181,7 @@ export default function UploadMovie() {
             downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: '1080p', url: '', size: '' }],
             screenshots: movieToEdit.screenshots && movieToEdit.screenshots.length > 0 ? movieToEdit.screenshots : ['', '', ''],
             episodes: movieToEdit.episodes && movieToEdit.episodes.length > 0 ? movieToEdit.episodes : [],
+            contentType: movieToEdit.contentType || 'movie',
         });
       }
     } else {
@@ -231,16 +304,17 @@ export default function UploadMovie() {
   };
 
 
-  const handleMovieSelect = async (tmdbId: number, type: ContentType) => {
+  const handleMovieSelect = async (tmdbId: number, type: 'movie' | 'series') => {
     setIsDialogOpen(false);
     setSearchResults([]);
     setIsFetchingAI(true);
+    
+    const { dismiss } = toast({
+      title: 'Fetching Details...',
+      description: 'AI is generating content. Please wait.',
+    });
+
     try {
-        const { id: toastId } = toast({
-          title: 'Fetching Details...',
-          description: 'AI is generating content. Please wait.',
-        });
-        
         const result = await getMovieDetails({ tmdbId, type });
 
         setFormData(prev => ({
@@ -264,13 +338,14 @@ export default function UploadMovie() {
             numberOfEpisodes: result.numberOfEpisodes,
         }));
 
+        dismiss();
         toast({
-            id: toastId,
             variant: 'success',
             title: 'Success!',
             description: 'Content details have been collected.',
         });
     } catch (error: any) {
+        dismiss();
         console.error("AI auto-fill failed:", error);
         toast({
             variant: 'destructive',
@@ -496,11 +571,11 @@ export default function UploadMovie() {
                               </Button>
                           </div>
                           <div className="space-y-4">
-                              {(formData.episodes || []).map((ep, epIndex) => (
-                                  <EpisodeEditor 
+                              {(formData.episodes || []).map((episode, epIndex) => (
+                                  episode && <EpisodeEditor 
                                       key={epIndex} 
                                       epIndex={epIndex} 
-                                      episode={ep} 
+                                      episode={episode} 
                                       onEpisodeChange={handleInputChange}
                                       onLinkChange={handleEpisodeLinkChange} 
                                       onAddLink={addEpisodeLink} 
@@ -567,6 +642,7 @@ export default function UploadMovie() {
               <AlertDialog>
                   <AlertDialogTrigger asChild>
                       <Button onClick={triggerSave} disabled={isFormDisabled}>
+                          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {formData.id ? 'Update Content' : 'Confirm & Upload'}
                       </Button>
                   </AlertDialogTrigger>
@@ -579,208 +655,81 @@ export default function UploadMovie() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSave} disabled={isPending}>
-                          {isPending ? (
-                              <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Processing...
-                              </>
-                          ) : 'Confirm'}
-                      </AlertDialogAction>
+                      <AlertDialogAction onClick={handleSave}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
           </CardFooter>
         </Card>
-
+        
         {/* Preview Column */}
-        <div className="lg:max-h-[85vh] overflow-hidden rounded-lg">
-          <div className="h-full w-full bg-secondary overflow-y-auto rounded-lg border">
-              <MovieDetailPreview movie={formData as Movie} />
-          </div>
+        <div className="hidden lg:block lg:max-h-[85vh] overflow-hidden rounded-lg border">
+            <ScrollArea className="h-full">
+                <MovieDetailPreview movie={formData as Movie} />
+            </ScrollArea>
         </div>
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle>Select Movie or Series</DialogTitle>
-            <DialogDescription>
-              Select the correct content. Use filters below for a better search experience.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2 mt-2">
-             <div className="flex items-center space-x-2">
-                <Switch id="search-all-pages" checked={searchAllPages} onCheckedChange={setSearchAllPages} />
-                <Label htmlFor="search-all-pages">Search all pages</Label>
-              </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="exact-match-toggle" checked={showExactMatches} onCheckedChange={setShowExactMatches} />
-              <Label htmlFor="exact-match-toggle">Show exact matches only</Label>
-            </div>
-          </div>
-          <div className="mt-4">
-            {isSearching ? (
-              <div className="flex justify-center items-center h-48">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : displayedSearchResults.length === 0 ? (
-               <div className="text-center h-48 flex flex-col justify-center items-center">
-                 <p className="font-semibold">No Results Found</p>
-                 <p className="text-sm text-muted-foreground">Try a different title or adjust filters.</p>
-               </div>
-            ) : (
-              <ScrollArea className="h-[60vh]">
-                <div className="space-y-4 pr-4">
-                  {displayedSearchResults.map((item) => (
-                    <div
-                      key={`${item.type}-${item.id}`}
-                      onClick={() => handleMovieSelect(item.id, item.type)}
-                      className="flex items-start gap-4 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                    >
-                      <div className="w-20 h-28 relative flex-shrink-0 bg-muted rounded-md overflow-hidden">
-                        <Image
-                          src={item.posterUrl}
-                          alt={item.title}
-                          fill
-                          className="object-cover"
-                          data-ai-hint="movie poster"
-                        />
+      
+       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                  <DialogTitle>Select a Movie or Series</DialogTitle>
+                  <DialogDescription>
+                      We found these results on TMDb. Select the correct one to auto-fill details.
+                  </DialogDescription>
+                  <div className="flex justify-between items-center pt-2">
+                      <div className="flex items-center space-x-2">
+                          <Switch id="exact-matches" checked={showExactMatches} onCheckedChange={setShowExactMatches} />
+                          <Label htmlFor="exact-matches">Show exact matches only</Label>
                       </div>
-                      <div className="flex-grow">
-                        <p className="font-bold">{item.title}</p>
-                        <p className="text-sm text-muted-foreground">{item.year}</p>
-                        <Badge variant={item.type === 'movie' ? 'default' : 'secondary'} className="mt-2">
-                            {item.type === 'movie' ? 'Movie' : 'TV Series'}
-                        </Badge>
+                      <div className="flex items-center space-x-2">
+                          <Switch id="search-all" checked={searchAllPages} onCheckedChange={setSearchAllPages} />
+                          <Label htmlFor="search-all">Search all pages (slower)</Label>
                       </div>
+                  </div>
+              </DialogHeader>
+              <div className="mt-4 max-h-[60vh] overflow-y-auto">
+                  {isSearching ? (
+                      <div className="flex justify-center items-center h-48">
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                      </div>
+                  ) : displayedSearchResults.length > 0 ? (
+                    <div className="space-y-2">
+                      {displayedSearchResults.map((item) => (
+                        <div key={`${item.id}-${item.type}`} onClick={() => handleMovieSelect(item.id, item.type)} className="flex items-center gap-4 p-2 rounded-lg hover:bg-accent cursor-pointer">
+                            <Image src={item.posterUrl} alt={item.title} width={60} height={90} className="rounded-md" />
+                            <div className="flex-1">
+                                <p className="font-semibold">{item.title} ({item.year})</p>
+                                <Badge variant={item.type === 'movie' ? 'default' : 'secondary'}>{item.type === 'movie' ? 'Movie' : 'TV Series'}</Badge>
+                            </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            )}
-          </div>
-        </DialogContent>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-10">No results found for "{formData.title}". Try a different search term.</p>
+                  )}
+              </div>
+          </DialogContent>
       </Dialog>
+      
       <AlertDialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className='flex items-center gap-2'>
-              <AlertTriangle className="text-primary h-6 w-6" />
-              Confirm Full Search
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="text-primary"/>
+              Full Search Warning
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Searching all pages may consume a significant number of API requests.
-              It is recommended to use this only when you cannot find your content on the first page.
-              <br /><br />
-              Do you want to proceed?
+              Searching all pages can be slow and may use more API credits. It's recommended for titles that don't appear in the initial quick search. Do you want to proceed?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setIsWarningDialogOpen(false); proceedWithSearch(); }}>
-              Yes, search all pages
-            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setSearchAllPages(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={proceedWithSearch}>Proceed</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </>
   );
 }
-
-// --- Sub-components for Editors ---
-
-interface DownloadLinkEditorProps {
-    index: number;
-    link: DownloadLink;
-    onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void;
-    onRemoveLink: (index: number) => void;
-    disabled?: boolean;
-}
-
-function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled }: DownloadLinkEditorProps) {
-    return (
-        <div className="flex items-center gap-2">
-            <Select
-                value={link.quality}
-                onValueChange={(value) => onLinkChange(index, 'quality', value)}
-                disabled={disabled}
-            >
-                <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Quality" />
-                </SelectTrigger>
-                <SelectContent>
-                    {qualityOptions.map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
-                </SelectContent>
-            </Select>
-            <Input
-                className="w-[100px]"
-                placeholder="e.g. 1.2GB"
-                value={link.size || ''}
-                onChange={(e) => onLinkChange(index, 'size', e.target.value)}
-                disabled={disabled}
-            />
-            <Input
-                className="flex-1"
-                placeholder="https://example.com/download"
-                value={link.url}
-                onChange={(e) => onLinkChange(index, 'url', e.target.value)}
-                disabled={disabled}
-            />
-            <Button variant="ghost" size="icon" onClick={() => onRemoveLink(index)} disabled={disabled}>
-                <XCircle className="h-5 w-5 text-destructive" />
-            </Button>
-        </div>
-    );
-}
-
-
-interface EpisodeEditorProps {
-    epIndex: number;
-    episode: Episode;
-    currentEpisodes: Episode[];
-    onEpisodeChange: (field: 'episodes', value: any) => void;
-    onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void;
-    onAddLink: (epIndex: number) => void;
-    onRemoveLink: (epIndex: number, linkIndex: number) => void;
-    onRemoveEpisode: (epIndex: number) => void;
-    disabled?: boolean;
-}
-
-function EpisodeEditor({ epIndex, episode, currentEpisodes, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled}: EpisodeEditorProps) {
-    
-    const handleEpisodeFieldChange = (field: keyof Episode, value: any) => {
-        const newEpisodes = [...currentEpisodes];
-        newEpisodes[epIndex] = { ...newEpisodes[epIndex], [field]: value };
-        onEpisodeChange('episodes', newEpisodes);
-    };
-
-    return (
-        <div className="p-3 border rounded-lg bg-background/30 space-y-3">
-            <div className="flex justify-between items-center">
-                 <Label className="font-semibold">Episode {episode.episodeNumber}</Label>
-                 <Button variant="ghost" size="icon" onClick={() => onRemoveEpisode(epIndex)} disabled={disabled}>
-                    <XCircle className="h-5 w-5 text-destructive" />
-                </Button>
-            </div>
-            <Input
-                placeholder="Episode Title (optional)"
-                value={episode.title || ''}
-                onChange={(e) => handleEpisodeFieldChange('title', e.target.value)}
-                disabled={disabled}
-            />
-            <div className="space-y-2 pl-2 border-l-2 ml-2">
-                {episode.downloadLinks.map((link, linkIndex) => (
-                    <DownloadLinkEditor key={linkIndex} index={linkIndex} link={link} onLinkChange={(idx, field, val) => onLinkChange(epIndex, idx, field, val)} onRemoveLink={(idx) => onRemoveLink(epIndex, idx)} disabled={disabled} />
-                ))}
-            </div>
-            <Button variant="outline" size="sm" onClick={() => onAddLink(epIndex)} disabled={disabled}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Download Link
-            </Button>
-        </div>
-    )
-}
-
-    
-
-    

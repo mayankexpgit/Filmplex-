@@ -89,11 +89,11 @@ const adminSections = [
 
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
-        return !!movie.downloadLinks && movie.downloadLinks.some(link => link.url);
+        return !!movie.downloadLinks && movie.downloadLinks.some(link => link && link.url);
     }
     if (movie.contentType === 'series') {
-        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link.url));
-        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link.url);
+        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link && link.url));
+        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link && link.url);
         return !!(hasEpisodeLinks || hasSeasonLinks);
     }
     return false;
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="container mx-auto py-8 md:py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:col-span-3 gap-8">
         
         <AdminTaskCard />
 

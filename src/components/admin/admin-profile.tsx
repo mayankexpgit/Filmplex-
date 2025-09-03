@@ -30,11 +30,11 @@ const getDisplayName = (fullName: string) => {
 
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
-        return !!movie.downloadLinks && movie.downloadLinks.some(link => link.url);
+        return !!movie.downloadLinks && movie.downloadLinks.some(link => link && link.url);
     }
     if (movie.contentType === 'series') {
-        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link.url));
-        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link.url);
+        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link && link.url));
+        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link && link.url);
         return !!(hasEpisodeLinks || hasSeasonLinks);
     }
     return false;
@@ -60,15 +60,17 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     useEffect(() => {
         if (isLoading) return;
         
-        const now = new Date();
         let startDate: Date;
+        const now = endOfToday();
 
         switch (timeFilter) {
             case '7d':
-                startDate = subDays(now, 6);
+                startDate = startOfToday();
+                startDate.setDate(startDate.getDate() - 6);
                 break;
             case '30d':
-                startDate = subDays(now, 29);
+                startDate = startOfToday();
+                startDate.setDate(startDate.getDate() - 29);
                 break;
             case 'all':
                 startDate = allDownloadRecords.length > 0 ? parseISO(allDownloadRecords[allDownloadRecords.length - 1].timestamp) : now;
@@ -77,7 +79,7 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
 
         const filteredRecords = allDownloadRecords.filter(record => {
             const recordDate = parseISO(record.timestamp);
-            return timeFilter === 'all' || isWithinInterval(recordDate, { start: startDate, end: endOfToday() });
+            return timeFilter === 'all' || isWithinInterval(recordDate, { start: startDate, end: now });
         });
         
         // Process data for the line chart
@@ -85,7 +87,7 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
         
         if (timeFilter !== 'all') {
             const dateRange = Array.from({ length: timeFilter === '7d' ? 7 : 30 }, (_, i) => {
-                const d = subDays(now, i);
+                const d = subDays(new Date(), i);
                 return format(d, 'yyyy-MM-dd');
             }).reverse();
 
@@ -135,8 +137,8 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     }, [timeFilter, allMovies, isLoading, allDownloadRecords]);
     
     const totalDownloads = useMemo(() => {
-         const now = new Date();
         let startDate: Date;
+        const now = endOfToday();
 
         switch (timeFilter) {
             case '7d': startDate = subDays(now, 6); break;
@@ -145,7 +147,7 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
         }
         
         return allDownloadRecords.filter(record => 
-            isWithinInterval(parseISO(record.timestamp), { start: startDate, end: endOfToday() })
+            isWithinInterval(parseISO(record.timestamp), { start: startDate, end: now })
         ).length;
 
     }, [timeFilter, allDownloadRecords]);
