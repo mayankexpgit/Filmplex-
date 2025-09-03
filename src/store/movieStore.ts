@@ -153,7 +153,7 @@ let isFetchingData = false;
  */
 export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
   const { isInitialized } = useMovieStore.getState();
-  if (isInitialized) {
+  if (isFetchingData || isInitialized) {
     return;
   }
   isFetchingData = true;

@@ -176,8 +176,8 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
     }, [admin, movies]);
     
     const now = new Date();
-    const weeklyMovies = completedMovies.filter(m => isWithinInterval(new Date(m.createdAt!), { start: startOfWeek(now), end: endOfWeek(now) }));
-    const monthlyMovies = completedMovies.filter(m => isWithinInterval(new Date(m.createdAt!), { start: startOfMonth(now), end: endOfMonth(now) }));
+    const weeklyMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now), end: endOfWeek(now) }));
+    const monthlyMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfMonth(now), end: endOfMonth(now) }));
 
     const stats = [
         { label: 'Completed Uploads', value: completedMovies.length, icon: CheckCircle },
@@ -312,7 +312,7 @@ export default function AdminProfile() {
             <CardHeader>
                 <CardTitle>Admin Profile &amp; Analytics</CardTitle>
                 <CardDescription>
-                    {`Viewing profile for ${selectedAdmin ? getDisplayName(selectedAdmin.name) : '...'}. Joined on ${selectedAdmin ? format(new Date(selectedAdmin.timestamp), 'MMMM d, yyyy') : '...'}`}
+                    {`Viewing profile for ${selectedAdmin ? getDisplayName(selectedAdmin.name) : '...'}. Joined on ${selectedAdmin && selectedAdmin.timestamp ? format(new Date(selectedAdmin.timestamp), 'MMMM d, yyyy') : '...'}`}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
