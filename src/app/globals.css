@@ -130,10 +130,6 @@
   .btn-shine:hover::before {
     @apply left-full;
   }
-
-  .animate-bounce-y {
-    animation: bounce-y 1s infinite;
-  }
 }
 
 @keyframes rotate {
