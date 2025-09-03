@@ -61,7 +61,7 @@ const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length
 
 
 // --- Types ---
-export type ContentType = 'movie' | 'tv';
+export type ContentType = 'movie' | 'series';
 
 export interface TMDbSearchResult {
   id: number;
@@ -104,8 +104,8 @@ const getPosterUrl = (path: string | null): string => {
 
 
 // Helper function to fetch pages for a given content type
-const fetchPages = async (title: string, type: ContentType, fetchAll: boolean): Promise<any[]> => {
-    const endpoint = `/search/${type === 'movie' ? 'movie' : 'tv'}`;
+const fetchPages = async (title: string, type: 'movie' | 'tv', fetchAll: boolean): Promise<any[]> => {
+    const endpoint = `/search/${type}`;
     let allResults: any[] = [];
 
     const initialData = await tmdbRequest({
@@ -172,7 +172,7 @@ export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = fals
         title: item.name,
         year: item.first_air_date ? new Date(item.first_air_date).getFullYear().toString() : 'N/A',
         posterUrl: getPosterUrl(item.poster_path),
-        type: 'tv' as ContentType,
+        type: 'series' as ContentType,
         popularity: item.popularity
     }));
     
@@ -226,10 +226,12 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
         throw new Error('TMDb API key is not configured.');
     }
 
+    const endpointType = type === 'series' ? 'tv' : 'movie';
+
     let details;
     try {
         details = await tmdbRequest({
-            url: `https://api.themoviedb.org/3/${type}/${tmdbId}`,
+            url: `https://api.themoviedb.org/3/${endpointType}/${tmdbId}`,
             method: 'GET',
             params: {
                 append_to_response: 'credits,videos',
@@ -249,7 +251,7 @@ export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentTyp
     let creators: string[] = [];
     if (type === 'movie') {
         creators = details.credits?.crew.filter((p: any) => p.job === 'Director').map((p: any) => p.name) || [];
-    } else { // tv
+    } else { // series
         creators = details.created_by?.map((p: any) => p.name) || [];
     }
     

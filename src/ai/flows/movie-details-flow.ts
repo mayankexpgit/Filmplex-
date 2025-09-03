@@ -15,7 +15,7 @@ import { fetchMovieDetailsFromTMDb, type ContentType } from '@/services/tmdbServ
 
 const MovieDetailsInputSchema = z.object({
   tmdbId: z.number().describe('The TMDb ID of the movie or series to fetch details for.'),
-  type: z.enum(['movie', 'tv']).describe('The type of content to fetch: movie or tv (for series).')
+  type: z.enum(['movie', 'series']).describe('The type of content to fetch: movie or series.')
 });
 export type MovieDetailsInput = z.infer<typeof MovieDetailsInputSchema>;
 

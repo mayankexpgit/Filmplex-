@@ -69,7 +69,7 @@ export interface Movie {
   releaseDate?: string; // full date
   country?: string;
   
-  contentType: 'movie' | 'tv';
+  contentType: 'movie' | 'series';
   
   // Movie-specific
   downloadLinks?: DownloadLink[];
@@ -182,7 +182,7 @@ export const initialMovies: Movie[] = [
     stars: 'Taro Sakamoto, Shin Asakura, Lu Xiaotang',
     creator: 'Yuto Suzuki',
     quality: 'WEB-DL 1080p, 720p',
-    contentType: 'tv',
+    contentType: 'series',
     qualityBadge: 'HD',
     episodes: [
       {

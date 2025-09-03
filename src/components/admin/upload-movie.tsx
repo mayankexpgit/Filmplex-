@@ -45,7 +45,7 @@ import { Switch } from '../ui/switch';
 
 type FormData = Partial<Movie> & {
     tagsString?: string;
-    contentType: 'movie' | 'tv';
+    contentType: 'movie' | 'series';
 };
 
 const qualityOptions = ['4K', '2160p', '1080p', '720p', '480p'];
@@ -304,7 +304,7 @@ export default function UploadMovie() {
   };
 
 
-  const handleMovieSelect = async (tmdbId: number, type: 'movie' | 'tv') => {
+  const handleMovieSelect = async (tmdbId: number, type: 'movie' | 'series') => {
     setIsDialogOpen(false);
     setSearchResults([]);
     setIsFetchingAI(true);
@@ -432,8 +432,8 @@ export default function UploadMovie() {
                       <Label htmlFor="r-movie">Movie</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="tv" id="r-series" />
-                      <Label htmlFor="r-series">Series (TV)</Label>
+                      <RadioGroupItem value="series" id="r-series" />
+                      <Label htmlFor="r-series">Series</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -613,7 +613,7 @@ export default function UploadMovie() {
                     onChange={(e) => handleInputChange('synopsis', e.target.value)} 
                     disabled={isFormDisabled} 
                     rows={5}
-                    placeholder="Provide a brief synopsis of the movie/tv..."
+                    placeholder="Provide a brief synopsis of the movie/series..."
                   />
                 </div>
 
