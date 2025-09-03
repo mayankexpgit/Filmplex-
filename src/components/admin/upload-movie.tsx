@@ -45,7 +45,7 @@ import { Switch } from '../ui/switch';
 
 type FormData = Partial<Movie> & {
     tagsString?: string;
-    contentType: 'movie' | 'series';
+    contentType: 'movie' | 'tv';
 };
 
 const qualityOptions = ['4K', '2160p', '1080p', '720p', '480p'];
@@ -304,7 +304,7 @@ export default function UploadMovie() {
   };
 
 
-  const handleMovieSelect = async (tmdbId: number, type: 'movie' | 'series') => {
+  const handleMovieSelect = async (tmdbId: number, type: 'movie' | 'tv') => {
     setIsDialogOpen(false);
     setSearchResults([]);
     setIsFetchingAI(true);
@@ -430,7 +430,7 @@ export default function UploadMovie() {
                       <Label htmlFor="r-movie">Movie</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="series" id="r-series" />
+                      <RadioGroupItem value="tv" id="r-series" />
                       <Label htmlFor="r-series">Series</Label>
                     </div>
                   </RadioGroup>
@@ -569,11 +569,11 @@ export default function UploadMovie() {
                               </Button>
                           </div>
                           <div className="space-y-4">
-                              {(formData.episodes || []).map((ep, epIndex) => (
-                                  ep && <EpisodeEditor 
+                              {(formData.episodes || []).map((episode, epIndex) => (
+                                  episode && <EpisodeEditor 
                                       key={epIndex} 
                                       epIndex={epIndex} 
-                                      episode={ep} 
+                                      episode={episode} 
                                       onEpisodeChange={handleInputChange}
                                       onLinkChange={handleEpisodeLinkChange} 
                                       onAddLink={addEpisodeLink} 
@@ -731,4 +731,5 @@ export default function UploadMovie() {
     </>
   );
 }
+
 
