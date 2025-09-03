@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -414,7 +413,6 @@ export default function UploadMovie() {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Form Column */}
         <Card className="lg:max-h-[85vh] flex flex-col">
           <CardHeader>
             <CardTitle>{formData.id ? 'Edit Content' : 'Upload Content'}</CardTitle>
@@ -662,11 +660,10 @@ export default function UploadMovie() {
           </CardFooter>
         </Card>
         
-        {/* Preview Column */}
         <div className="hidden lg:block lg:max-h-[85vh] overflow-hidden rounded-lg border">
-            <ScrollArea className="h-full">
-                <MovieDetailPreview movie={formData as Movie} />
-            </ScrollArea>
+          <ScrollArea className="h-full">
+            <MovieDetailPreview movie={formData as Movie} />
+          </ScrollArea>
         </div>
       </div>
       
@@ -733,3 +730,5 @@ export default function UploadMovie() {
     </>
   );
 }
+
+    
