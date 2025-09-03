@@ -40,13 +40,9 @@ export default function AdminLayout({
     if (adminProfile?.task) {
       const deadline = format(parseISO(adminProfile.task.deadline), 'PP');
       toast({
-        title: (
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            <span>New Task Assigned!</span>
-          </div>
-        ),
-        description: `Your target is ${adminProfile.task.targetUploads} uploads by ${deadline}.`,
+        variant: 'success',
+        title: "New Task Assigned!",
+        description: `Your target: ${adminProfile.task.targetUploads} uploads by ${deadline}.`,
         duration: 10000, 
       });
     }
