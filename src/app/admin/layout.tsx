@@ -40,7 +40,7 @@ export default function AdminLayout({
     if (adminProfile?.task) {
       const deadline = format(parseISO(adminProfile.task.deadline), 'PP');
       toast({
-        variant: 'success',
+        variant: 'default',
         title: "New Task Assigned!",
         description: `Your target: ${adminProfile.task.targetUploads} uploads by ${deadline}.`,
         duration: 10000, 

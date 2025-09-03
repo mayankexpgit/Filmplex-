@@ -35,11 +35,11 @@ const topLevelRoles = ['Regulator', 'Co-Founder'];
 
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
-        return !!movie.downloadLinks && movie.downloadLinks.some(link => link.url);
+        return !!movie.downloadLinks && movie.downloadLinks.some(link => link && link.url);
     }
     if (movie.contentType === 'series') {
-        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link.url));
-        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link.url);
+        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link && link.url));
+        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link && link.url);
         return !!(hasEpisodeLinks || hasSeasonLinks);
     }
     return false;
@@ -249,7 +249,7 @@ export default function ManagementManager() {
 
     startAddTransition(async () => {
       try {
-        await addManagementMember(newMember as any);
+        await addManagementMember(newMember);
         toast({
           title: 'Success!',
           description: `Team member "${name}" has been added with the role "${selectedRole}".`,

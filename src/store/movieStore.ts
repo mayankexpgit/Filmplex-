@@ -240,7 +240,7 @@ export const addMovie = async (movieData: Omit<Movie, 'id' | 'uploadedBy'>): Pro
     uploadedBy: adminName,
     reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
   };
-  const newId = await dbAddMovie(movieWithMetadata);
+  const newId = await dbAddMovie(movieWithMetadata as Omit<Movie, 'id'>);
   const newMovie = { id: newId, ...movieWithMetadata } as Movie;
 
   useMovieStore.setState(state => ({
@@ -421,7 +421,7 @@ export const removeManagementMemberTask = async (id: string): Promise<void> => {
         managementTeam: state.managementTeam.map(member => {
             if (member.id === id) {
                 const { task, ...rest } = member;
-                return rest;
+                return rest as ManagementMember;
             }
             return member;
         }),
