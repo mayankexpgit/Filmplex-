@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'www.edigitalagency.com.au',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.filmibeat.com',
       }
     ],
   },
