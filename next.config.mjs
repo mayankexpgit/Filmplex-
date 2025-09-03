@@ -1,14 +1,5 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["@genkit-ai/firebase"],
-  },
-  devServer: {
-    allowedDevOrigins: [
-      "https://vexel-cinema-develop.web.app",
-    ]
-  },
   images: {
     remotePatterns: [
       {
@@ -16,6 +7,10 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+  },
+  experimental: {},
+  devServer: {
+    allowedDevOrigins: ['https://studio.web.app'],
   },
 };
 
