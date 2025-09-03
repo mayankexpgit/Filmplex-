@@ -433,7 +433,7 @@ export default function UploadMovie() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="tv" id="r-series" />
-                      <Label htmlFor="r-series">Series</Label>
+                      <Label htmlFor="r-series">Series (TV)</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -733,6 +733,3 @@ export default function UploadMovie() {
     </>
   );
 }
-
-
-
