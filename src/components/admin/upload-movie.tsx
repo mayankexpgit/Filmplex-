@@ -730,5 +730,3 @@ export default function UploadMovie() {
     </>
   );
 }
-
-    
