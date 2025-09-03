@@ -5,14 +5,14 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
-      // More specific wildcards for better reliability on Vercel
-      { protocol: 'https', hostname: '*.tmdb.org' },
-      { protocol: 'https', hostname: '*.google.com' },
-      { protocol: 'https', hostname: '*.wikimedia.org' },
-      { protocol: 'https', hostname: '*.bmscdn.com' },
-      { protocol: 'https', hostname: '*.brave.com' },
-      { protocol: 'https', hostname: 'www.filmibeat.com' },
-      { protocol: 'https', hostname: 'placehold.co' },
+        { protocol: 'https', hostname: '**.tmdb.org' },
+        { protocol: 'https', hostname: 'upload.wikimedia.org' },
+        { protocol: 'https', hostname: 'logos-world.net' },
+        { protocol: 'https', hostname: 'www.edigitalagency.com.au' },
+        { protocol: 'https', hostname: 'placehold.co' },
+        { protocol: 'https', hostname: 'www.filmibeat.com' },
+        { protocol: 'https', hostname: 'assets-in.bmscdn.com' },
+        { protocol: 'https, hostname: 'imgs.search.brave.com' },
     ],
   },
 };
