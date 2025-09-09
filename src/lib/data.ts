@@ -33,6 +33,7 @@ export interface AdminTask {
   targetUploads: number;
   timeframe: 'daily' | 'weekly';
   deadline: string; // ISO String
+  startDate: string; // ISO String, marks the beginning of the task period
 }
 
 export interface ManagementMember {

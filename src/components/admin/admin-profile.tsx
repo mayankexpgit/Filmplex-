@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
 import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
@@ -242,15 +242,21 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
 
 function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
     
-    const { completedMovies, pendingMovies } = useMemo(() => {
+    const { completedMovies, pendingMovies, completedMoviesForTask } = useMemo(() => {
         const allAdminMovies = movies
             .filter(movie => movie.uploadedBy === admin.name)
             .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
         
         const completed = allAdminMovies.filter(isUploadCompleted);
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m));
+        
+        let completedForTask: Movie[] = [];
+        if (admin.task) {
+            const taskStartDate = parseISO(admin.task.startDate);
+            completedForTask = completed.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
+        }
 
-        return { completedMovies: completed, pendingMovies: pending };
+        return { completedMovies: completed, pendingMovies: pending, completedMoviesForTask: completedForTask };
     }, [admin, movies]);
     
     const now = new Date();
@@ -263,7 +269,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         { label: 'This Month', value: monthlyMovies.length, icon: Clock },
     ];
     
-    const taskProgress = admin.task ? (completedMovies.length / admin.task.targetUploads) * 100 : 0;
+    const taskProgress = admin.task ? (completedMoviesForTask.length / admin.task.targetUploads) * 100 : 0;
 
     return (
         <div className="space-y-6">
@@ -288,7 +294,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                  <Card>
                     <CardHeader>
                         <CardTitle>Current Task</CardTitle>
-                        <CardDescription>Progress for the current {admin.task.timeframe} target.</CardDescription>
+                        <CardDescription>Progress for the current {admin.task.timeframe} target. Task started on {format(parseISO(admin.task.startDate), 'PP')}.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex justify-between items-center gap-4 text-sm">
@@ -303,7 +309,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                         </div>
                         <Progress value={taskProgress} className="h-3" />
                          <p className="text-center text-muted-foreground text-sm">
-                            {completedMovies.length} / {admin.task.targetUploads} uploads completed ({Math.round(taskProgress)}%)
+                            {completedMoviesForTask.length} / {admin.task.targetUploads} uploads completed ({Math.round(taskProgress)}%)
                         </p>
                     </CardContent>
                 </Card>

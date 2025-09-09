@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { format, addWeeks, setHours, setMinutes, setSeconds, isWithinInterval, startOfWeek } from 'date-fns';
+import { format, addWeeks, setHours, setMinutes, setSeconds, isWithinInterval, startOfWeek, parseISO, isAfter, startOfDay } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '../ui/badge';
 
@@ -47,26 +47,31 @@ const isUploadCompleted = (movie: Movie): boolean => {
 
 // Performance calculation logic
 const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]): number => {
-    const adminMovies = allMovies.filter(movie => movie.uploadedBy === admin.name);
-    const completedMovies = adminMovies.filter(isUploadCompleted);
-    const now = new Date();
-    const lastWeekMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now, { weekStartsOn: 1 }), end: now }));
-
+    const allAdminMovies = allMovies.filter(movie => movie.uploadedBy === admin.name);
+    
     // 1. Task Completion (Weight: 5 points)
     let taskScore = 0;
     if (admin.task) {
-        const progress = Math.min(100, (completedMovies.length / admin.task.targetUploads) * 100);
+        const taskStartDate = parseISO(admin.task.startDate);
+        const moviesForTask = allAdminMovies.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
+        const completedMoviesForTask = moviesForTask.filter(isUploadCompleted);
+        
+        const progress = Math.min(100, (completedMoviesForTask.length / admin.task.targetUploads) * 100);
         taskScore = (progress / 100) * 5;
     } else {
         // Neutral score if no task is assigned
         taskScore = 2.5; 
     }
+    
+    const completedAdminMovies = allAdminMovies.filter(isUploadCompleted);
 
     // 2. Total Uploads (Weight: 3 points)
     // Scale: 0 uploads = 0 points, 50+ uploads = 3 points
-    const totalUploadsScore = Math.min(3, (completedMovies.length / 50) * 3);
+    const totalUploadsScore = Math.min(3, (completedAdminMovies.length / 50) * 3);
 
     // 3. Recent Activity (Weight: 2 points)
+    const now = new Date();
+    const lastWeekMovies = completedAdminMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now, { weekStartsOn: 1 }), end: now }));
     // Scale: 0 uploads last week = 0 points, 5+ uploads = 2 points
     const recentActivityScore = Math.min(2, (lastWeekMovies.length / 5) * 2);
 
@@ -108,10 +113,12 @@ function TaskManagerDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
             });
             return;
         }
+        // When a task is set or updated, the start date is always now.
         const task: AdminTask = {
             targetUploads,
             timeframe,
             deadline: deadline.toISOString(),
+            startDate: new Date().toISOString(),
         };
         startTransition(() => {
             onTaskSet(member.id, task);
