@@ -219,9 +219,11 @@ export default function UploadMovie() {
 
   const handleEpisodeLinkChange = (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => {
     const newEpisodes = [...(formData.episodes || [])];
-    const newLinks = handleLinkChange(newEpisodes[epIndex].downloadLinks, linkIndex, field, value);
-    newEpisodes[epIndex].downloadLinks = newLinks;
-    handleInputChange('episodes', newEpisodes);
+    if (newEpisodes[epIndex]) {
+        const newLinks = handleLinkChange(newEpisodes[epIndex].downloadLinks, linkIndex, field, value);
+        newEpisodes[epIndex].downloadLinks = newLinks;
+        handleInputChange('episodes', newEpisodes);
+    }
   }
 
 
@@ -246,8 +248,10 @@ export default function UploadMovie() {
   };
   const addEpisodeLink = (epIndex: number) => {
      const newEpisodes = [...(formData.episodes || [])];
-     newEpisodes[epIndex].downloadLinks = addListItem(newEpisodes[epIndex].downloadLinks, { quality: '1080p', url: '', size: '' });
-     handleInputChange('episodes', newEpisodes);
+     if (newEpisodes[epIndex]) {
+        newEpisodes[epIndex].downloadLinks = addListItem(newEpisodes[epIndex].downloadLinks, { quality: '1080p', url: '', size: '' });
+        handleInputChange('episodes', newEpisodes);
+     }
   }
   const addScreenshot = () => handleInputChange('screenshots', addListItem(formData.screenshots, ''));
 
@@ -265,8 +269,10 @@ export default function UploadMovie() {
   const removeScreenshot = (index: number) => handleInputChange('screenshots', removeListItem(formData.screenshots, index));
   const removeEpisodeLink = (epIndex: number, linkIndex: number) => {
       const newEpisodes = [...(formData.episodes || [])];
-      newEpisodes[epIndex].downloadLinks = removeListItem(newEpisodes[epIndex].downloadLinks, linkIndex);
-      handleInputChange('episodes', newEpisodes);
+      if (newEpisodes[epIndex]) {
+        newEpisodes[epIndex].downloadLinks = removeListItem(newEpisodes[epIndex].downloadLinks, linkIndex);
+        handleInputChange('episodes', newEpisodes);
+      }
   }
   
   const proceedWithSearch = async () => {
@@ -364,16 +370,16 @@ export default function UploadMovie() {
       const movieData: Partial<Movie> = {
         ...formData,
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        screenshots: (formData.screenshots || []).filter(ss => ss.trim() !== ''),
+        screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
       };
       if (formData.contentType === 'movie') {
-        movieData.downloadLinks = (formData.downloadLinks || []).filter(link => link.url.trim() !== '');
+        movieData.downloadLinks = (formData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
         delete movieData.episodes;
         delete movieData.seasonDownloadLinks;
         delete movieData.numberOfEpisodes;
       } else {
-        movieData.episodes = (formData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link.url.trim() !== '')})).filter(ep => ep.downloadLinks.length > 0);
-        movieData.seasonDownloadLinks = (formData.seasonDownloadLinks || []).filter(link => link.url.trim() !== '');
+        movieData.episodes = (formData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
+        movieData.seasonDownloadLinks = (formData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
         delete movieData.downloadLinks;
       }
       delete (movieData as any).tagsString;
