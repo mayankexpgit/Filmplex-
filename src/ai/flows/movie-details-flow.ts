@@ -62,14 +62,18 @@ Year: {{year}}
 Genre: {{genre}}
 Director: {{creator}}
 Actors: {{stars}}
-Original Plot: {{synopsis}}
 Trailer URL: {{trailerUrl}}
 Runtime: {{runtime}} minutes
 Release Date: {{releaseDate}}
 Country: {{country}}
 
+---
+ORIGINAL PLOT:
+{{synopsis}}
+---
+
 Your tasks:
-1.  **Synopsis**: Refine the provided plot into a compelling one-paragraph synopsis. Do not make up facts.
+1.  **Synopsis**: Based on the ORIGINAL PLOT provided above, expand and refine it into a compelling, detailed synopsis of 10-15 lines. Do not invent facts or characters. The synopsis should be a single paragraph.
 2.  **Tags**: Generate an array of 3-5 relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").
 3.  **Description**: Generate a detailed, colorful HTML description. It MUST follow this exact template:
 
