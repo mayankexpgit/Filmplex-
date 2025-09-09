@@ -26,7 +26,7 @@ import {
   deleteManagementMember as dbDeleteManagementMember,
   updateManagementMember as dbUpdateManagementMember,
 } from '@/services/movieService';
-import { isAfter, parseISO } from 'date-fns';
+import { format, isAfter, parseISO } from 'date-fns';
 
 
 // --- Types ---
@@ -415,8 +415,8 @@ export const deleteManagementMember = async (id: string): Promise<void> => {
     }));
 };
 
-export const updateManagementMemberTask = async (id: string, task: AdminTask): Promise<void> => {
-    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+export const updateManagementMemberTask = async (memberId: string, task: AdminTask): Promise<void> => {
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
     if (!member) return;
 
     // Archive the current task if it exists
@@ -427,17 +427,17 @@ export const updateManagementMemberTask = async (id: string, task: AdminTask): P
         pastTasks: newPastTasks
     };
 
-    await dbUpdateManagementMember(id, updates);
+    await dbUpdateManagementMember(memberId, updates);
     useMovieStore.setState(state => ({
         managementTeam: state.managementTeam.map(m => 
-            m.id === id ? { ...m, ...updates } : m
+            m.id === memberId ? { ...m, ...updates } : m
         ),
     }));
     await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${format(parseISO(task.deadline), 'PP')}`);
 }
 
-export const removeManagementMemberTask = async (id: string): Promise<void> => {
-    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+export const removeManagementMemberTask = async (memberId: string): Promise<void> => {
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
     if (!member || !member.task) return;
 
     const cancelledTask: AdminTask = { 
@@ -447,13 +447,13 @@ export const removeManagementMemberTask = async (id: string): Promise<void> => {
     };
     const newPastTasks = [...(member.pastTasks || []), cancelledTask];
     
-    const updates = { task: null, pastTasks: newPastTasks };
+    const updates = { task: undefined, pastTasks: newPastTasks };
 
-    await dbUpdateManagementMember(id, updates);
+    await dbUpdateManagementMember(memberId, updates);
 
     useMovieStore.setState(state => ({
         managementTeam: state.managementTeam.map(m => {
-            if (m.id === id) {
+            if (m.id === memberId) {
                 const { task, ...rest } = m;
                 return { ...rest, pastTasks: newPastTasks, task: undefined } as ManagementMember;
             }
@@ -500,7 +500,7 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
                 };
                 
                 const newPastTasks = [...(member.pastTasks || []), updatedTask];
-                const updates = { task: null, pastTasks: newPastTasks };
+                const updates = { task: undefined, pastTasks: newPastTasks };
 
                 await dbUpdateManagementMember(member.id, updates);
 
