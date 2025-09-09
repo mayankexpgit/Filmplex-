@@ -29,7 +29,7 @@ const MovieDetailsOutputSchema = z.object({
   tags: z.array(z.string()).describe('An array of relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").'),
   synopsis: z.string().describe('A brief, one-paragraph synopsis of the movie plot.'),
   description: z.string().describe('A longer, more detailed description of the movie, formatted in HTML.'),
-  cardInfoText: z.string().describe("A concise info string for the movie card. It must follow this exact format: 'Filmplex – {{title}} ({{year}}) [Audio Info] [Available Qualities]'. It must be short enough to fit on a movie card (approx 6-7 lines). Example: 'Filmplex – Tenet (2020) Dual Audio [1080p, 720p]'."),
+  cardInfoText: z.string().describe("A concise, multi-line info string for the movie card, approximately 6-7 lines long. It must follow this exact format: 'Filmplex – {{title}} ({{year}})\\n[Audio Info]\\n[Available Qualities]\\n[Source]\\n[Encoding Details]'. Example: 'Filmplex – Tenet (2020)\\nDual Audio [Hindi-Eng]\\n1080p, 720p & 480p\\n[WEB-DL]\\nx264 | HEVC'."),
   posterUrl: z.string().describe("The URL of the movie poster."),
   trailerUrl: z.string().optional().describe("The URL of the movie trailer."),
   runtime: z.number().optional().describe('The runtime of the movie in minutes.'),
@@ -58,11 +58,12 @@ const getMovieDetailsFlow = ai.defineFlow(
       tags: [],
       synopsis: tmdbData.synopsis, // Pass original synopsis to AI for refinement
       description: '',
+      cardInfoText: '',
     };
     
     const { output: creativeOutput } = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
-      output: { schema: MovieDetailsOutputSchema.pick({ synopsis: true, description: true, tags: true }) },
+      output: { schema: MovieDetailsOutputSchema.pick({ synopsis: true, description: true, tags: true, cardInfoText: true }) },
       prompt: `You are an expert movie database. Based on the following ACCURATE movie data, generate the creative fields. You MUST use the provided data as the source of truth.
 
 Movie Title: {{title}}
@@ -79,7 +80,8 @@ Country: {{country}}
 Your tasks:
 1.  **Synopsis**: Refine the provided plot into a compelling one-paragraph synopsis. Do not make up facts.
 2.  **Tags**: Generate an array of 3-5 relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").
-3.  **Description**: Generate a detailed, colorful HTML description. It MUST follow this exact template:
+3.  **Card Info Text**: Create a concise, multi-line info string for the movie card, approximately 6-7 lines long to fit the card perfectly. You MUST use the exact title and year from the input. Format it like this, using newline characters (\\n) for line breaks: 'Filmplex – {{title}} ({{year}})\\n[Audio Info, e.g., Dual Audio [Hindi-Eng]]\\n[Available Qualities, e.g., 1080p, 720p & 480p]\\n[Source, e.g., WEB-DL]\\n[Encoding Details, e.g., x264 | HEVC]'.
+4.  **Description**: Generate a detailed, colorful HTML description. It MUST follow this exact template:
 
 <p><span style="color:#ff4d4d;">✅ <b>Download {{title}} ({{year}}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a masterpiece in the {{genre}} genre</span>,<br><span style="color:#ff66b3;">blending drama, action, and powerful performances</span>,<br>now <span style="color:#00cccc;">available in high definition</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>
   `,
@@ -90,18 +92,14 @@ Your tasks:
         throw new Error("AI failed to generate creative content.");
     }
     
-    // Step 3: Manually construct cardInfoText from the factual TMDb data
-    const cardInfoText = `Filmplex – ${tmdbData.title} (${tmdbData.year}) Dual Audio [1080p, 720p]`;
-
-    // Step 4: Combine factual and creative data into the final output
+    // Step 3: Combine factual and creative data into the final output
     return {
       ...tmdbData,
       // From AI
       synopsis: creativeOutput.synopsis,
       description: creativeOutput.description,
       tags: creativeOutput.tags,
-      // Manually constructed
-      cardInfoText: cardInfoText,
+      cardInfoText: creativeOutput.cardInfoText,
     };
   }
 );
