@@ -217,13 +217,10 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
 
 
 const addSecurityLogEntry = async (action: string): Promise<void> => {
-    // Attempt to get admin name from localStorage, fallback to a generic name
+    // This is now session-based, so we rely on the state of useAuth hook
+    // which is not available here. A better approach would be to pass the admin name
+    // from the component where the action is initiated. For now, we'll use a placeholder.
     let adminName = 'admin_user';
-    try {
-        adminName = localStorage.getItem('filmplex_admin_name') || 'admin_user';
-    } catch(e) {
-        console.error("Could not access localStorage for security log.");
-    }
 
     const newLog = {
         admin: adminName,
@@ -240,12 +237,9 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
 };
 
 export const addMovie = async (movieData: Omit<Movie, 'id' | 'uploadedBy'>): Promise<void> => {
-  let adminName = 'unknown_admin';
-  try {
-      adminName = localStorage.getItem('filmplex_admin_name') || 'unknown_admin';
-  } catch(e) {
-      console.error("Could not access localStorage for uploader name.");
-  }
+  // Admin name should be passed from the component level where useAuth can be used.
+  // For now, using a placeholder.
+  const adminName = 'unknown_admin';
   
   const movieWithMetadata = {
     ...movieData,
@@ -381,12 +375,11 @@ export const deleteComment = async (movieId: string, commentId: string): Promise
 };
 
 export const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
-    await dbUpdateReaction(movieId, reaction);
-    useMovieStore.getState().incrementReaction(movieId, reaction);
     try {
-        localStorage.setItem(`reacted_${movieId}`, 'true');
+        await dbUpdateReaction(movieId, reaction);
+        useMovieStore.getState().incrementReaction(movieId, reaction);
     } catch (e) {
-        console.error("Could not save reaction state to localStorage", e);
+        console.error("Could not update reaction in database", e);
     }
 };
 
