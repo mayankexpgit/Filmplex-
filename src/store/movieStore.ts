@@ -433,30 +433,34 @@ export const updateManagementMemberTask = async (id: string, task: AdminTask): P
             m.id === id ? { ...m, ...updates } : m
         ),
     }));
-    await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${task.deadline}`);
+    await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${format(parseISO(task.deadline), 'PP')}`);
 }
 
 export const removeManagementMemberTask = async (id: string): Promise<void> => {
     const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
-    if (!member) return;
+    if (!member || !member.task) return;
 
-    const updates: Partial<ManagementMember> = { task: undefined };
-    if (member.task) {
-        updates.pastTasks = [...(member.pastTasks || []), member.task];
-    }
+    const cancelledTask: AdminTask = { 
+      ...member.task, 
+      status: 'cancelled',
+      endDate: new Date().toISOString(),
+    };
+    const newPastTasks = [...(member.pastTasks || []), cancelledTask];
     
-    await dbUpdateManagementMember(id, { task: null, pastTasks: updates.pastTasks });
+    const updates = { task: null, pastTasks: newPastTasks };
+
+    await dbUpdateManagementMember(id, updates);
 
     useMovieStore.setState(state => ({
         managementTeam: state.managementTeam.map(m => {
             if (m.id === id) {
                 const { task, ...rest } = m;
-                return { ...rest, pastTasks: updates.pastTasks } as ManagementMember;
+                return { ...rest, pastTasks: newPastTasks, task: undefined } as ManagementMember;
             }
             return m;
         }),
     }));
-    await addSecurityLogEntry(`Removed task for ${member.name}.`);
+    await addSecurityLogEntry(`Removed (cancelled) active task for ${member.name}.`);
 };
 
 /**
@@ -471,7 +475,6 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
             const now = new Date();
             const deadline = parseISO(member.task.deadline);
             
-            // Get movies uploaded by this admin since the task started
             const taskStartDate = parseISO(member.task.startDate);
             const completedMoviesForTask = allMovies
                 .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
@@ -483,7 +486,7 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
 
             if (isTargetMet) {
                 newStatus = 'completed';
-            } else if (isAfter(now, deadline)) { // Deadline passed and target not met
+            } else if (isAfter(now, deadline)) {
                 newStatus = 'incompleted';
             }
 
@@ -492,15 +495,23 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
                 const updatedTask: AdminTask = { 
                     ...member.task, 
                     status: newStatus,
-                    completedUploads: completedMoviesForTask.length
+                    completedUploads: completedMoviesForTask.length,
+                    endDate: new Date().toISOString()
                 };
                 
-                await dbUpdateManagementMember(member.id, { task: updatedTask });
+                const newPastTasks = [...(member.pastTasks || []), updatedTask];
+                const updates = { task: null, pastTasks: newPastTasks };
+
+                await dbUpdateManagementMember(member.id, updates);
 
                 useMovieStore.setState(state => ({
-                    managementTeam: state.managementTeam.map(m => 
-                        m.id === member.id ? { ...m, task: updatedTask } : m
-                    ),
+                    managementTeam: state.managementTeam.map(m => {
+                         if (m.id === member.id) {
+                            const { task, ...rest } = m;
+                            return { ...rest, pastTasks: newPastTasks, task: undefined } as ManagementMember;
+                        }
+                        return m;
+                    }),
                 }));
                  await addSecurityLogEntry(`Task for ${member.name} automatically marked as ${newStatus}.`);
             }

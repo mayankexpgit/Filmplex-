@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive } from 'lucide-react';
 import type { ManagementMember, AdminTask, Movie } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { format, addWeeks, setHours, setMinutes, setSeconds, isWithinInterval, startOfWeek, parseISO, isAfter, startOfDay } from 'date-fns';
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '../ui/badge';
+import { ScrollArea } from '../ui/scroll-area';
 
 const adminRoles = [
     'Regulator',
@@ -48,9 +49,15 @@ const isUploadCompleted = (movie: Movie): boolean => {
 // Performance calculation logic
 const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]): number => {
     
-    // 1. Task Performance Score (Weight: 6 points for success, -4 for failure)
-    let taskScore = 0; // Neutral score
-    if (admin.task?.status === 'completed') {
+    let taskScore = 0;
+    if (admin.pastTasks && admin.pastTasks.length > 0) {
+        const lastTask = admin.pastTasks[admin.pastTasks.length - 1];
+         if (lastTask.status === 'completed') {
+            taskScore = 6;
+        } else if (lastTask.status === 'incompleted') {
+            taskScore = -4;
+        }
+    } else if (admin.task?.status === 'completed') {
         taskScore = 6;
     } else if (admin.task?.status === 'incompleted') {
         taskScore = -4;
@@ -60,146 +67,15 @@ const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]):
         .filter(movie => movie.uploadedBy === admin.name)
         .filter(isUploadCompleted);
     
-    // 2. Total Uploads (Weight: 3 points)
-    // Scale: 0 uploads = 0 points, 50+ uploads = 3 points
     const totalUploadsScore = Math.min(3, (completedAdminMovies.length / 50) * 3);
 
-    // 3. Recent Activity (Weight: 1 point)
     const now = new Date();
     const lastWeekMovies = completedAdminMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now, { weekStartsOn: 1 }), end: now }));
-    // Scale: 0 uploads last week = 0 points, 5+ uploads = 1 point
     const recentActivityScore = Math.min(1, (lastWeekMovies.length / 5) * 1);
 
     const finalScore = taskScore + totalUploadsScore + recentActivityScore;
-    return Math.max(0, Math.min(10, Math.round(finalScore * 10) / 10)); // Ensure score is between 0-10
+    return Math.max(0, Math.min(10, Math.round(finalScore * 10) / 10));
 };
-
-function TaskManagerDialog({ member, onTaskSet, onTaskRemove }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; onTaskRemove: (id: string) => void; }) {
-    const { toast } = useToast();
-    const [targetUploads, setTargetUploads] = useState<number>(member.task?.targetUploads || 10);
-    const [timeframe, setTimeframe] = useState<'daily' | 'weekly'>(member.task?.timeframe || 'weekly');
-    const [deadline, setDeadline] = useState<Date | undefined>(member.task?.deadline ? new Date(member.task.deadline) : undefined);
-    const [isPending, startTransition] = useTransition();
-    const [isRemovePending, startRemoveTransition] = useTransition();
-
-    const handleSetDefaultDeadline = (selectedTimeframe: 'daily' | 'weekly') => {
-        const now = new Date();
-        const endOfDay = setSeconds(setMinutes(setHours(now, 23), 59), 59);
-        if (selectedTimeframe === 'daily') {
-            setDeadline(endOfDay);
-        } else {
-            setDeadline(addWeeks(endOfDay, 1));
-        }
-    }
-
-    const handleTimeframeChange = (value: 'daily' | 'weekly') => {
-        setTimeframe(value);
-        if(!deadline) { // Only set default if no deadline is set
-            handleSetDefaultDeadline(value);
-        }
-    }
-    
-    const handleSaveTask = () => {
-        if (!deadline || !targetUploads) {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Please set a target and a deadline.',
-            });
-            return;
-        }
-        // When a task is set or updated, the start date is always now.
-        const task: AdminTask = {
-            targetUploads,
-            timeframe,
-            deadline: deadline.toISOString(),
-            startDate: new Date().toISOString(),
-            status: 'active',
-        };
-        startTransition(() => {
-            onTaskSet(member.id, task);
-        });
-    }
-
-    const handleRemoveTask = () => {
-        startRemoveTransition(() => {
-            onTaskRemove(member.id);
-        });
-    }
-
-    return (
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Manage Task for {member.name.split('.').pop()}</DialogTitle>
-                <DialogDescription>Set, update, or remove an upload target for this team member.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                    <Label htmlFor="target-uploads">Target Uploads</Label>
-                    <Input 
-                        id="target-uploads" 
-                        type="number" 
-                        value={targetUploads} 
-                        onChange={e => setTargetUploads(Number(e.target.value))}
-                        min="1"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="timeframe">Timeframe</Label>
-                    <Select value={timeframe} onValueChange={handleTimeframeChange}>
-                        <SelectTrigger id="timeframe">
-                            <SelectValue placeholder="Select timeframe" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>Deadline</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={'outline'}
-                            className={cn( 'w-full justify-start text-left font-normal', !deadline && 'text-muted-foreground' )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {deadline ? format(deadline, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus />
-                        </PopoverContent>
-                    </Popover>
-                </div>
-            </div>
-            <DialogFooter className="sm:justify-between">
-                <div>
-                     {member.task && (
-                        <DialogClose asChild>
-                            <Button variant="destructive" onClick={handleRemoveTask} disabled={isRemovePending}>
-                                {isRemovePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Remove Task
-                            </Button>
-                        </DialogClose>
-                     )}
-                </div>
-                <div className="flex gap-2">
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <DialogClose asChild>
-                        <Button onClick={handleSaveTask} disabled={isPending}>
-                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {member.task ? 'Update Task' : 'Set Task'}
-                        </Button>
-                    </DialogClose>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-    );
-}
 
 const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
     if (!task) return <Badge variant="secondary">No Task</Badge>;
@@ -211,10 +87,119 @@ const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
             return <Badge variant="success"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
         case 'incompleted':
             return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Incompleted</Badge>;
+        case 'cancelled':
+            return <Badge variant="outline"><Archive className="mr-1 h-3 w-3" />Cancelled</Badge>;
         default:
             return <Badge variant="secondary">No Task</Badge>;
     }
 };
+
+function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; onTaskRemove: (id: string) => void; }) {
+    const { toast } = useToast();
+    const [targetUploads, setTargetUploads] = useState<number>(member.task?.targetUploads || 10);
+    const [deadline, setDeadline] = useState<Date | undefined>(member.task?.deadline ? new Date(member.task.deadline) : undefined);
+    const [isSetPending, startSetTransition] = useTransition();
+    const [isRemovePending, startRemoveTransition] = useTransition();
+    
+    const handleSaveTask = () => {
+        if (!deadline || !targetUploads) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please set a target and a deadline.' });
+            return;
+        }
+        if (isAfter(new Date(), deadline)) {
+            toast({ variant: 'destructive', title: 'Invalid Date', description: 'Deadline must be in the future.' });
+            return;
+        }
+        const task: AdminTask = {
+            targetUploads,
+            deadline: deadline.toISOString(),
+            startDate: new Date().toISOString(),
+            status: 'active',
+        };
+        startSetTransition(() => onTaskSet(member.id, task));
+    }
+
+    const handleRemoveTask = () => {
+        startRemoveTransition(() => onTaskRemove(member.id));
+    }
+    
+    const sortedPastTasks = [...(member.pastTasks || [])].sort((a,b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
+
+    return (
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Task History & Management for {member.name.split('.').pop()}</DialogTitle>
+                <DialogDescription>View past performance and manage the current task.</DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[60vh]">
+                {/* Left Side: Set/Update Task */}
+                <div className="space-y-4 p-4 border rounded-lg">
+                     <h3 className="font-semibold text-lg">{member.task ? 'Update Active Task' : 'Set New Task'}</h3>
+                    <div className="space-y-2">
+                        <Label htmlFor="target-uploads">Target Uploads</Label>
+                        <Input id="target-uploads" type="number" value={targetUploads} onChange={e => setTargetUploads(Number(e.target.value))} min="1" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Deadline</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal', !deadline && 'text-muted-foreground')}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {deadline ? format(deadline, 'PPP') : <span>Pick a date</span>}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus /></PopoverContent>
+                        </Popover>
+                    </div>
+                    <Button onClick={handleSaveTask} disabled={isSetPending} className="w-full">
+                        {isSetPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {member.task ? 'Update Task' : 'Set Task'}
+                    </Button>
+                     {member.task && (
+                        <Button variant="destructive" onClick={handleRemoveTask} disabled={isRemovePending} className="w-full">
+                            {isRemovePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Remove Active Task
+                        </Button>
+                    )}
+                </div>
+
+                {/* Right Side: Task History */}
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg flex items-center gap-2"><History className="h-5 w-5"/> Task Log</h3>
+                    <ScrollArea className="h-[45vh] pr-4">
+                        <div className="space-y-3">
+                             {member.task && (
+                                <div className="p-3 bg-secondary rounded-lg border-l-4 border-primary">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold">Active Task</p>
+                                        <TaskStatusBadge task={member.task} />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">Target: {member.task.targetUploads} uploads by {format(parseISO(member.task.deadline), 'PP')}</p>
+                                </div>
+                            )}
+                            {sortedPastTasks.length > 0 ? sortedPastTasks.map((task, index) => (
+                                <div key={index} className="p-3 bg-secondary/50 rounded-lg">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-semibold">{format(parseISO(task.startDate), 'PP')} - {task.endDate ? format(parseISO(task.endDate), 'PP') : 'N/A'}</p>
+                                        <TaskStatusBadge task={task} />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">Target: {task.targetUploads} | Completed: {task.completedUploads ?? 0}</p>
+                                </div>
+                            )) : (
+                               !member.task && <p className="text-center text-muted-foreground py-10">No task history for this member.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">Close</Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    );
+}
 
 export default function ManagementManager() {
   const { toast } = useToast();
@@ -248,11 +233,11 @@ export default function ManagementManager() {
             });
         }
     };
-    if (managementTeam.length > 0 && allMovies.length > 0) {
+    if (canManageTeam && managementTeam.length > 0 && allMovies.length > 0) {
         checkTasks();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [managementTeam, allMovies]);
+  }, [canManageTeam, managementTeam, allMovies]);
 
   const sortedTeam = useMemo(() => {
     return [...managementTeam].sort((a, b) => {
@@ -507,7 +492,7 @@ export default function ManagementManager() {
         </Card>
 
       </div>
-      {selectedMember && <TaskManagerDialog member={selectedMember} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} />}
+      {selectedMember && <TaskHistoryDialog member={selectedMember} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} />}
     </Dialog>
   );
 }
