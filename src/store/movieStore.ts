@@ -26,6 +26,7 @@ import {
   deleteManagementMember as dbDeleteManagementMember,
   updateManagementMember as dbUpdateManagementMember,
 } from '@/services/movieService';
+import { isAfter, parseISO } from 'date-fns';
 
 
 // --- Types ---
@@ -144,6 +145,18 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 // =================================================================
 // 2. ASYNCHRONOUS ACTION FUNCTIONS
 // =================================================================
+
+const isUploadCompleted = (movie: Movie): boolean => {
+    if (movie.contentType === 'movie') {
+        return !!movie.downloadLinks && movie.downloadLinks.some(link => link && link.url);
+    }
+    if (movie.contentType === 'series') {
+        const hasEpisodeLinks = movie.episodes && movie.episodes.some(ep => ep.downloadLinks.some(link => link && link.url));
+        const hasSeasonLinks = movie.seasonDownloadLinks && movie.seasonDownloadLinks.some(link => link && link.url);
+        return !!(hasEpisodeLinks || hasSeasonLinks);
+    }
+    return false;
+};
 
 let isFetchingData = false;
 /**
@@ -403,31 +416,95 @@ export const deleteManagementMember = async (id: string): Promise<void> => {
 };
 
 export const updateManagementMemberTask = async (id: string, task: AdminTask): Promise<void> => {
-    await dbUpdateManagementMember(id, { task });
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    if (!member) return;
+
+    // Archive the current task if it exists
+    const newPastTasks = member.task ? [...(member.pastTasks || []), member.task] : (member.pastTasks || []);
+    
+    const updates = {
+        task: task,
+        pastTasks: newPastTasks
+    };
+
+    await dbUpdateManagementMember(id, updates);
     useMovieStore.setState(state => ({
-        managementTeam: state.managementTeam.map(member => 
-            member.id === id ? { ...member, task } : member
+        managementTeam: state.managementTeam.map(m => 
+            m.id === id ? { ...m, ...updates } : m
         ),
     }));
-    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
-    if (member) {
-      await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${task.deadline}`);
-    }
+    await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${task.deadline}`);
 }
 
 export const removeManagementMemberTask = async (id: string): Promise<void> => {
-    await dbUpdateManagementMember(id, { task: null });
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
+    if (!member) return;
+
+    const updates: Partial<ManagementMember> = { task: undefined };
+    if (member.task) {
+        updates.pastTasks = [...(member.pastTasks || []), member.task];
+    }
+    
+    await dbUpdateManagementMember(id, { task: null, pastTasks: updates.pastTasks });
+
     useMovieStore.setState(state => ({
-        managementTeam: state.managementTeam.map(member => {
-            if (member.id === id) {
-                const { task, ...rest } = member;
-                return rest as ManagementMember;
+        managementTeam: state.managementTeam.map(m => {
+            if (m.id === id) {
+                const { task, ...rest } = m;
+                return { ...rest, pastTasks: updates.pastTasks } as ManagementMember;
             }
-            return member;
+            return m;
         }),
     }));
-    const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
-    if (member) {
-      await addSecurityLogEntry(`Removed task for ${member.name}.`);
+    await addSecurityLogEntry(`Removed task for ${member.name}.`);
+};
+
+/**
+ * Checks all active admin tasks. If a task is overdue, its status is updated in the database.
+ */
+export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
+    const { managementTeam, allMovies } = useMovieStore.getState();
+    let anyTaskUpdated = false;
+
+    for (const member of managementTeam) {
+        if (member.task?.status === 'active') {
+            const now = new Date();
+            const deadline = parseISO(member.task.deadline);
+            
+            // Get movies uploaded by this admin since the task started
+            const taskStartDate = parseISO(member.task.startDate);
+            const completedMoviesForTask = allMovies
+                .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+                .filter(isUploadCompleted);
+            
+            const isTargetMet = completedMoviesForTask.length >= member.task.targetUploads;
+
+            let newStatus: AdminTask['status'] | null = null;
+
+            if (isTargetMet) {
+                newStatus = 'completed';
+            } else if (isAfter(now, deadline)) { // Deadline passed and target not met
+                newStatus = 'incompleted';
+            }
+
+            if (newStatus) {
+                anyTaskUpdated = true;
+                const updatedTask: AdminTask = { 
+                    ...member.task, 
+                    status: newStatus,
+                    completedUploads: completedMoviesForTask.length
+                };
+                
+                await dbUpdateManagementMember(member.id, { task: updatedTask });
+
+                useMovieStore.setState(state => ({
+                    managementTeam: state.managementTeam.map(m => 
+                        m.id === member.id ? { ...m, task: updatedTask } : m
+                    ),
+                }));
+                 await addSecurityLogEntry(`Task for ${member.name} automatically marked as ${newStatus}.`);
+            }
+        }
     }
+    return anyTaskUpdated;
 };

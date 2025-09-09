@@ -34,14 +34,17 @@ export interface AdminTask {
   timeframe: 'daily' | 'weekly';
   deadline: string; // ISO String
   startDate: string; // ISO String, marks the beginning of the task period
+  status: 'active' | 'completed' | 'incompleted'; // Task status
+  completedUploads?: number; // To store the count at the time of completion/incompletion
 }
 
 export interface ManagementMember {
-    id: string;
+    id:string;
     name: string;
     info: string;
     timestamp: string; 
     task?: AdminTask;
+    pastTasks?: AdminTask[]; // To store a history of tasks
 }
 
 export interface Movie {

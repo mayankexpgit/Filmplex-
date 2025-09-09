@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp } from 'lucide-react';
+import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks } from '@/store/movieStore';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import type { ManagementMember, AdminTask, Movie } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
@@ -47,36 +47,31 @@ const isUploadCompleted = (movie: Movie): boolean => {
 
 // Performance calculation logic
 const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]): number => {
-    const allAdminMovies = allMovies.filter(movie => movie.uploadedBy === admin.name);
     
-    // 1. Task Completion (Weight: 5 points)
-    let taskScore = 0;
-    if (admin.task && admin.task.startDate) {
-        const taskStartDate = parseISO(admin.task.startDate);
-        const moviesForTask = allAdminMovies.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
-        const completedMoviesForTask = moviesForTask.filter(isUploadCompleted);
-        
-        const progress = Math.min(100, (completedMoviesForTask.length / admin.task.targetUploads) * 100);
-        taskScore = (progress / 100) * 5;
-    } else {
-        // Neutral score if no task is assigned
-        taskScore = 2.5; 
+    // 1. Task Performance Score (Weight: 6 points for success, -4 for failure)
+    let taskScore = 0; // Neutral score
+    if (admin.task?.status === 'completed') {
+        taskScore = 6;
+    } else if (admin.task?.status === 'incompleted') {
+        taskScore = -4;
     }
-    
-    const completedAdminMovies = allAdminMovies.filter(isUploadCompleted);
 
+    const completedAdminMovies = allMovies
+        .filter(movie => movie.uploadedBy === admin.name)
+        .filter(isUploadCompleted);
+    
     // 2. Total Uploads (Weight: 3 points)
     // Scale: 0 uploads = 0 points, 50+ uploads = 3 points
     const totalUploadsScore = Math.min(3, (completedAdminMovies.length / 50) * 3);
 
-    // 3. Recent Activity (Weight: 2 points)
+    // 3. Recent Activity (Weight: 1 point)
     const now = new Date();
     const lastWeekMovies = completedAdminMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now, { weekStartsOn: 1 }), end: now }));
-    // Scale: 0 uploads last week = 0 points, 5+ uploads = 2 points
-    const recentActivityScore = Math.min(2, (lastWeekMovies.length / 5) * 2);
+    // Scale: 0 uploads last week = 0 points, 5+ uploads = 1 point
+    const recentActivityScore = Math.min(1, (lastWeekMovies.length / 5) * 1);
 
     const finalScore = taskScore + totalUploadsScore + recentActivityScore;
-    return Math.round(finalScore * 10) / 10; // Round to one decimal place
+    return Math.max(0, Math.min(10, Math.round(finalScore * 10) / 10)); // Ensure score is between 0-10
 };
 
 function TaskManagerDialog({ member, onTaskSet, onTaskRemove }: { member: ManagementMember; onTaskSet: (id: string, task: AdminTask) => void; onTaskRemove: (id: string) => void; }) {
@@ -119,6 +114,7 @@ function TaskManagerDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
             timeframe,
             deadline: deadline.toISOString(),
             startDate: new Date().toISOString(),
+            status: 'active',
         };
         startTransition(() => {
             onTaskSet(member.id, task);
@@ -205,6 +201,21 @@ function TaskManagerDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
     );
 }
 
+const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
+    if (!task) return <Badge variant="secondary">No Task</Badge>;
+
+    switch(task.status) {
+        case 'active':
+            return <Badge variant="default"><AlertCircle className="mr-1 h-3 w-3" />Active</Badge>;
+        case 'completed':
+            return <Badge variant="success"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
+        case 'incompleted':
+            return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Incompleted</Badge>;
+        default:
+            return <Badge variant="secondary">No Task</Badge>;
+    }
+};
+
 export default function ManagementManager() {
   const { toast } = useToast();
   const [addPending, startAddTransition] = useTransition();
@@ -226,24 +237,22 @@ export default function ManagementManager() {
   const canManageTeam = adminProfile && topLevelRoles.includes(adminProfile.info);
 
   useEffect(() => {
-    // One-time effect to clean up legacy tasks without a startDate
-    const cleanupLegacyTasks = async () => {
-        const legacyTasks = managementTeam.filter(member => member.task && !member.task.startDate);
-        if (legacyTasks.length > 0) {
-            console.log(`Found ${legacyTasks.length} legacy tasks. Resetting...`);
-            const resetPromises = legacyTasks.map(member => removeManagementMemberTask(member.id));
-            await Promise.all(resetPromises);
+    // This effect will run once when the component mounts, or when `allMovies` changes.
+    // It checks for any overdue tasks and updates their status in the database.
+    const checkTasks = async () => {
+        const updated = await checkAndUpdateOverdueTasks();
+        if (updated) {
             toast({
-                title: 'Task System Reset',
-                description: 'Old admin tasks have been cleared for a fresh start.'
+                title: "Tasks Updated",
+                description: "Overdue task statuses have been automatically updated.",
             });
         }
     };
-    if (managementTeam.length > 0) {
-        cleanupLegacyTasks();
+    if (managementTeam.length > 0 && allMovies.length > 0) {
+        checkTasks();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [managementTeam]);
+  }, [managementTeam, allMovies]);
 
   const sortedTeam = useMemo(() => {
     return [...managementTeam].sort((a, b) => {
@@ -420,7 +429,7 @@ export default function ManagementManager() {
             <CardHeader>
                 <CardTitle>Current Team</CardTitle>
                 <CardDescription>
-                    This is the current list of management team members with their performance score.
+                    This is the current list of management team members with their performance score and task status.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -439,6 +448,7 @@ export default function ManagementManager() {
                                 </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                <TaskStatusBadge task={member.task} />
                                 <Badge variant={getPerformanceBadgeVariant(performanceScore)} className="flex items-center gap-1.5">
                                     <TrendingUp className="h-3.5 w-3.5" />
                                     <span>{performanceScore.toFixed(1)} / 10</span>

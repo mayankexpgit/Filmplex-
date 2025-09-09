@@ -164,7 +164,7 @@ export const addManagementMember = async (member: Omit<ManagementMember, 'id'>):
     return docRef.id;
 };
 
-export const updateManagementMember = async (id: string, updates: Partial<ManagementMember> | { task: null }): Promise<void> => {
+export const updateManagementMember = async (id: string, updates: Partial<Omit<ManagementMember, 'id'>> | { task: null }): Promise<void> => {
   const memberDoc = doc(db, 'management', id);
   // If task is explicitly set to null, we want to remove the field.
   const finalUpdates = (updates as any).task === null 
