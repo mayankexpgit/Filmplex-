@@ -8,7 +8,7 @@ import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { Progress } from '@/components/ui/progress';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isAfter } from 'date-fns';
 import { useMemo } from 'react';
 import type { Movie } from '@/lib/data';
 
@@ -106,8 +106,11 @@ function AdminTaskCard() {
     const { completedMoviesCount, taskProgress } = useMemo(() => {
         if (!adminProfile?.task) return { completedMoviesCount: 0, taskProgress: 0 };
         
+        const taskStartDate = parseISO(adminProfile.task.startDate);
+
         const completed = allMovies
             .filter(movie => movie.uploadedBy === adminProfile.name)
+            .filter(movie => movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
             .filter(isUploadCompleted);
 
         const progress = (completed.length / adminProfile.task.targetUploads) * 100;

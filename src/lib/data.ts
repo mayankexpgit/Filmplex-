@@ -31,16 +31,20 @@ export interface Comment {
 
 export interface AdminTask {
   targetUploads: number;
-  timeframe: 'daily' | 'weekly';
   deadline: string; // ISO String
+  startDate: string; // ISO String, marks the beginning of the task period
+  status: 'active' | 'completed' | 'incompleted' | 'cancelled'; // Task status
+  endDate?: string; // ISO string for when the task was completed/incompleted/cancelled
+  completedUploads?: number; // To store the count at the time of completion/incompletion
 }
 
 export interface ManagementMember {
-    id: string;
+    id:string;
     name: string;
     info: string;
     timestamp: string; 
     task?: AdminTask;
+    pastTasks?: AdminTask[]; // To store a history of tasks
 }
 
 export interface Movie {

@@ -54,7 +54,9 @@ function CommentsSection({ movieId }: { movieId: string }) {
     const { toast } = useToast();
 
     useEffect(() => {
-        fetchCommentsForMovie(movieId);
+        if (movieId) {
+            fetchCommentsForMovie(movieId);
+        }
         // Clear comments when movie changes
         return () => setComments([]);
     }, [movieId, setComments]);
@@ -175,20 +177,6 @@ export default function MovieDetailPage() {
     }
   }, [isInitialized, allMovies, slug]);
 
-  useEffect(() => {
-    if (movie) {
-      try {
-        const reacted = localStorage.getItem(`reacted_${movie.id}`);
-        if (reacted === 'true') {
-          setHasReacted(true);
-        }
-      } catch (error) {
-        console.error("Could not access localStorage:", error);
-      }
-    }
-  }, [movie]);
-
-
   if (!isInitialized || !movie) {
     return <MoviePageLoader />;
   }
@@ -200,7 +188,7 @@ export default function MovieDetailPage() {
   }
 
   const handleReactionClick = (reaction: keyof Reactions) => {
-    if (hasReacted) return;
+    if (hasReacted || !movie.id) return;
     submitReaction(movie.id, reaction);
     setHasReacted(true);
   }

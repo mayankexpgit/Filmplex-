@@ -117,8 +117,8 @@ export default function MovieList() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Movie List</span>
-            <Badge variant="secondary">{movies.length} movies</Badge>
+            <span>Movie List ({filteredMovies.length})</span>
+            <Badge variant="secondary">{movies.length} total movies</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

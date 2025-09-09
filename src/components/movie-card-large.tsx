@@ -130,8 +130,8 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
       </div>
        {moviesToShow.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-2 gap-y-4">
-          {moviesToShow.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} variant="large" />
+          {moviesToShow.map((movie, index) => (
+            <MovieCard key={`${movie.id}-${index}`} movie={movie} variant="large" />
           ))}
         </div>
       ) : (

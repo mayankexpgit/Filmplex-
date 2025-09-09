@@ -28,7 +28,9 @@ function MovieCommentsView({ movie, onBack }: { movie: Movie, onBack: () => void
     const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
-        fetchCommentsForMovie(movie.id);
+        if (movie.id) {
+            fetchCommentsForMovie(movie.id);
+        }
     }, [movie.id]);
 
     const handleDelete = (commentId: string) => {
@@ -119,20 +121,14 @@ function MovieCommentsView({ movie, onBack }: { movie: Movie, onBack: () => void
 
 
 export default function CommentsManager() {
-    const { latestReleases, featuredMovies, allComments, setAllComments } = useMovieStore();
+    const { allMovies } = useMovieStore();
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const allMovies = useMemo(() => {
-        const uniqueMovies = [...latestReleases, ...featuredMovies].filter(
-            (movie, index, self) => index === self.findIndex((m) => m.id === movie.id)
-        );
-        return uniqueMovies.sort((a,b) => a.title.localeCompare(b.title));
-    }, [latestReleases, featuredMovies]);
-
     const filteredMovies = useMemo(() => {
-        if (!searchQuery) return allMovies;
-        return allMovies.filter(movie => movie.title.toLowerCase().includes(searchQuery.toLowerCase()));
+        const sortedMovies = [...allMovies].sort((a,b) => a.title.localeCompare(b.title));
+        if (!searchQuery) return sortedMovies;
+        return sortedMovies.filter(movie => movie.title.toLowerCase().includes(searchQuery.toLowerCase()));
     }, [allMovies, searchQuery]);
 
     if (selectedMovie) {
