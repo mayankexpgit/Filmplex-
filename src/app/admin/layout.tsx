@@ -36,19 +36,6 @@ export default function AdminLayout({
     }
   }, [isAuthenticated, isInitialized]);
 
-  useEffect(() => {
-    if (adminProfile?.task) {
-      const deadline = format(parseISO(adminProfile.task.deadline), 'PP');
-      toast({
-        variant: 'default',
-        title: "New Task Assigned!",
-        description: `Your target: ${adminProfile.task.targetUploads} uploads by ${deadline}.`,
-        duration: 10000, 
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminProfile]);
-  
   // If we are on the login page, let it render without the layout shell
   if (pathname === '/admin/login') {
     return <>{children}</>;

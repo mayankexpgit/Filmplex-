@@ -4,14 +4,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
-import type { ManagementMember, Movie, DownloadRecord } from '@/lib/data';
+import type { ManagementMember, Movie, DownloadRecord, AdminTask } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
 import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
@@ -39,6 +39,23 @@ const isUploadCompleted = (movie: Movie): boolean => {
     }
     return false;
 }
+
+const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
+    if (!task) return <Badge variant="secondary">No Task</Badge>;
+
+    switch(task.status) {
+        case 'active':
+            return <Badge variant="default"><AlertCircle className="mr-1 h-3 w-3" />Active</Badge>;
+        case 'completed':
+            return <Badge variant="success"><CheckCircle className="mr-1 h-3 w-3" />Completed</Badge>;
+        case 'incompleted':
+            return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Incompleted</Badge>;
+        case 'cancelled':
+            return <Badge variant="outline"><Archive className="mr-1 h-3 w-3" />Cancelled</Badge>;
+        default:
+            return <Badge variant="secondary">No Task</Badge>;
+    }
+};
 
 function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     const [analyticsData, setAnalyticsData] = useState<{ date: string; downloads: number }[]>([]);
@@ -251,7 +268,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m));
         
         let completedForTask: Movie[] = [];
-        if (admin.task && admin.task.startDate) {
+        if (admin.task && admin.task.startDate && admin.task.status === 'active') {
             const taskStartDate = parseISO(admin.task.startDate);
             completedForTask = completed.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
         }
@@ -270,6 +287,13 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
     ];
     
     const taskProgress = admin.task ? (completedMoviesForTask.length / admin.task.targetUploads) * 100 : 0;
+    
+    const allTasks = [...(admin.pastTasks || [])];
+    if (admin.task) {
+        allTasks.push(admin.task);
+    }
+    const sortedTasks = allTasks.sort((a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
+
 
     return (
         <div className="space-y-6">
@@ -290,11 +314,11 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                 </CardContent>
             </Card>
 
-            {admin.task && admin.task.startDate && (
+            {admin.task && admin.task.status === 'active' && (
                  <Card>
                     <CardHeader>
-                        <CardTitle>Current Task</CardTitle>
-                        <CardDescription>Progress for the current {admin.task.timeframe} target. Task started on {format(parseISO(admin.task.startDate), 'PP')}.</CardDescription>
+                        <CardTitle>Current Active Task</CardTitle>
+                        <CardDescription>Progress for the current target. Task started on {format(parseISO(admin.task.startDate), 'PP')}.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex justify-between items-center gap-4 text-sm">
@@ -314,6 +338,39 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                     </CardContent>
                 </Card>
             )}
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Task History</CardTitle>
+                    <CardDescription>Record of all assigned tasks.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-[300px]">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Start Date</TableHead>
+                                    <TableHead>Deadline</TableHead>
+                                    <TableHead>Target</TableHead>
+                                    <TableHead>Completed</TableHead>
+                                    <TableHead>Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {sortedTasks.length > 0 ? sortedTasks.map((task, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{format(parseISO(task.startDate), 'PP')}</TableCell>
+                                        <TableCell>{format(parseISO(task.deadline), 'PP')}</TableCell>
+                                        <TableCell>{task.targetUploads}</TableCell>
+                                        <TableCell>{task.completedUploads ?? (task.status === 'active' ? completedMoviesForTask.length : 'N/A')}</TableCell>
+                                        <TableCell><TaskStatusBadge task={task} /></TableCell>
+                                    </TableRow>
+                                )) : <TableRow><TableCell colSpan={5} className="text-center h-24">No task history.</TableCell></TableRow>}
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
 
             <div className="grid md:grid-cols-2 gap-6">
                 <Card>

@@ -123,7 +123,12 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
         startRemoveTransition(() => onTaskRemove(member.id));
     }
     
-    const sortedPastTasks = [...(member.pastTasks || [])].sort((a,b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
+    const allTasks = [...(member.pastTasks || [])];
+    if (member.task) {
+        allTasks.push(member.task);
+    }
+    const sortedPastTasks = allTasks.sort((a,b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
+
 
     return (
         <DialogContent className="max-w-2xl">
@@ -168,25 +173,16 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
                     <h3 className="font-semibold text-lg flex items-center gap-2"><History className="h-5 w-5"/> Task Log</h3>
                     <ScrollArea className="h-[45vh] pr-4">
                         <div className="space-y-3">
-                             {member.task && (
-                                <div className="p-3 bg-secondary rounded-lg border-l-4 border-primary">
-                                    <div className="flex justify-between items-center">
-                                        <p className="font-semibold">Active Task</p>
-                                        <TaskStatusBadge task={member.task} />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground mt-1">Target: {member.task.targetUploads} uploads by {format(parseISO(member.task.deadline), 'PP')}</p>
-                                </div>
-                            )}
                             {sortedPastTasks.length > 0 ? sortedPastTasks.map((task, index) => (
                                 <div key={index} className="p-3 bg-secondary/50 rounded-lg">
                                     <div className="flex justify-between items-center">
-                                        <p className="font-semibold">{format(parseISO(task.startDate), 'PP')} - {task.endDate ? format(parseISO(task.endDate), 'PP') : 'N/A'}</p>
+                                        <p className="font-semibold">{format(parseISO(task.startDate), 'PP')} - {task.endDate ? format(parseISO(task.endDate), 'PP') : 'Ongoing'}</p>
                                         <TaskStatusBadge task={task} />
                                     </div>
-                                    <p className="text-sm text-muted-foreground mt-1">Target: {task.targetUploads} | Completed: {task.completedUploads ?? 0}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Target: {task.targetUploads} | Completed: {task.completedUploads ?? 'N/A'}</p>
                                 </div>
                             )) : (
-                               !member.task && <p className="text-center text-muted-foreground py-10">No task history for this member.</p>
+                                <p className="text-center text-muted-foreground py-10">No task history for this member.</p>
                             )}
                         </div>
                     </ScrollArea>
