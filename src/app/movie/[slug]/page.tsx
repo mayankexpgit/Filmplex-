@@ -221,7 +221,7 @@ export default function MovieDetailPage() {
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
           {movie.cardInfoText && (
-            <p className="text-2xl font-bold text-center mb-2 text-foreground">{movie.cardInfoText}</p>
+            <p className="text-2xl font-bold text-center mb-2 text-foreground whitespace-pre-line">{movie.cardInfoText}</p>
           )}
 
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">

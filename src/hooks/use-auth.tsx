@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { fetchAdminCredentials, fetchManagementTeam } from '@/services/movieService';
 import type { ManagementMember } from '@/lib/data';
 
+const ADMIN_STORAGE_KEY = 'filmplex_admin_name';
+
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,16 +15,41 @@ export function useAuth() {
   const [adminProfile, setAdminProfile] = useState<ManagementMember | null>(null);
   const router = useRouter();
 
-  // On initial load, we assume the user is not authenticated
-  // as we are not using any persistent storage like localStorage.
   useEffect(() => {
-    setIsLoading(false);
+    const checkLocalStorage = async () => {
+      try {
+        const storedAdminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+        if (storedAdminName) {
+          const managementTeam = await fetchManagementTeam();
+          const memberProfile = managementTeam.find(member => member.name === storedAdminName);
+          if (memberProfile) {
+            setAdminName(storedAdminName);
+            setAdminProfile(memberProfile);
+            setIsAuthenticated(true);
+          } else {
+            // Clear invalid data from storage
+            localStorage.removeItem(ADMIN_STORAGE_KEY);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check auth status:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkLocalStorage();
   }, []);
 
   const logout = useCallback(() => {
     setIsAuthenticated(false);
     setAdminName(null);
     setAdminProfile(null);
+    try {
+      localStorage.removeItem(ADMIN_STORAGE_KEY);
+    } catch (error) {
+      console.error("Failed to clear auth from localStorage:", error);
+    }
     router.replace('/admin/login');
   }, [router]);
 
@@ -46,10 +73,10 @@ export function useAuth() {
         return false;
       }
 
-      // If credentials are valid, set the state for the current session.
       setIsAuthenticated(true);
       setAdminName(name);
       setAdminProfile(memberProfile);
+      localStorage.setItem(ADMIN_STORAGE_KEY, name);
       return true;
 
     } catch (error) {
