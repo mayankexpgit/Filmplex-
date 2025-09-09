@@ -251,7 +251,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m));
         
         let completedForTask: Movie[] = [];
-        if (admin.task) {
+        if (admin.task && admin.task.startDate) {
             const taskStartDate = parseISO(admin.task.startDate);
             completedForTask = completed.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
         }
@@ -290,7 +290,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                 </CardContent>
             </Card>
 
-            {admin.task && (
+            {admin.task && admin.task.startDate && (
                  <Card>
                     <CardHeader>
                         <CardTitle>Current Task</CardTitle>

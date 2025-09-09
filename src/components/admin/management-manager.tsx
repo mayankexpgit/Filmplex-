@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useMemo } from 'react';
+import { useState, useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -51,7 +51,7 @@ const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]):
     
     // 1. Task Completion (Weight: 5 points)
     let taskScore = 0;
-    if (admin.task) {
+    if (admin.task && admin.task.startDate) {
         const taskStartDate = parseISO(admin.task.startDate);
         const moviesForTask = allAdminMovies.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
         const completedMoviesForTask = moviesForTask.filter(isUploadCompleted);
@@ -224,6 +224,26 @@ export default function ManagementManager() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   
   const canManageTeam = adminProfile && topLevelRoles.includes(adminProfile.info);
+
+  useEffect(() => {
+    // One-time effect to clean up legacy tasks without a startDate
+    const cleanupLegacyTasks = async () => {
+        const legacyTasks = managementTeam.filter(member => member.task && !member.task.startDate);
+        if (legacyTasks.length > 0) {
+            console.log(`Found ${legacyTasks.length} legacy tasks. Resetting...`);
+            const resetPromises = legacyTasks.map(member => removeManagementMemberTask(member.id));
+            await Promise.all(resetPromises);
+            toast({
+                title: 'Task System Reset',
+                description: 'Old admin tasks have been cleared for a fresh start.'
+            });
+        }
+    };
+    if (managementTeam.length > 0) {
+        cleanupLegacyTasks();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [managementTeam]);
 
   const sortedTeam = useMemo(() => {
     return [...managementTeam].sort((a, b) => {
