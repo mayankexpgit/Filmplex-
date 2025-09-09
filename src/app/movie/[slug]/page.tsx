@@ -221,7 +221,7 @@ export default function MovieDetailPage() {
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
           {movie.cardInfoText && (
-            <p className="text-2xl font-bold text-center mb-2 text-foreground">{movie.cardInfoText}</p>
+            <p className="text-2xl font-bold text-center mb-2 text-foreground whitespace-pre-line">{movie.cardInfoText}</p>
           )}
 
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
@@ -404,10 +404,10 @@ export default function MovieDetailPage() {
 
            <section className="w-full max-w-3xl mx-auto text-muted-foreground text-sm text-center space-y-4">
               <p>
-                  Filmplex is one of India's emerging platforms for watching and downloading a wide range of movies and web series, including Bollywood, Hollywood, South Indian, Hindi-dubbed, and more. From the latest blockbusters to timeless classics, Filmplex brings you content directly from original sources — ensuring quality and authenticity across every genre.
+                  Filmplex is one of India's emerging platforms for watching and downloading a wide range of movies and web series, including Bollywood, Hollywood, South Indian, Hindi-dubbed, and more. From the latest blockbusters to timeless classics, Filmplex brings you content directly from original sources â€” ensuring quality and authenticity across every genre.
               </p>
               <p>
-                  Filmplex offers high-quality movies across multiple resolutions like HD, 1080p, 4K, and more. One of its standout features is early movie notifications and scheduled release date alerts, so you never miss a new drop. Whether you're a fan of drama, action, romance, or thrillers — Filmplex has something for everyone.
+                  Filmplex offers high-quality movies across multiple resolutions like HD, 1080p, 4K, and more. One of its standout features is early movie notifications and scheduled release date alerts, so you never miss a new drop. Whether you're a fan of drama, action, romance, or thrillers â€” Filmplex has something for everyone.
               </p>
               <p>
                   The platform is 100% free to use, and while currently focused on downloads, streaming options may be available in the near future.
