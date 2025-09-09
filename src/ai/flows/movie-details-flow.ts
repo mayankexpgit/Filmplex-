@@ -48,55 +48,26 @@ const getMovieDetailsFlow = ai.defineFlow(
   },
   async (input) => {
     
-    // Step 1: Get factual data from TMDb API using the TMDb ID
+    // Step 1: Get all factual data from TMDb API using the TMDb ID
     const tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
     
-    // Step 2: Use the factual data to generate creative content with the LLM
-    const { output: creativeOutput } = await ai.generate({
-      model: 'googleai/gemini-2.0-flash',
-      output: { schema: MovieDetailsOutputSchema.pick({ synopsis: true, description: true, tags: true }) },
-      prompt: `You are an expert movie database. Based on the following ACCURATE movie data, generate the creative fields. You MUST use the provided data as the source of truth.
-
-Movie Title: {{title}}
-Year: {{year}}
-Genre: {{genre}}
-Director: {{creator}}
-Actors: {{stars}}
-Trailer URL: {{trailerUrl}}
-Runtime: {{runtime}} minutes
-Release Date: {{releaseDate}}
-Country: {{country}}
-
----
-ORIGINAL PLOT:
-{{synopsis}}
----
-
-Your tasks:
-1.  **Synopsis**: Based on the ORIGINAL PLOT provided above, expand and refine it into a compelling, detailed synopsis of 10-15 lines. Do not invent facts or characters. The synopsis should be a single paragraph.
-2.  **Tags**: Generate an array of 3-5 relevant tags (e.g., "Superhero", "Mind-bending", "Based on a true story").
-3.  **Description**: Generate a detailed, colorful HTML description. It MUST follow this exact template:
-
-<p><span style="color:#ff4d4d;">✅ <b>Download {{title}} ({{year}}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a masterpiece in the {{genre}} genre</span>,<br><span style="color:#ff66b3;">blending drama, action, and powerful performances</span>,<br>now <span style="color:#00cccc;">available in high definition</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>
-  `,
-      input: tmdbData,
-    });
+    // Step 2: Construct all fields directly from the factual data, removing the unreliable AI step.
     
-    if (!creativeOutput) {
-        throw new Error("AI failed to generate creative content.");
-    }
-    
-    // Step 3: Manually construct the cardInfoText to ensure accuracy
+    // Manually construct the cardInfoText to ensure accuracy
     const cardInfoText = `Filmplex – ${tmdbData.title} (${tmdbData.year})\nDual Audio [Hindi-Eng]\n1080p, 720p & 480p\n[WEB-DL]\nx264 | HEVC`;
 
-    // Step 4: Combine factual and creative data into the final output
+    // Create a reliable description from the fetched data
+    const description = `<p><span style="color:#ff4d4d;">✅ <b>Download ${tmdbData.title} (${tmdbData.year}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a masterpiece in the ${tmdbData.genre} genre</span>,<br><span style="color:#ff66b3;">blending drama, action, and powerful performances</span>,<br>now <span style="color:#00cccc;">available in high definition</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>`;
+    
+    // Use genres as tags for reliability
+    const tags = tmdbData.genre.split(',').map(g => g.trim()).filter(Boolean);
+
+    // Step 3: Combine all data into the final output
     return {
       ...tmdbData,
-      // From AI
-      synopsis: creativeOutput.synopsis,
-      description: creativeOutput.description,
-      tags: creativeOutput.tags,
-      // Manually created
+      synopsis: tmdbData.synopsis, // Use the direct synopsis from TMDb
+      description: description,
+      tags: tags,
       cardInfoText: cardInfoText,
     };
   }
