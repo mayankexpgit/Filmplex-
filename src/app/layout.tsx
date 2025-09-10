@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'FILMPLEX',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', type: 'image/x-icon' },
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' }, // added
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
     ],
     apple: '/apple-touch-icon.png',
     other: [
@@ -46,9 +47,19 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
           rel="stylesheet"
         />
+      </head>
+      <body className="font-body antialiased flex flex-col min-h-screen">
+        <div className="flex-grow">{children}</div>
+        <Toaster />
+        <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
+          <div className="container mx-auto text-center text-sm text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} FILMPLEX. All Rights Reserved.</p>
+          </div>
+        </footer>
 
-        {/* ✅ JSON-LD Schema for Google with Instagram */}
-        <script
+        {/* ✅ JSON-LD Schema with Instagram */}
+        <Script
+          id="ld-json-org"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -63,15 +74,6 @@ export default function RootLayout({
             }),
           }}
         />
-      </head>
-      <body className="font-body antialiased flex flex-col min-h-screen">
-        <div className="flex-grow">{children}</div>
-        <Toaster />
-        <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
-          <div className="container mx-auto text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} FILMPLEX. All Rights Reserved.</p>
-          </div>
-        </footer>
       </body>
     </html>
   );
