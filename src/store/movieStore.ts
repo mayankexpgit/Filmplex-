@@ -27,6 +27,7 @@ import {
   updateManagementMember as dbUpdateManagementMember,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
+import { getAdminName } from '@/hooks/use-auth';
 
 
 // --- Types ---
@@ -217,10 +218,7 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
 
 
 const addSecurityLogEntry = async (action: string): Promise<void> => {
-    // This is now session-based, so we rely on the state of useAuth hook
-    // which is not available here. A better approach would be to pass the admin name
-    // from the component where the action is initiated. For now, we'll use a placeholder.
-    let adminName = 'admin_user';
+    const adminName = getAdminName() || 'unknown_admin';
 
     const newLog = {
         admin: adminName,
@@ -237,9 +235,7 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
 };
 
 export const addMovie = async (movieData: Omit<Movie, 'id' | 'uploadedBy'>): Promise<void> => {
-  // Admin name should be passed from the component level where useAuth can be used.
-  // For now, using a placeholder.
-  const adminName = 'unknown_admin';
+  const adminName = getAdminName() || 'unknown_admin';
   
   const movieWithMetadata = {
     ...movieData,
