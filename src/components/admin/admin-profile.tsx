@@ -260,12 +260,15 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
 function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
     
     const { completedMovies, pendingMovies, completedMoviesForTask } = useMemo(() => {
-        const allAdminMovies = movies
-            .filter(movie => movie.uploadedBy === admin.name)
-            .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+        const sortMoviesByDate = (a: Movie, b: Movie) => {
+            if (!a.createdAt || !b.createdAt) return 0;
+            return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
+        };
+
+        const allAdminMovies = movies.filter(movie => movie.uploadedBy === admin.name);
         
-        const completed = allAdminMovies.filter(isUploadCompleted);
-        const pending = allAdminMovies.filter(m => !isUploadCompleted(m));
+        const completed = allAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
+        const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
         
         let completedForTask: Movie[] = [];
         if (admin.task && admin.task.startDate && admin.task.status === 'active') {

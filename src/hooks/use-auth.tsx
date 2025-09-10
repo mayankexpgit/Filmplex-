@@ -8,6 +8,19 @@ import type { ManagementMember } from '@/lib/data';
 
 const ADMIN_STORAGE_KEY = 'filmplex_admin_name';
 
+/**
+ * A utility function to safely get the admin name from localStorage.
+ * This can be used outside of a React component context (e.g., in Zustand store actions).
+ */
+export const getAdminName = (): string | null => {
+    try {
+        return localStorage.getItem(ADMIN_STORAGE_KEY);
+    } catch (error) {
+        console.error("Could not access localStorage:", error);
+        return null;
+    }
+};
+
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +31,7 @@ export function useAuth() {
   useEffect(() => {
     const checkLocalStorage = async () => {
       try {
-        const storedAdminName = localStorage.getItem(ADMIN_STORAGE_KEY);
+        const storedAdminName = getAdminName();
         if (storedAdminName) {
           const managementTeam = await fetchManagementTeam();
           const memberProfile = managementTeam.find(member => member.name === storedAdminName);
