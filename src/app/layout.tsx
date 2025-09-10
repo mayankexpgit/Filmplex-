@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -48,7 +47,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
 
-        {/* ✅ JSON-LD Schema for Google */}
+        {/* ✅ JSON-LD Schema for Google with Instagram */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -58,6 +57,9 @@ export default function RootLayout({
               "name": "FILMPLEX",
               "url": "https://filmplex.space",
               "logo": "https://filmplex.space/logo.png",
+              "sameAs": [
+                "https://www.instagram.com/filmplex.space/"
+              ]
             }),
           }}
         />
