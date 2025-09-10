@@ -1,5 +1,4 @@
-
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -11,6 +10,7 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', type: 'image/x-icon' },
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
     ],
     apple: '/apple-touch-icon.png',
     other: [
@@ -37,13 +37,37 @@ export default function RootLayout({
       <head>
         <meta charSet="UTF-8" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+
+        {/* ✅ JSON-LD Schema for Google Search Logo */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "FILMPLEX",
+              "url": "https://www.filmplex.com", // ← apna actual domain dalna
+              "logo": "https://www.filmplex.com/logo.png", // ← public/logo.png ka full URL
+              "sameAs": [
+                "https://www.facebook.com/filmplex",
+                "https://www.instagram.com/filmplex",
+                "https://twitter.com/filmplex"
+              ]
+            }),
+          }}
+        />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
-        <div className="flex-grow">
-          {children}
-        </div>
+        <div className="flex-grow">{children}</div>
         <Toaster />
         <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
           <div className="container mx-auto text-center text-sm text-muted-foreground">
