@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', type: 'image/x-icon' },
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' }, // added
     ],
     apple: '/apple-touch-icon.png',
     other: [
@@ -47,7 +48,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
 
-        {/* ✅ JSON-LD Schema for Google Search Logo */}
+        {/* ✅ JSON-LD Schema for Google */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -55,13 +56,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "FILMPLEX",
-              "url": "https://www.filmplex.com", // ← apna actual domain dalna
-              "logo": "https://www.filmplex.com/logo.png", // ← public/logo.png ka full URL
-              "sameAs": [
-                "https://www.facebook.com/filmplex",
-                "https://www.instagram.com/filmplex",
-                "https://twitter.com/filmplex"
-              ]
+              "url": "https://filmplex.space",
+              "logo": "https://filmplex.space/logo.png",
             }),
           }}
         />
