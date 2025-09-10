@@ -368,7 +368,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                                         <TableCell>{task.completedUploads ?? (task.status === 'active' ? completedMoviesForTask.length : 'N/A')}</TableCell>
                                         <TableCell><TaskStatusBadge task={task} /></TableCell>
                                     </TableRow>
-                                )) : <TableRow><TableCell colSpan={5} className="text-center h-24">No task history.</TableCell></TableRow>}
+                                )) : <TableRow key="no-tasks"><TableCell colSpan={5} className="text-center h-24">No task history.</TableCell></TableRow>}
                             </TableBody>
                         </Table>
                     </ScrollArea>
@@ -388,7 +388,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                                 <TableBody>
                                     {completedMovies.length > 0 ? completedMovies.map(movie => (
                                         <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{format(new Date(movie.createdAt!), 'PPP')}</TableCell></TableRow>
-                                    )) : <TableRow><TableCell colSpan={2} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
+                                    )) : <TableRow key="no-completed-uploads"><TableCell colSpan={2} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </ScrollArea>
@@ -406,7 +406,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                                 <TableBody>
                                     {pendingMovies.length > 0 ? pendingMovies.map(movie => (
                                         <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{format(new Date(movie.createdAt!), 'PPP')}</TableCell></TableRow>
-                                    )) : <TableRow><TableCell colSpan={2} className="text-center h-24">No pending uploads.</TableCell></TableRow>}
+                                    )) : <TableRow key="no-pending-uploads"><TableCell colSpan={2} className="text-center h-24">No pending uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </ScrollArea>
