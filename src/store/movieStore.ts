@@ -234,8 +234,12 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
     }
 };
 
-export const addMovie = async (movieData: Omit<Movie, 'id' | 'uploadedBy'>): Promise<void> => {
-  const adminName = getAdminName() || 'unknown_admin';
+export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
+  const adminName = getAdminName();
+  if (!adminName) {
+    console.error("Cannot add movie: admin name not found.");
+    return;
+  }
   
   const movieWithMetadata = {
     ...movieData,

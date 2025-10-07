@@ -89,6 +89,10 @@ export const updateReaction = async (movieId: string, reactionType: keyof Reacti
 
 // --- Comments ---
 export const fetchComments = async (movieId: string): Promise<Comment[]> => {
+    if (!movieId) {
+        console.error("fetchComments called with undefined movieId");
+        return [];
+    }
     const commentsCollection = collection(db, 'movies', movieId, 'comments');
     const q = query(commentsCollection, orderBy('timestamp', 'desc'));
     const snapshot = await getDocs(q);
