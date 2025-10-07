@@ -61,7 +61,7 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     const [topMovies, setTopMovies] = useState<{ title: string; count: number }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | 'all'>('7d');
-    const [allDownloadRecords, setAllDownloadRecords] = useState<DownloadRecord[]>([]);
+    const [allDownloadRecords, setAllDownloadRecords] = useState<{ id: string, movieId: string, timestamp: string }[]>([]);
 
     useEffect(() => {
         const fetchAllData = async () => {

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive, ListChecks, Target, X } from 'lucide-react';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive, ListChecks, Target, X, Eye } from 'lucide-react';
 import type { ManagementMember, AdminTask, Movie, TodoItem } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
@@ -21,6 +21,7 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Textarea } from '../ui/textarea';
+import { Progress } from '../ui/progress';
 
 const adminRoles = [
     'Regulator',
@@ -89,7 +90,78 @@ const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
     }
 };
 
-function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: ManagementMember; onTaskSet: (memberId: string, task: Omit<AdminTask, 'id' | 'status' | 'startDate'>) => void; onTaskRemove: (memberId: string, taskId: string) => void; }) {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+    if (task.type === 'target') {
+        const taskStartDate = parseISO(task.startDate);
+        const completedMoviesForTask = allMovies
+            .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+            .filter(isUploadCompleted);
+        
+        return {
+            completed: completedMoviesForTask.length,
+            target: task.target || 0,
+            progress: task.target ? (completedMoviesForTask.length / task.target) * 100 : 0
+        };
+    }
+    if (task.type === 'todo') {
+        const completedCount = task.items?.filter(item => item.completed).length || 0;
+        const totalCount = task.items?.length || 0;
+        return {
+            completed: completedCount,
+            target: totalCount,
+            progress: totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+        };
+    }
+    return { completed: 0, target: 0, progress: 0 };
+};
+
+function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: AdminTask, allMovies: Movie[], adminName: string, onClose: () => void }) {
+    const { completed, target, progress } = getTaskProgress(task, allMovies, adminName);
+    
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="max-w-xl">
+                <DialogHeader>
+                    <DialogTitle>Task Details: {task.title}</DialogTitle>
+                    <DialogDescription>
+                        <span className="capitalize">{task.type} Task</span> assigned to {adminName.split('.').pop()}.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    {task.type === 'target' ? (
+                        <div className="space-y-4">
+                            <h3 className="font-semibold">Task Progress</h3>
+                            <Progress value={progress} className="h-4" />
+                            <p className="text-center text-lg font-semibold">
+                                {completed} / {target}
+                                <span className="text-muted-foreground"> uploads completed</span>
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                             <h3 className="font-semibold">To-Do List Progress</h3>
+                             <ScrollArea className="h-[250px] pr-4">
+                                <ul className="space-y-2">
+                                    {(task.items || []).map((item, index) => (
+                                        <li key={index} className="flex items-center gap-3">
+                                            {item.completed ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                                            <span className={cn(item.completed && "line-through text-muted-foreground")}>{item.text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                             </ScrollArea>
+                        </div>
+                    )}
+                </div>
+                 <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Close</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove }: { member: ManagementMember; allMovies: Movie[], onTaskSet: (memberId: string, task: Omit<AdminTask, 'id' | 'status' | 'startDate'>) => void; onTaskRemove: (memberId: string, taskId: string) => void; }) {
     const { toast } = useToast();
     const [title, setTitle] = useState('');
     const [deadline, setDeadline] = useState<Date | undefined>();
@@ -97,6 +169,7 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
     const [targetUploads, setTargetUploads] = useState<number>(10);
     const [todoList, setTodoList] = useState('');
     const [isSetPending, startSetTransition] = useTransition();
+    const [viewingTask, setViewingTask] = useState<AdminTask | null>(null);
 
     const hasUnfinishedTask = member.tasks?.some(t => t.status === 'active' || t.status === 'incompleted');
 
@@ -143,6 +216,7 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
     const sortedTasks = [...(member.tasks || [])].sort((a,b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
 
     return (
+        <>
         <DialogContent className="max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Task History & Management for {member.name.split('.').pop()}</DialogTitle>
@@ -211,20 +285,25 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
                         <div className="space-y-3">
                             {sortedTasks.length > 0 ? sortedTasks.map((task) => (
                                 <div key={task.id} className="p-3 bg-secondary/50 rounded-lg">
-                                    <div className="flex justify-between items-start">
+                                    <div className="flex justify-between items-start gap-2">
                                         <div>
                                             <p className="font-semibold">{task.title}</p>
                                             <p className="text-sm text-muted-foreground mt-1">
                                                 {format(parseISO(task.startDate), 'PP')} - {task.endDate ? format(parseISO(task.endDate), 'PP') : 'Ongoing'}
                                             </p>
                                         </div>
-                                        <div className="flex flex-col items-end gap-1">
+                                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
                                             <TaskStatusBadge task={task} />
-                                            {(task.status === 'active' || task.status === 'incompleted') && (
-                                                <Button size="sm" variant="destructive" onClick={() => onTaskRemove(member.id, task.id)} disabled={isSetPending}>
-                                                    <X className="h-4 w-4 mr-1" /> Cancel
+                                             <div className="flex gap-1">
+                                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setViewingTask(task)}>
+                                                    <Eye className="h-4 w-4" />
                                                 </Button>
-                                            )}
+                                                {(task.status === 'active' || task.status === 'incompleted') && (
+                                                    <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => onTaskRemove(member.id, task.id)} disabled={isSetPending}>
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -241,6 +320,9 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
                 </DialogClose>
             </DialogFooter>
         </DialogContent>
+
+        {viewingTask && <TaskDetailsDialog task={viewingTask} allMovies={allMovies} adminName={member.name} onClose={() => setViewingTask(null)} />}
+        </>
     );
 }
 
@@ -541,7 +623,7 @@ export default function ManagementManager() {
         </Card>
 
       </div>
-      {selectedMember && <TaskHistoryDialog member={selectedMember} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} />}
+      {selectedMember && <TaskHistoryDialog member={selectedMember} allMovies={allMovies} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} />}
     </Dialog>
   );
 }
