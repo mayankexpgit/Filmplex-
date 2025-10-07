@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAdminCredentials, fetchManagementTeam } from '@/services/movieService';
 import type { ManagementMember } from '@/lib/data';
+import { useMovieStore } from '@/store/movieStore';
 
 const ADMIN_STORAGE_KEY = 'filmplex_admin_name';
 
@@ -27,14 +28,35 @@ export function useAuth() {
   const [adminName, setAdminName] = useState<string | null>(null);
   const [adminProfile, setAdminProfile] = useState<ManagementMember | null>(null);
   const router = useRouter();
+  
+  // Connect to the movie store to get real-time updates for the management team.
+  const managementTeam = useMovieStore(state => state.managementTeam);
+
+  useEffect(() => {
+    // This effect ensures that if the admin's profile data changes in the global store
+    // (e.g., a task is updated), the local adminProfile state in this hook is updated too.
+    if (adminName) {
+        const currentProfile = managementTeam.find(m => m.name === adminName);
+        if (currentProfile) {
+            setAdminProfile(currentProfile);
+        } else {
+            // If the profile is gone for some reason, log out.
+            logout();
+        }
+    }
+  }, [managementTeam, adminName]); // Rerun when the global team data or the local admin name changes
+
 
   useEffect(() => {
     const checkLocalStorage = async () => {
       try {
         const storedAdminName = getAdminName();
         if (storedAdminName) {
-          const managementTeam = await fetchManagementTeam();
-          const memberProfile = managementTeam.find(member => member.name === storedAdminName);
+          // No need to fetch here, the global store `fetchInitialData` handles it.
+          // We just need to check if the name is valid once data is loaded.
+          const initialTeam = await fetchManagementTeam();
+          const memberProfile = initialTeam.find(member => member.name === storedAdminName);
+          
           if (memberProfile) {
             setAdminName(storedAdminName);
             setAdminProfile(memberProfile);
