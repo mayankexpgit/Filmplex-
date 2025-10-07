@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass } from 'lucide-react';
+import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,6 +27,13 @@ const adminSections = [
     href: '/admin/movie-list',
     icon: List,
     id: 'movie-list',
+  },
+  {
+    title: 'My Tasks',
+    description: 'View and manage your assigned tasks.',
+    href: '/admin/my-tasks',
+    icon: ListChecks,
+    id: 'my-tasks',
   },
   {
     title: 'Update Featured Movies',
@@ -103,21 +109,28 @@ function AdminTaskCard() {
     const { adminProfile } = useAuth();
     const { allMovies } = useMovieStore();
 
-    const { completedMoviesCount, taskProgress } = useMemo(() => {
-        if (!adminProfile?.task) return { completedMoviesCount: 0, taskProgress: 0 };
+    const { completedMoviesCount, taskProgress, activeTodoTasks } = useMemo(() => {
+        if (!adminProfile?.tasks || adminProfile.tasks.length === 0) return { completedMoviesCount: 0, taskProgress: 0, activeTodoTasks: 0 };
         
-        const taskStartDate = parseISO(adminProfile.task.startDate);
+        const targetTask = adminProfile.tasks.find(t => t.type === 'target' && t.status === 'active');
+        const todoTasks = adminProfile.tasks.filter(t => t.type === 'todo' && t.status === 'active');
+
+        if (!targetTask) return { completedMoviesCount: 0, taskProgress: 0, activeTodoTasks: todoTasks.length };
+
+        const taskStartDate = parseISO(targetTask.startDate);
 
         const completed = allMovies
             .filter(movie => movie.uploadedBy === adminProfile.name)
             .filter(movie => movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
             .filter(isUploadCompleted);
 
-        const progress = (completed.length / adminProfile.task.targetUploads) * 100;
-        return { completedMoviesCount: completed.length, taskProgress: progress };
+        const progress = targetTask.target ? (completed.length / targetTask.target) * 100 : 0;
+        return { completedMoviesCount: completed.length, taskProgress: progress, activeTodoTasks: todoTasks.length };
     }, [adminProfile, allMovies]);
 
-    if (!adminProfile?.task) {
+    const targetTask = adminProfile?.tasks?.find(t => t.type === 'target' && t.status === 'active');
+
+    if (!targetTask) {
         return null;
     }
 
@@ -126,10 +139,10 @@ function AdminTaskCard() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Target className="h-6 w-6 text-primary" />
-                    <span>Your Current Task</span>
+                    <span>Your Current Upload Target</span>
                 </CardTitle>
                 <CardDescription>
-                    Your current assigned target is <span className="font-bold text-foreground">{adminProfile.task.targetUploads}</span> completed uploads.
+                    Your current assigned target is <span className="font-bold text-foreground">{targetTask.target}</span> completed uploads.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -139,12 +152,12 @@ function AdminTaskCard() {
                     </div>
                     <div className="flex items-center gap-2 text-primary font-semibold">
                         <Hourglass className="h-4 w-4" />
-                        <span>Deadline: {format(parseISO(adminProfile.task.deadline), 'PPp')}</span>
+                        <span>Deadline: {format(parseISO(targetTask.deadline), 'PPp')}</span>
                     </div>
                 </div>
                 <Progress value={taskProgress} className="h-3" />
                 <p className="text-center text-muted-foreground text-sm">
-                    {completedMoviesCount} / {adminProfile.task.targetUploads} uploads completed ({Math.round(taskProgress)}%)
+                    {completedMoviesCount} / {targetTask.target} uploads completed ({Math.round(taskProgress)}%)
                 </p>
             </CardContent>
         </Card>
@@ -152,8 +165,9 @@ function AdminTaskCard() {
 }
 
 export default function AdminDashboardPage() {
-  const { suggestions } = useMovieStore();
+  const { suggestions, adminProfile } = useMovieStore();
   const suggestionCount = suggestions.length;
+  const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && t.status === 'active').length || 0;
 
   return (
     <div className="container mx-auto py-8 md:py-12">
@@ -169,6 +183,11 @@ export default function AdminDashboardPage() {
                   <div className="flex-1">
                     <CardTitle className="flex items-center justify-between">
                       <span>{section.title}</span>
+                       {section.id === 'my-tasks' && activeTodoTasksCount > 0 && (
+                        <Badge variant="destructive" className="animate-pulse">
+                          {activeTodoTasksCount}
+                        </Badge>
+                      )}
                       {section.id === 'suggestions-box' && suggestionCount > 0 && (
                         <Badge variant="destructive" className="animate-pulse">
                           {suggestionCount}

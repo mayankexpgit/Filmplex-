@@ -1,6 +1,6 @@
-
 import { create } from 'zustand';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask } from '@/lib/data';
+import { v4 as uuidv4 } from 'uuid';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem } from '@/lib/data';
 import {
   addMovie as dbAddMovie,
   updateMovie as dbUpdateMovie,
@@ -68,6 +68,7 @@ interface MovieState {
   searchQuery: string;
   selectedGenre: string;
   selectedQuality: QualityFilter;
+  adminProfile: ManagementMember | null;
   
   // Admin Data
   contactInfo: ContactInfo;
@@ -111,6 +112,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   notifications: [],
   allComments: [],
   managementTeam: [],
+  adminProfile: null,
   comments: [],
   isInitialized: false,
 
@@ -185,6 +187,9 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
       dbFetchManagementTeam(),
     ]);
 
+    const adminName = getAdminName();
+    const adminProfile = managementTeam.find(m => m.name === adminName) || null;
+
     const stateUpdate: Partial<MovieState> = {
       allMovies: allMovies,
       latestReleases: allMovies,
@@ -192,6 +197,7 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
       notifications,
       contactInfo,
       managementTeam,
+      adminProfile,
     };
     
     if (isAdmin) {
@@ -237,8 +243,7 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
 export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   const adminName = getAdminName();
   if (!adminName) {
-    console.error("Cannot add movie: admin name not found.");
-    return;
+    throw new Error("Cannot add movie: admin name not found.");
   }
   
   const movieWithMetadata = {
@@ -345,6 +350,7 @@ export const deleteNotification = async (id: string): Promise<void> => {
 
 export const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
   try {
+    if (!movieId) return;
     const comments = await dbFetchComments(movieId);
     useMovieStore.getState().setComments(comments);
   } catch (error) {
@@ -383,7 +389,7 @@ export const submitReaction = async (movieId: string, reaction: keyof Reactions)
     }
 };
 
-// --- Management Team ---
+// --- Management Team & Tasks ---
 
 export const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'timestamp'>): Promise<void> => {
     const fullMemberData = {
@@ -408,52 +414,71 @@ export const deleteManagementMember = async (id: string): Promise<void> => {
     }));
 };
 
-export const updateManagementMemberTask = async (memberId: string, task: AdminTask): Promise<void> => {
+export const updateManagementMemberTask = async (memberId: string, taskData: Omit<AdminTask, 'id' | 'status' | 'startDate'>): Promise<void> => {
     const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
     if (!member) return;
 
-    // Archive the current task if it exists
-    const newPastTasks = member.task ? [...(member.pastTasks || []), member.task] : (member.pastTasks || []);
-    
-    const updates = {
-        task: task,
-        pastTasks: newPastTasks
+    const newTask: AdminTask = {
+        id: uuidv4(),
+        ...taskData,
+        startDate: new Date().toISOString(),
+        status: 'active'
     };
-
-    await dbUpdateManagementMember(memberId, updates);
+    
+    const newTasks = [...(member.tasks || []), newTask];
+    await dbUpdateManagementMember(memberId, { tasks: newTasks });
+    
     useMovieStore.setState(state => ({
-        managementTeam: state.managementTeam.map(m => 
-            m.id === memberId ? { ...m, ...updates } : m
-        ),
+        managementTeam: state.managementTeam.map(m => m.id === memberId ? { ...m, tasks: newTasks } : m ),
     }));
-    await addSecurityLogEntry(`Set task for ${member.name}: ${task.targetUploads} uploads by ${format(parseISO(task.deadline), 'PP')}`);
+    await addSecurityLogEntry(`Set task "${taskData.title}" for ${member.name}.`);
 }
 
-export const removeManagementMemberTask = async (memberId: string): Promise<void> => {
-    const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
-    if (!member || !member.task) return;
 
-    const cancelledTask: AdminTask = { 
-      ...member.task, 
-      status: 'cancelled',
-      endDate: new Date().toISOString(),
-    };
-    const newPastTasks = [...(member.pastTasks || []), cancelledTask];
-    
-    const updates = { task: undefined, pastTasks: newPastTasks };
+export const updateAdminTask = async (memberId: string, taskId: string, itemIndex: number, completed: boolean): Promise<void> => {
+    const { managementTeam } = useMovieStore.getState();
+    const member = managementTeam.find(m => m.id === memberId);
+    if (!member || !member.tasks) return;
 
-    await dbUpdateManagementMember(memberId, updates);
+    const newTasks = member.tasks.map(task => {
+        if (task.id === taskId && task.type === 'todo' && task.items) {
+            const newItems = [...task.items];
+            newItems[itemIndex] = { ...newItems[itemIndex], completed };
+            return { ...task, items: newItems };
+        }
+        return task;
+    });
 
+    await dbUpdateManagementMember(memberId, { tasks: newTasks });
     useMovieStore.setState(state => ({
-        managementTeam: state.managementTeam.map(m => {
-            if (m.id === memberId) {
-                const { task, ...rest } = m;
-                return { ...rest, pastTasks: newPastTasks, task: undefined } as ManagementMember;
-            }
-            return m;
-        }),
+        managementTeam: state.managementTeam.map(m => m.id === memberId ? { ...m, tasks: newTasks } : m),
+        adminProfile: state.adminProfile?.id === memberId ? { ...state.adminProfile, tasks: newTasks } : state.adminProfile,
     }));
-    await addSecurityLogEntry(`Removed (cancelled) active task for ${member.name}.`);
+}
+
+
+export const removeManagementMemberTask = async (memberId: string, taskId: string): Promise<void> => {
+    const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
+    if (!member || !member.tasks) return;
+
+    let taskTitle = 'a task';
+    const newTasks = member.tasks.map(task => {
+        if (task.id === taskId) {
+            taskTitle = task.title;
+            return {
+                ...task,
+                status: 'cancelled' as const,
+                endDate: new Date().toISOString()
+            };
+        }
+        return task;
+    });
+
+    await dbUpdateManagementMember(memberId, { tasks: newTasks });
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.map(m => m.id === memberId ? { ...m, tasks: newTasks } : m),
+    }));
+    await addSecurityLogEntry(`Cancelled task "${taskTitle}" for ${member.name}.`);
 };
 
 /**
@@ -464,50 +489,50 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
     let anyTaskUpdated = false;
 
     for (const member of managementTeam) {
-        if (member.task?.status === 'active') {
-            const now = new Date();
-            const deadline = parseISO(member.task.deadline);
-            
-            const taskStartDate = parseISO(member.task.startDate);
-            const completedMoviesForTask = allMovies
-                .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
-                .filter(isUploadCompleted);
-            
-            const isTargetMet = completedMoviesForTask.length >= member.task.targetUploads;
+        if (!member.tasks || member.tasks.length === 0) continue;
 
-            let newStatus: AdminTask['status'] | null = null;
+        const now = new Date();
+        let tasksNeedUpdate = false;
 
-            if (isTargetMet) {
-                newStatus = 'completed';
-            } else if (isAfter(now, deadline)) {
-                newStatus = 'incompleted';
+        const updatedTasks = member.tasks.map(task => {
+            if (task.status !== 'active') return task;
+
+            const deadline = parseISO(task.deadline);
+            let isCompleted = false;
+
+            if (task.type === 'target') {
+                const taskStartDate = parseISO(task.startDate);
+                const completedMoviesForTask = allMovies
+                    .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+                    .filter(isUploadCompleted);
+                if (task.target && completedMoviesForTask.length >= task.target) {
+                    isCompleted = true;
+                }
+            } else if (task.type === 'todo') {
+                if (task.items?.every(item => item.completed)) {
+                    isCompleted = true;
+                }
             }
-
-            if (newStatus) {
+            
+            if (isCompleted) {
+                tasksNeedUpdate = true;
                 anyTaskUpdated = true;
-                const updatedTask: AdminTask = { 
-                    ...member.task, 
-                    status: newStatus,
-                    completedUploads: completedMoviesForTask.length,
-                    endDate: new Date().toISOString()
-                };
-                
-                const newPastTasks = [...(member.pastTasks || []), updatedTask];
-                const updates = { task: undefined, pastTasks: newPastTasks };
-
-                await dbUpdateManagementMember(member.id, updates);
-
-                useMovieStore.setState(state => ({
-                    managementTeam: state.managementTeam.map(m => {
-                         if (m.id === member.id) {
-                            const { task, ...rest } = m;
-                            return { ...rest, pastTasks: newPastTasks, task: undefined } as ManagementMember;
-                        }
-                        return m;
-                    }),
-                }));
-                 await addSecurityLogEntry(`Task for ${member.name} automatically marked as ${newStatus}.`);
+                return { ...task, status: 'completed' as const, endDate: new Date().toISOString() };
+            } else if (isAfter(now, deadline)) {
+                tasksNeedUpdate = true;
+                anyTaskUpdated = true;
+                return { ...task, status: 'incompleted' as const, endDate: new Date().toISOString() };
             }
+            
+            return task;
+        });
+
+        if (tasksNeedUpdate) {
+            await dbUpdateManagementMember(member.id, { tasks: updatedTasks });
+            useMovieStore.setState(state => ({
+                managementTeam: state.managementTeam.map(m => m.id === member.id ? { ...m, tasks: updatedTasks } : m)
+            }));
+            await addSecurityLogEntry(`Task status automatically updated for ${member.name}.`);
         }
     }
     return anyTaskUpdated;

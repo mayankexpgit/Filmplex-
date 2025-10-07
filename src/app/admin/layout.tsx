@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target, ListChecks } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -59,6 +58,12 @@ export default function AdminLayout({
             <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
           <div className="flex items-center gap-4">
+             <Button variant="outline" asChild>
+              <Link href="/admin/my-tasks">
+                <ListChecks className="mr-2 h-4 w-4" />
+                My Tasks
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href="/admin/profile">
                 <UserCircle className="mr-2 h-4 w-4" />

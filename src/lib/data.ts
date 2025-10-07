@@ -29,13 +29,28 @@ export interface Comment {
   movieId: string;
 }
 
+export interface TodoItem {
+    text: string;
+    completed: boolean;
+}
+
 export interface AdminTask {
-  targetUploads: number;
+  id: string;
+  title: string;
+  type: 'target' | 'todo';
   deadline: string; // ISO String
   startDate: string; // ISO String, marks the beginning of the task period
   status: 'active' | 'completed' | 'incompleted' | 'cancelled'; // Task status
+  
+  // Target-based properties
+  target?: number;
+  
+  // To-do-based properties
+  items?: TodoItem[];
+
+  // Completion data
   endDate?: string; // ISO string for when the task was completed/incompleted/cancelled
-  completedUploads?: number; // To store the count at the time of completion/incompletion
+  completedCount?: number; // To store the count at the time of completion/incompletion
 }
 
 export interface ManagementMember {
@@ -43,8 +58,7 @@ export interface ManagementMember {
     name: string;
     info: string;
     timestamp: string; 
-    task?: AdminTask;
-    pastTasks?: AdminTask[]; // To store a history of tasks
+    tasks?: AdminTask[];
 }
 
 export interface Movie {

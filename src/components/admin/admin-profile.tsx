@@ -1,17 +1,16 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
-import type { ManagementMember, Movie, DownloadRecord, AdminTask } from '@/lib/data';
+import type { ManagementMember, Movie, AdminTask, TodoItem } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
 import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
@@ -129,7 +128,7 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
                 monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
             });
             const chartData = Object.entries(monthlyCounts).sort(([a], [b]) => a.localeCompare(b)).map(([month, downloads]) => ({
-                date: format(new Date(month + '-02'), 'MMM yy'), // Using day 02 to avoid timezone issues
+                date: format(new Date(month + '-02'), 'yyyy-MM-dd'), // Using day 02 to avoid timezone issues
                 downloads
             }));
             setAnalyticsData(chartData);
@@ -256,10 +255,35 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     );
 }
 
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+    if (task.type === 'target') {
+        const taskStartDate = parseISO(task.startDate);
+        const completedMoviesForTask = allMovies
+            .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+            .filter(isUploadCompleted);
+        
+        return {
+            completed: completedMoviesForTask.length,
+            target: task.target || 0,
+            progress: task.target ? (completedMoviesForTask.length / task.target) * 100 : 0
+        };
+    }
+    if (task.type === 'todo') {
+        const completedCount = task.items?.filter(item => item.completed).length || 0;
+        const totalCount = task.items?.length || 0;
+        return {
+            completed: completedCount,
+            target: totalCount,
+            progress: totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+        };
+    }
+    return { completed: 0, target: 0, progress: 0 };
+};
+
 
 function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
     
-    const { completedMovies, pendingMovies, completedMoviesForTask } = useMemo(() => {
+    const { completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
             if (!a.createdAt || !b.createdAt) return 0;
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
@@ -270,13 +294,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         const completed = allAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
         
-        let completedForTask: Movie[] = [];
-        if (admin.task && admin.task.startDate && admin.task.status === 'active') {
-            const taskStartDate = parseISO(admin.task.startDate);
-            completedForTask = completed.filter(m => m.createdAt && isAfter(parseISO(m.createdAt), taskStartDate));
-        }
-
-        return { completedMovies: completed, pendingMovies: pending, completedMoviesForTask: completedForTask };
+        return { completedMovies: completed, pendingMovies: pending };
     }, [admin, movies]);
     
     const now = new Date();
@@ -289,14 +307,9 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         { label: 'This Month', value: monthlyMovies.length, icon: Clock },
     ];
     
-    const taskProgress = admin.task ? (completedMoviesForTask.length / admin.task.targetUploads) * 100 : 0;
-    
-    const allTasks = [...(admin.pastTasks || [])];
-    if (admin.task) {
-        allTasks.push(admin.task);
-    }
-    const sortedTasks = allTasks.sort((a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
-
+    const allTasks = admin.tasks || [];
+    const sortedTasks = [...allTasks].sort((a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
+    const activeTasks = admin.tasks?.filter(t => t.status === 'active') || [];
 
     return (
         <div className="space-y-6">
@@ -317,27 +330,36 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                 </CardContent>
             </Card>
 
-            {admin.task && admin.task.status === 'active' && (
+            {activeTasks.length > 0 && (
                  <Card>
                     <CardHeader>
-                        <CardTitle>Current Active Task</CardTitle>
-                        <CardDescription>Progress for the current target. Task started on {format(parseISO(admin.task.startDate), 'PP')}.</CardDescription>
+                        <CardTitle>Current Active Tasks</CardTitle>
+                        <CardDescription>Progress for all current targets.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex justify-between items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                                <Target className="h-5 w-5 text-primary" />
-                                <span className="font-medium">Target: {admin.task.targetUploads} uploads</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Hourglass className="h-5 w-5 text-primary" />
-                                <span className="font-medium">Deadline: {format(parseISO(admin.task.deadline), 'PPp')}</span>
-                            </div>
-                        </div>
-                        <Progress value={taskProgress} className="h-3" />
-                         <p className="text-center text-muted-foreground text-sm">
-                            {completedMoviesForTask.length} / {admin.task.targetUploads} uploads completed ({Math.round(taskProgress)}%)
-                        </p>
+                        {activeTasks.map(task => {
+                             const { completed, target, progress } = getTaskProgress(task, movies, admin.name);
+                             const Icon = task.type === 'target' ? Target : ListChecks;
+
+                             return (
+                                <div key={task.id} className="p-3 border rounded-lg">
+                                    <div className="flex justify-between items-center gap-4 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Icon className="h-5 w-5 text-primary" />
+                                            <span className="font-medium">{task.title}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Hourglass className="h-5 w-5 text-primary" />
+                                            <span className="font-medium">Deadline: {format(parseISO(task.deadline), 'PPp')}</span>
+                                        </div>
+                                    </div>
+                                    <Progress value={progress} className="h-3 my-2" />
+                                     <p className="text-center text-muted-foreground text-sm">
+                                        {completed} / {target} completed ({Math.round(progress)}%)
+                                    </p>
+                                </div>
+                             )
+                        })}
                     </CardContent>
                 </Card>
             )}
@@ -352,23 +374,21 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Start Date</TableHead>
+                                    <TableHead>Task Title</TableHead>
+                                    <TableHead>Type</TableHead>
                                     <TableHead>Deadline</TableHead>
-                                    <TableHead>Target</TableHead>
-                                    <TableHead>Completed</TableHead>
                                     <TableHead>Status</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sortedTasks.length > 0 ? sortedTasks.map((task, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell>{format(parseISO(task.startDate), 'PP')}</TableCell>
+                                {sortedTasks.length > 0 ? sortedTasks.map((task) => (
+                                    <TableRow key={task.id}>
+                                        <TableCell>{task.title}</TableCell>
+                                        <TableCell><Badge variant="outline" className="capitalize">{task.type}</Badge></TableCell>
                                         <TableCell>{format(parseISO(task.deadline), 'PP')}</TableCell>
-                                        <TableCell>{task.targetUploads}</TableCell>
-                                        <TableCell>{task.completedUploads ?? (task.status === 'active' ? completedMoviesForTask.length : 'N/A')}</TableCell>
                                         <TableCell><TaskStatusBadge task={task} /></TableCell>
                                     </TableRow>
-                                )) : <TableRow key="no-tasks"><TableCell colSpan={5} className="text-center h-24">No task history.</TableCell></TableRow>}
+                                )) : <TableRow key="no-tasks"><TableCell colSpan={4} className="text-center h-24">No task history.</TableCell></TableRow>}
                             </TableBody>
                         </Table>
                     </ScrollArea>
@@ -387,7 +407,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                                 <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                                 <TableBody>
                                     {completedMovies.length > 0 ? completedMovies.map(movie => (
-                                        <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{format(new Date(movie.createdAt!), 'PPP')}</TableCell></TableRow>
+                                        <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
                                     )) : <TableRow key="no-completed-uploads"><TableCell colSpan={2} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
@@ -405,7 +425,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                                 <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                                 <TableBody>
                                     {pendingMovies.length > 0 ? pendingMovies.map(movie => (
-                                        <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{format(new Date(movie.createdAt!), 'PPP')}</TableCell></TableRow>
+                                        <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
                                     )) : <TableRow key="no-pending-uploads"><TableCell colSpan={2} className="text-center h-24">No pending uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
