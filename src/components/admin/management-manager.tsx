@@ -98,6 +98,8 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
     const [todoList, setTodoList] = useState('');
     const [isSetPending, startSetTransition] = useTransition();
 
+    const hasUnfinishedTask = member.tasks?.some(t => t.status === 'active' || t.status === 'incompleted');
+
     const handleSaveTask = () => {
         if (!deadline || !title) {
             toast({ variant: 'destructive', title: 'Error', description: 'Please set a title and a deadline.' });
@@ -150,47 +152,57 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
                 <div className="space-y-4 p-4 border rounded-lg">
                     <h3 className="font-semibold text-lg">Assign New Task</h3>
                     
-                    <div className="space-y-2">
-                        <Label>Task Type</Label>
-                        <RadioGroup defaultValue="target" value={taskType} onValueChange={(v: 'target'|'todo') => setTaskType(v)} className="flex gap-4">
-                            <div className="flex items-center space-x-2"><RadioGroupItem value="target" id="r-target" /><Label htmlFor="r-target">Target Based</Label></div>
-                            <div className="flex items-center space-x-2"><RadioGroupItem value="todo" id="r-todo" /><Label htmlFor="r-todo">To-do List</Label></div>
-                        </RadioGroup>
-                    </div>
-                    
-                    <div className="space-y-2">
-                        <Label htmlFor="task-title">Task Title</Label>
-                        <Input id="task-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Weekly Uploads" />
-                    </div>
-
-                    {taskType === 'target' ? (
-                        <div className="space-y-2">
-                            <Label htmlFor="target-uploads">Target Uploads</Label>
-                            <Input id="target-uploads" type="number" value={targetUploads} onChange={e => setTargetUploads(Number(e.target.value))} min="1" />
+                    {hasUnfinishedTask ? (
+                         <div className="text-center py-10 px-4 bg-amber-900/20 text-amber-400 border border-amber-500/30 rounded-lg">
+                            <AlertCircle className="mx-auto h-10 w-10" />
+                            <h4 className="mt-2 font-semibold">Task in Progress</h4>
+                            <p className="text-sm text-amber-300">This admin has an active or incompleted task. A new task cannot be assigned until the current one is completed or cancelled.</p>
                         </div>
                     ) : (
-                         <div className="space-y-2">
-                            <Label htmlFor="todo-list">Movie To-Do List (one per line)</Label>
-                            <Textarea id="todo-list" value={todoList} onChange={e => setTodoList(e.target.value)} placeholder="The Matrix&#10;Inception&#10;Interstellar" rows={5}/>
+                    <>
+                        <div className="space-y-2">
+                            <Label>Task Type</Label>
+                            <RadioGroup defaultValue="target" value={taskType} onValueChange={(v: 'target'|'todo') => setTaskType(v)} className="flex gap-4">
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="target" id="r-target" /><Label htmlFor="r-target">Target Based</Label></div>
+                                <div className="flex items-center space-x-2"><RadioGroupItem value="todo" id="r-todo" /><Label htmlFor="r-todo">To-do List</Label></div>
+                            </RadioGroup>
                         </div>
-                    )}
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="task-title">Task Title</Label>
+                            <Input id="task-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Weekly Uploads" />
+                        </div>
 
-                    <div className="space-y-2">
-                        <Label>Deadline</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal', !deadline && 'text-muted-foreground')}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {deadline ? format(deadline, 'PPP') : <span>Pick a date</span>}
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus /></PopoverContent>
-                        </Popover>
-                    </div>
-                    <Button onClick={handleSaveTask} disabled={isSetPending} className="w-full">
-                        {isSetPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Set Task
-                    </Button>
+                        {taskType === 'target' ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="target-uploads">Target Uploads</Label>
+                                <Input id="target-uploads" type="number" value={targetUploads} onChange={e => setTargetUploads(Number(e.target.value))} min="1" />
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Label htmlFor="todo-list">Movie To-Do List (one per line)</Label>
+                                <Textarea id="todo-list" value={todoList} onChange={e => setTodoList(e.target.value)} placeholder="The Matrix&#10;Inception&#10;Interstellar" rows={5}/>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label>Deadline</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal', !deadline && 'text-muted-foreground')}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {deadline ? format(deadline, 'PPP') : <span>Pick a date</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus /></PopoverContent>
+                            </Popover>
+                        </div>
+                        <Button onClick={handleSaveTask} disabled={isSetPending} className="w-full">
+                            {isSetPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Set Task
+                        </Button>
+                    </>
+                    )}
                 </div>
 
                 <div className="space-y-4">
@@ -208,7 +220,7 @@ function TaskHistoryDialog({ member, onTaskSet, onTaskRemove }: { member: Manage
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
                                             <TaskStatusBadge task={task} />
-                                            {task.status === 'active' && (
+                                            {(task.status === 'active' || task.status === 'incompleted') && (
                                                 <Button size="sm" variant="destructive" onClick={() => onTaskRemove(member.id, task.id)} disabled={isSetPending}>
                                                     <X className="h-4 w-4 mr-1" /> Cancel
                                                 </Button>
@@ -256,16 +268,13 @@ export default function ManagementManager() {
     const checkTasks = async () => {
         const updated = await checkAndUpdateOverdueTasks();
         if (updated) {
-            toast({
-                title: "Tasks Updated",
-                description: "Overdue task statuses have been automatically updated.",
-            });
+            console.log("Overdue task statuses have been automatically updated.");
         }
     };
     if (canManageTeam && managementTeam.length > 0 && allMovies.length > 0) {
         checkTasks();
     }
-  }, [canManageTeam, managementTeam, allMovies, toast]);
+  }, [canManageTeam, managementTeam, allMovies]);
 
   const sortedTeam = useMemo(() => {
     return [...managementTeam].sort((a, b) => {
@@ -459,7 +468,7 @@ export default function ManagementManager() {
                 ) : (
                     sortedTeam.map(member => {
                         const performanceScore = calculatePerformanceScore(member, allMovies);
-                        const activeTasks = member.tasks?.filter(t => t.status === 'active') || [];
+                        const activeTasks = member.tasks?.filter(t => t.status === 'active' || t.status === 'incompleted') || [];
                         return (
                             <div key={member.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
                                 <div className="flex items-center gap-4">
@@ -474,7 +483,7 @@ export default function ManagementManager() {
                                     <TrendingUp className="h-3.5 w-3.5" />
                                     <span>{performanceScore.toFixed(1)} / 10</span>
                                 </Badge>
-                                <Badge variant={activeTasks.length > 0 ? 'default' : 'secondary'} className="flex items-center gap-1.5">
+                                <Badge variant={activeTasks.length > 0 ? 'destructive' : 'success'} className="flex items-center gap-1.5">
                                     {activeTasks.length > 0 ? <AlertCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
                                     <span>{activeTasks.length} Active Task(s)</span>
                                 </Badge>

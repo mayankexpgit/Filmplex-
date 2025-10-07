@@ -209,6 +209,8 @@ export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
       stateUpdate.suggestions = suggestions;
       stateUpdate.securityLogs = securityLogs;
       stateUpdate.allComments = allComments;
+      // After fetching all data, check for overdue tasks
+      await checkAndUpdateOverdueTasks(managementTeam, allMovies);
     }
 
     useMovieStore.setState({ ...stateUpdate, isInitialized: true });
@@ -484,22 +486,20 @@ export const removeManagementMemberTask = async (memberId: string, taskId: strin
 /**
  * Checks all active admin tasks. If a task is overdue, its status is updated in the database.
  */
-export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
-    const { managementTeam, allMovies } = useMovieStore.getState();
+export const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<boolean> => {
     let anyTaskUpdated = false;
 
-    for (const member of managementTeam) {
+    for (const member of team) {
         if (!member.tasks || member.tasks.length === 0) continue;
 
         const now = new Date();
         let tasksNeedUpdate = false;
 
         const updatedTasks = member.tasks.map(task => {
-            if (task.status !== 'active') return task;
+            // Skip tasks that are already finished
+            if (task.status === 'completed' || task.status === 'cancelled') return task;
 
-            const deadline = parseISO(task.deadline);
             let isCompleted = false;
-
             if (task.type === 'target') {
                 const taskStartDate = parseISO(task.startDate);
                 const completedMoviesForTask = allMovies
@@ -518,7 +518,9 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
                 tasksNeedUpdate = true;
                 anyTaskUpdated = true;
                 return { ...task, status: 'completed' as const, endDate: new Date().toISOString() };
-            } else if (isAfter(now, deadline)) {
+            } else if (isAfter(now, parseISO(task.deadline)) && task.status === 'active') {
+                // Only mark as 'incompleted' if it's currently 'active' and deadline has passed.
+                // This allows an 'incompleted' task to eventually become 'completed'.
                 tasksNeedUpdate = true;
                 anyTaskUpdated = true;
                 return { ...task, status: 'incompleted' as const, endDate: new Date().toISOString() };
@@ -532,6 +534,7 @@ export const checkAndUpdateOverdueTasks = async (): Promise<boolean> => {
             useMovieStore.setState(state => ({
                 managementTeam: state.managementTeam.map(m => m.id === member.id ? { ...m, tasks: updatedTasks } : m)
             }));
+            console.log(`Task status automatically updated for ${member.name}.`);
             await addSecurityLogEntry(`Task status automatically updated for ${member.name}.`);
         }
     }

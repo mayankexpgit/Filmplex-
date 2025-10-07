@@ -309,7 +309,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
     
     const allTasks = admin.tasks || [];
     const sortedTasks = [...allTasks].sort((a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
-    const activeTasks = admin.tasks?.filter(t => t.status === 'active') || [];
+    const activeTasks = admin.tasks?.filter(t => t.status === 'active' || t.status === 'incompleted') || [];
 
     return (
         <div className="space-y-6">
