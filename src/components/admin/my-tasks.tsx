@@ -12,6 +12,7 @@ import { format, parseISO } from 'date-fns';
 import { Hourglass, ListChecks, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FilmpilexLoader from '../ui/filmplex-loader';
+import { cn } from '@/lib/utils';
 
 export default function MyTasks() {
   const { adminProfile, isLoading } = useAuth();
@@ -23,7 +24,8 @@ export default function MyTasks() {
   const handleTodoItemToggle = (taskId: string, itemIndex: number, completed: boolean) => {
     startTransition(async () => {
         try {
-            await updateAdminTask(adminProfile!.id, taskId, itemIndex, completed);
+            if (!adminProfile) throw new Error("Admin profile not found");
+            await updateAdminTask(adminProfile.id, taskId, itemIndex, completed);
             toast({
                 title: 'Task Updated',
                 description: 'Your to-do list has been updated.',
@@ -91,7 +93,7 @@ export default function MyTasks() {
                             <Checkbox
                                 id={`task-${task.id}-item-${index}`}
                                 checked={item.completed}
-                                onCheckedChange={(checked) => handleTodoItemToggle(task.id!, index, !!checked)}
+                                onCheckedChange={(checked) => handleTodoItemToggle(task.id, index, !!checked)}
                                 disabled={isPending}
                             />
                             <Label 

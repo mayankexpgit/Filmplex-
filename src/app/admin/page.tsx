@@ -165,13 +165,14 @@ function AdminTaskCard() {
 }
 
 export default function AdminDashboardPage() {
-  const { suggestions, adminProfile } = useMovieStore();
+  const { suggestions } = useMovieStore();
+  const { adminProfile } = useAuth();
   const suggestionCount = suggestions.length;
   const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && t.status === 'active').length || 0;
 
   return (
     <div className="container mx-auto py-8 md:py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:col-span-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         
         <AdminTaskCard />
 
