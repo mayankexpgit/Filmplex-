@@ -49,13 +49,7 @@ function AdminTaskDialog() {
                     </DialogDescription>
                 </DialogHeader>
                 <AdminTaskStatus task={unfinishedTask} allMovies={allMovies} adminName={adminProfile!.name} />
-                <DialogFooter className="justify-between">
-                     <Button variant="outline" asChild>
-                        <DialogClose>
-                            <span className="mr-2">X</span>
-                            Close
-                        </DialogClose>
-                     </Button>
+                <DialogFooter>
                     <Button asChild>
                         <Link href="/admin/upload-movie">
                             <Upload className="mr-2 h-4 w-4" />
