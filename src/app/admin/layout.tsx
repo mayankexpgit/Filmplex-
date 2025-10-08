@@ -10,6 +10,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import FilmpilexLoader from '@/components/ui/filmplex-loader';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
+import FloatingTaskButton from '@/components/admin/floating-task-button';
 
 export default function AdminLayout({
   children,
@@ -83,8 +84,9 @@ export default function AdminLayout({
           </div>
         </div>
       </header>
-      <main>
+      <main className="relative">
         {children}
+        <FloatingTaskButton />
       </main>
     </div>
   );
