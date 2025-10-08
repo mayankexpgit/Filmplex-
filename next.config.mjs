@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    unoptimized: true,
+  experimental: {
+    // This allows requests from the Firebase Studio development environment.
+    allowedDevOrigins: ["*.cloudworkstations.dev"],
   },
 };
 
