@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -26,6 +26,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import SuggestionForm from '../suggestion-form';
 import type { ManagementMember } from '@/lib/data';
+import Changelog from '../changelog';
 
 function UpcomingReleasesPanel() {
   const notifications = useMovieStore((state) => state.notifications);
@@ -242,6 +243,21 @@ function SuggestionPanel() {
   );
 }
 
+function ChangelogPanel() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          <Sparkles className="mr-2 h-4 w-4" />
+          What's New
+        </DropdownMenuItem>
+      </SheetTrigger>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <Changelog />
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 export function Header() {
   return (
@@ -262,7 +278,8 @@ export function Header() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-             <HelpCenterPanel />
+            <ChangelogPanel />
+            <HelpCenterPanel />
             <SuggestionPanel />
           </DropdownMenuContent>
         </DropdownMenu>
