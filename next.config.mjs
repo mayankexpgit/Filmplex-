@@ -4,32 +4,15 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'image.tmdb.org',
+        hostname: '**',
       },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'www.filmibeat.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'assets-in.bmscdn.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'upload.wikimedia.org',
-      },
-      {
-        protocol: 'https',
-        hostname: 'logos-world.net',
-      },
-       {
-        protocol: 'https',
-        hostname: 'www.edigitalagency.com.au',
-      },
+    ],
+  },
+  experimental: {
+    // This is the correct place for allowedDevOrigins in newer Next.js versions.
+    // We will keep it here to avoid future cross-origin issues during development.
+    allowedDevOrigins: [
+      '9000-firebase-studio-1754397069489.cluster-fdkw7vjj7bgguspe3fbbc25tra.cloudworkstations.dev',
     ],
   },
 };
