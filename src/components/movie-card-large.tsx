@@ -16,6 +16,7 @@ const smartFilterTags: Record<string, string[]> = {
     'Hollywood': ['hollywood', 'english'],
     'Anime': ['anime', 'animation', 'japanese'],
     'Dubbed': ['dubbed', 'hindi-dubbed'],
+    '18+ Adult': ['18+', 'adult'],
 }
 
 const getQualityBadge = (movie: Movie): '4K' | 'HD' | null => {
@@ -112,7 +113,7 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
   const handlePageChange = useCallback((newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     startTransition(() => {
-        const params = new URLSearchParams(searchParams);
+        const params = new URLSearchParams(searchParams.toString());
         if (newPage === 1) {
             params.delete('page');
         } else {

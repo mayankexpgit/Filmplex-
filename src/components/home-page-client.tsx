@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition, useCallback } from 'react';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -34,6 +34,7 @@ const genres = [
   'Hollywood',
   'Anime',
   'Dubbed',
+  '18+ Adult',
   'Action',
   'Adventure',
   'Animation',
@@ -60,7 +61,6 @@ export function HomePageClient() {
     setCurrentPage,
     featuredMovies,
     latestReleases,
-    fetchInitialData,
   } = useMovieStore(state => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
@@ -71,7 +71,6 @@ export function HomePageClient() {
     setCurrentPage: state.setCurrentPage,
     featuredMovies: state.featuredMovies,
     latestReleases: state.latestReleases,
-    fetchInitialData: state.fetchInitialData,
   }));
   
   const router = useRouter();
@@ -96,7 +95,7 @@ export function HomePageClient() {
     if (!isInitialized) {
       fetchInitialData(false); 
     }
-  }, [isInitialized, fetchInitialData]);
+  }, [isInitialized]);
   
   const updateURL = (params: URLSearchParams) => {
     startTransition(() => {
@@ -105,7 +104,7 @@ export function HomePageClient() {
   }
 
   const handleSearch = useCallback(() => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     if (localSearch) {
         params.set('s', localSearch);
     } else {
@@ -116,7 +115,7 @@ export function HomePageClient() {
   }, [localSearch, searchParams]);
 
   const handleGenreSelect = useCallback((genre: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     if (genre && genre !== 'All Genres') {
         params.set('genre', genre);
     } else {
