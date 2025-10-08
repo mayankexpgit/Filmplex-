@@ -20,14 +20,12 @@ const changelogData = [
   {
     version: '1.8',
     date: 'July 28, 2024',
-    title: 'Advanced Admin Controls & UI Polish',
+    title: 'New Features & UI Polish',
     changes: [
-      'Added a "What\'s New" changelog panel for users.',
-      'Fixed a bug where the movie list would crash due to incorrect key props.',
-      'Refined pagination URL logic to keep the base URL clean for page 1.',
+      'Added a "What\'s New" changelog panel to keep you updated.',
       'Added an "18+ Adult" category to genre filters.',
       'Polished movie card UI by adding correct spacing for IMDb ratings.',
-      'Resolved a critical "fetchInitialData is not defined" error.',
+      'Refined pagination to keep the URL clean on the first page.',
     ],
   },
   {
@@ -38,51 +36,17 @@ const changelogData = [
       'Implemented URL-based search queries (e.g., /?s=TheMatrix).',
       'Implemented URL-based genre filtering (e.g., /?genre=Action).',
       'Introduced URL-based pagination (e.g., /?page=2) for a smoother browsing experience.',
-      'Fixed a visual bug with a duplicate "Close" button in the admin task dialog.',
-    ],
-  },
-  {
-    version: '1.6',
-    date: 'July 26, 2024',
-    title: 'AI-Powered Content & Admin UX',
-    changes: [
-      'Introduced AI-powered movie detail fetching from TMDb.',
-      'Streamlined the movie upload form with an AI "Auto-fill" feature.',
-      'Enhanced admin profile page with download analytics charts.',
-      'Added a floating task progress button for admins for quick access.',
     ],
   },
   {
     version: '1.5',
     date: 'July 25, 2024',
-    title: 'Task Management System',
-    changes: [
-      'Launched a complete task management system for the admin team.',
-      'Admins can now view and manage target-based and to-do list tasks.',
-      'Added a "My Tasks" page for admins to track their personal assignments.',
-      'Implemented automatic status updates for overdue or completed tasks.',
-    ],
-  },
-  {
-    version: '1.4',
-    date: 'July 24, 2024',
     title: 'User Interaction & Feedback',
     changes: [
       'Users can now react to movies with emojis (Like, Love, Haha, etc.).',
       'Added a full-featured comments section on movie detail pages.',
       'Introduced a "Suggestions Box" for users to request new content.',
-      'Admins can now manage all comments and reactions from the dashboard.',
-    ],
-  },
-  {
-    version: '1.3',
-    date: 'July 23, 2024',
-    title: 'Admin Dashboard V2',
-    changes: [
-      'Redesigned the admin dashboard for better navigation.',
-      'Added a Management Team page to add/remove admins and assign roles.',
-      'Introduced a Security Log to track all admin activities.',
-      'Created a Help Center management page to update contact links.',
+      'You can now contact specific management members directly.',
     ],
   },
   {
@@ -103,7 +67,6 @@ const changelogData = [
     changes: [
       'FILMPLEX is live!',
       'Core features include movie browsing, searching, and downloading.',
-      'Basic admin panel for uploading and managing movies.',
       'Secure admin login system implemented.',
     ],
   },
