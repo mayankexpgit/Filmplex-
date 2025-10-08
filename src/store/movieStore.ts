@@ -487,6 +487,11 @@ export const removeManagementMemberTask = async (memberId: string, taskId: strin
  * Checks all active admin tasks. If a task is overdue, its status is updated in the database.
  */
 export const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<boolean> => {
+    if (!team || !Array.isArray(team)) {
+        console.error("checkAndUpdateOverdueTasks was called with invalid 'team' argument.");
+        return false;
+    }
+    
     let anyTaskUpdated = false;
 
     for (const member of team) {
@@ -499,17 +504,22 @@ export const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMo
             // Skip tasks that are already finished
             if (task.status === 'completed' || task.status === 'cancelled') return task;
 
+            const taskStartDate = parseISO(task.startDate);
+            const completedMoviesForTask = allMovies
+                .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+                .filter(isUploadCompleted);
+
             let isCompleted = false;
+            let target = 0;
+
             if (task.type === 'target') {
-                const taskStartDate = parseISO(task.startDate);
-                const completedMoviesForTask = allMovies
-                    .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
-                    .filter(isUploadCompleted);
-                if (task.target && completedMoviesForTask.length >= task.target) {
+                target = task.target || 0;
+                if (target > 0 && completedMoviesForTask.length >= target) {
                     isCompleted = true;
                 }
             } else if (task.type === 'todo') {
-                if (task.items?.every(item => item.completed)) {
+                target = task.items?.length || 0;
+                 if (target > 0 && completedMoviesForTask.length >= target) {
                     isCompleted = true;
                 }
             }

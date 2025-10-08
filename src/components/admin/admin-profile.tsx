@@ -256,28 +256,23 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
 }
 
 const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+    const taskStartDate = parseISO(task.startDate);
+    const completedMoviesForTask = allMovies
+        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(isUploadCompleted);
+
+    let target = 0;
     if (task.type === 'target') {
-        const taskStartDate = parseISO(task.startDate);
-        const completedMoviesForTask = allMovies
-            .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
-            .filter(isUploadCompleted);
-        
-        return {
-            completed: completedMoviesForTask.length,
-            target: task.target || 0,
-            progress: task.target ? (completedMoviesForTask.length / task.target) * 100 : 0
-        };
+        target = task.target || 0;
+    } else if (task.type === 'todo') {
+        target = task.items?.length || 0;
     }
-    if (task.type === 'todo') {
-        const completedCount = task.items?.filter(item => item.completed).length || 0;
-        const totalCount = task.items?.length || 0;
-        return {
-            completed: completedCount,
-            target: totalCount,
-            progress: totalCount > 0 ? (completedCount / totalCount) * 100 : 0
-        };
-    }
-    return { completed: 0, target: 0, progress: 0 };
+
+    return {
+        completed: completedMoviesForTask.length,
+        target: target,
+        progress: target > 0 ? (completedMoviesForTask.length / target) * 100 : 0
+    };
 };
 
 
@@ -406,8 +401,8 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                             <Table>
                                 <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                                 <TableBody>
-                                    {completedMovies.length > 0 ? completedMovies.map(movie => (
-                                        <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
+                                    {completedMovies.length > 0 ? completedMovies.map((movie, index) => (
+                                        <TableRow key={`${movie.id}-${index}`}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
                                     )) : <TableRow key="no-completed-uploads"><TableCell colSpan={2} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
@@ -424,8 +419,8 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                             <Table>
                                 <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                                 <TableBody>
-                                    {pendingMovies.length > 0 ? pendingMovies.map(movie => (
-                                        <TableRow key={movie.id}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
+                                    {pendingMovies.length > 0 ? pendingMovies.map((movie, index) => (
+                                        <TableRow key={`${movie.id}-${index}`}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
                                     )) : <TableRow key="no-pending-uploads"><TableCell colSpan={2} className="text-center h-24">No pending uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>

@@ -91,28 +91,23 @@ const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
 };
 
 const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+    const taskStartDate = parseISO(task.startDate);
+    const completedMoviesForTask = allMovies
+        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(isUploadCompleted);
+
+    let target = 0;
     if (task.type === 'target') {
-        const taskStartDate = parseISO(task.startDate);
-        const completedMoviesForTask = allMovies
-            .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
-            .filter(isUploadCompleted);
-        
-        return {
-            completed: completedMoviesForTask.length,
-            target: task.target || 0,
-            progress: task.target ? (completedMoviesForTask.length / task.target) * 100 : 0
-        };
+        target = task.target || 0;
+    } else if (task.type === 'todo') {
+        target = task.items?.length || 0;
     }
-    if (task.type === 'todo') {
-        const completedCount = task.items?.filter(item => item.completed).length || 0;
-        const totalCount = task.items?.length || 0;
-        return {
-            completed: completedCount,
-            target: totalCount,
-            progress: totalCount > 0 ? (completedCount / totalCount) * 100 : 0
-        };
-    }
-    return { completed: 0, target: 0, progress: 0 };
+
+    return {
+        completed: completedMoviesForTask.length,
+        target: target,
+        progress: target > 0 ? (completedMoviesForTask.length / target) * 100 : 0
+    };
 };
 
 function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: AdminTask, allMovies: Movie[], adminName: string, onClose: () => void }) {
@@ -128,19 +123,18 @@ function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: Admi
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
-                    {task.type === 'target' ? (
-                        <div className="space-y-4">
-                            <h3 className="font-semibold">Task Progress</h3>
-                            <Progress value={progress} className="h-4" />
-                            <p className="text-center text-lg font-semibold">
-                                {completed} / {target}
-                                <span className="text-muted-foreground"> uploads completed</span>
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                             <h3 className="font-semibold">To-Do List Progress</h3>
-                             <ScrollArea className="h-[250px] pr-4">
+                    <div className="space-y-4">
+                        <h3 className="font-semibold">Task Progress (Based on Real Uploads)</h3>
+                        <Progress value={progress} className="h-4" />
+                        <p className="text-center text-lg font-semibold">
+                            {completed} / {target}
+                            <span className="text-muted-foreground"> uploads completed</span>
+                        </p>
+                    </div>
+                    {task.type === 'todo' && (
+                        <div className="space-y-4 mt-6">
+                             <h3 className="font-semibold">To-Do Checklist (Admin's View)</h3>
+                             <ScrollArea className="h-[250px] pr-4 border rounded-lg p-3">
                                 <ul className="space-y-2">
                                     {(task.items || []).map((item, index) => (
                                         <li key={index} className="flex items-center gap-3">

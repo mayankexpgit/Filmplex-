@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle, CheckCircle, Hourglass, ListChecks, Target, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { format, parseISO, differenceInSeconds } from 'date-fns';
+import { format, parseISO, differenceInSeconds, isAfter } from 'date-fns';
 
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
@@ -22,26 +22,22 @@ const isUploadCompleted = (movie: Movie): boolean => {
 };
 
 const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+    const taskStartDate = parseISO(task.startDate);
+    const completedMoviesForTask = allMovies
+        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(isUploadCompleted);
+
+    let target = 0;
     if (task.type === 'target') {
-        const taskStartDate = parseISO(task.startDate);
-        const completedMoviesForTask = allMovies
-            .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
-            .filter(isUploadCompleted);
-        
-        return {
-            completed: completedMoviesForTask.length,
-            target: task.target || 0,
-        };
+        target = task.target || 0;
+    } else if (task.type === 'todo') {
+        target = task.items?.length || 0;
     }
-    if (task.type === 'todo') {
-        const completedCount = task.items?.filter(item => item.completed).length || 0;
-        const totalCount = task.items?.length || 0;
-        return {
-            completed: completedCount,
-            target: totalCount,
-        };
-    }
-    return { completed: 0, target: 0 };
+
+    return {
+        completed: completedMoviesForTask.length,
+        target: target,
+    };
 };
 
 function Countdown({ deadline }: { deadline: string }) {
@@ -134,7 +130,7 @@ export default function AdminTaskStatus({ task, allMovies, adminName }: AdminTas
                     <Progress value={progress} className="h-4" />
                     <p className="text-lg font-semibold">
                         {completed} / {target} 
-                        <span className="text-muted-foreground"> completed</span>
+                        <span className="text-muted-foreground"> uploads completed</span>
                     </p>
                 </div>
                  {isOverdue && (
