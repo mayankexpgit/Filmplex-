@@ -28,8 +28,10 @@ import { Badge } from '../ui/badge';
 
 export default function MovieList() {
   const { toast } = useToast();
-  const movies = useMovieStore((state) => state.allMovies);
-  const featuredMoviesCount = useMovieStore((state) => state.featuredMovies.length);
+  const { allMovies, featuredMovies } = useMovieStore(state => ({
+    allMovies: state.allMovies,
+    featuredMovies: state.featuredMovies
+  }));
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -63,7 +65,7 @@ export default function MovieList() {
   };
 
   const handleToggleFeatured = (movie: Movie) => {
-    if (!movie.isFeatured && featuredMoviesCount >= 20) {
+    if (!movie.isFeatured && featuredMovies.length >= 20) {
       toast({
         variant: 'destructive',
         title: 'Maximum Limit Reached',
@@ -71,7 +73,7 @@ export default function MovieList() {
       });
       return;
     }
-     if (movie.isFeatured && featuredMoviesCount <= 10) {
+     if (movie.isFeatured && featuredMovies.length <= 10) {
       toast({
         variant: 'destructive',
         title: 'Minimum Limit Reached',
@@ -98,7 +100,7 @@ export default function MovieList() {
   }
 
   const filteredMovies = useMemo(() => {
-    const sortedMovies = [...movies].sort((a, b) => {
+    const sortedMovies = [...allMovies].sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
@@ -110,7 +112,7 @@ export default function MovieList() {
     return sortedMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
-  }, [movies, searchQuery]);
+  }, [allMovies, searchQuery]);
 
   return (
     <AlertDialog>
@@ -118,7 +120,7 @@ export default function MovieList() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Movie List ({filteredMovies.length})</span>
-            <Badge variant="secondary">{movies.length} total movies</Badge>
+            <Badge variant="secondary">{allMovies.length} total movies</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
