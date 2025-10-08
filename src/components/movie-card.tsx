@@ -83,7 +83,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
                     <span>&bull;</span>
                     <div className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-primary" />
-                      <span>{movie.imdbRating}</span>
+                      <span> {movie.imdbRating}</span>
                     </div>
                   </>
                 ) : null}
