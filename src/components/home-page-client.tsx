@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition, useCallback } from 'react';
-import { useMovieStore, fetchInitialData } from '@/store/movieStore';
+import { useMovieStore } from '@/store/movieStore';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -56,16 +56,22 @@ export function HomePageClient() {
     setSearchQuery,
     selectedGenre,
     setSelectedGenre,
+    currentPage,
+    setCurrentPage,
     featuredMovies,
     latestReleases,
+    fetchInitialData,
   } = useMovieStore(state => ({
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
     selectedGenre: state.selectedGenre,
     setSelectedGenre: state.setSelectedGenre,
+    currentPage: state.currentPage,
+    setCurrentPage: state.setCurrentPage,
     featuredMovies: state.featuredMovies,
     latestReleases: state.latestReleases,
+    fetchInitialData: state.fetchInitialData,
   }));
   
   const router = useRouter();
@@ -74,53 +80,52 @@ export function HomePageClient() {
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    const sQuery = searchParams.get('s');
-    const gQuery = searchParams.get('genre');
+    const sQuery = searchParams.get('s') || '';
+    const gQuery = searchParams.get('genre') || 'All Genres';
+    const pQuery = parseInt(searchParams.get('page') || '1', 10);
     
-    const newSearchQuery = sQuery || '';
-    const newGenre = gQuery || 'All Genres';
-
-    setLocalSearch(newSearchQuery);
+    setLocalSearch(sQuery);
     
-    if (newSearchQuery !== searchQuery) {
-        setSearchQuery(newSearchQuery);
-    }
-    if (newGenre !== selectedGenre) {
-        setSelectedGenre(newGenre);
-    }
-  }, [searchParams, setSearchQuery, searchQuery, setSelectedGenre, selectedGenre]);
+    if (sQuery !== searchQuery) setSearchQuery(sQuery);
+    if (gQuery !== selectedGenre) setSelectedGenre(gQuery);
+    if (pQuery !== currentPage) setCurrentPage(pQuery);
+    
+  }, [searchParams, setSearchQuery, searchQuery, setSelectedGenre, selectedGenre, setCurrentPage, currentPage]);
   
   useEffect(() => {
     if (!isInitialized) {
       fetchInitialData(false); 
     }
-  }, [isInitialized]);
+  }, [isInitialized, fetchInitialData]);
+  
+  const updateURL = (params: URLSearchParams) => {
+    startTransition(() => {
+      router.push(`/?${params.toString()}`);
+    });
+  }
 
   const handleSearch = useCallback(() => {
-    startTransition(() => {
-        const params = new URLSearchParams(searchParams);
-        if (localSearch) {
-            params.set('s', localSearch);
-        } else {
-            params.delete('s');
-        }
-        router.push(`/?${params.toString()}`);
-    });
-  }, [localSearch, router, searchParams]);
+    const params = new URLSearchParams(searchParams);
+    if (localSearch) {
+        params.set('s', localSearch);
+    } else {
+        params.delete('s');
+    }
+    params.set('page', '1'); // Reset to first page on new search
+    updateURL(params);
+  }, [localSearch, searchParams]);
 
   const handleGenreSelect = useCallback((genre: string) => {
-    startTransition(() => {
-        const params = new URLSearchParams(searchParams);
-        if (genre && genre !== 'All Genres') {
-            params.set('genre', genre);
-        } else {
-            params.delete('genre');
-        }
-        // When genre changes, we clear the search query from URL
-        params.delete('s'); 
-        router.push(`/?${params.toString()}`);
-    });
-  }, [router, searchParams]);
+    const params = new URLSearchParams(searchParams);
+    if (genre && genre !== 'All Genres') {
+        params.set('genre', genre);
+    } else {
+        params.delete('genre');
+    }
+    params.delete('s'); // When genre changes, clear search query
+    params.set('page', '1'); // Reset to first page on new genre
+    updateURL(params);
+  }, [searchParams]);
 
   if (!isInitialized) {
      return <HomePageLoader />;

@@ -4,9 +4,10 @@
 import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
 import { Button } from './ui/button';
-import { Flame, Loader2 } from 'lucide-react';
-import { useMemo, useState, useTransition, useEffect } from 'react';
+import { Flame, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { useMemo, useState, useTransition, useCallback } from 'react';
 import type { Movie } from '@/lib/data';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const MOVIES_PER_PAGE = 12;
 
@@ -48,17 +49,17 @@ interface MovieCardLargeProps {
 }
 
 export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
-  const { searchQuery, selectedGenre, selectedQuality } = useMovieStore((state) => ({
+  const { searchQuery, selectedGenre, selectedQuality, currentPage } = useMovieStore((state) => ({
     searchQuery: state.searchQuery,
     selectedGenre: state.selectedGenre,
     selectedQuality: state.selectedQuality,
+    currentPage: state.currentPage,
   }));
-  const [visibleMoviesCount, setVisibleMoviesCount] = useState(MOVIES_PER_PAGE);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const sortedMovies = useMemo(() => {
-    // Sort all movies received from the store by creation date, descending.
-    // This ensures the newest movies appear first.
     return [...movies].sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -68,10 +69,8 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
 
 
   const filteredMovies = useMemo(() => {
-    // Start with the full, sorted list of movies.
     let currentMovies = sortedMovies;
     
-    // Apply genre filter
     if (selectedGenre && selectedGenre !== 'All Genres') {
         const lowerCaseGenre = selectedGenre.toLowerCase();
         const tagsToMatch = smartFilterTags[selectedGenre] || [lowerCaseGenre];
@@ -84,14 +83,12 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         );
     }
     
-    // Apply search query filter
     if (searchQuery) {
       currentMovies = currentMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Apply quality filter
     if (selectedQuality !== 'all') {
         currentMovies = currentMovies.filter((movie) => {
             const quality = getQualityBadge(movie);
@@ -103,22 +100,24 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
 
     return currentMovies;
   }, [sortedMovies, searchQuery, selectedGenre, selectedQuality]);
+  
+  const totalPages = Math.ceil(filteredMovies.length / MOVIES_PER_PAGE);
 
   const moviesToShow = useMemo(() => {
-    return filteredMovies.slice(0, visibleMoviesCount);
-  }, [filteredMovies, visibleMoviesCount]);
+    const startIndex = (currentPage - 1) * MOVIES_PER_PAGE;
+    const endIndex = startIndex + MOVIES_PER_PAGE;
+    return filteredMovies.slice(startIndex, endIndex);
+  }, [filteredMovies, currentPage]);
 
-  // Reset visible count when filters change
-  useEffect(() => {
-    setVisibleMoviesCount(MOVIES_PER_PAGE);
-  }, [searchQuery, selectedGenre, selectedQuality]);
-
-
-  const handleMoreMovies = () => {
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
     startTransition(() => {
-        setVisibleMoviesCount(prevCount => prevCount + MOVIES_PER_PAGE);
+        const params = new URLSearchParams(searchParams);
+        params.set('page', newPage.toString());
+        router.push(`/?${params.toString()}`);
     });
-  };
+  }, [router, searchParams, totalPages]);
+
 
   return (
     <div>
@@ -141,17 +140,18 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         </div>
       )}
 
-      {visibleMoviesCount < filteredMovies.length && (
-        <div className="mt-8 flex justify-center">
-          <Button onClick={handleMoreMovies} variant="secondary" disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              'Load more'
-            )}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center items-center gap-4">
+          <Button onClick={() => handlePageChange(currentPage - 1)} variant="secondary" disabled={isPending || currentPage <= 1}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Previous
+          </Button>
+          <span className="text-sm font-medium">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button onClick={() => handlePageChange(currentPage + 1)} variant="secondary" disabled={isPending || currentPage >= totalPages}>
+            Next
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       )}

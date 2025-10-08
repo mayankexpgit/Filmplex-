@@ -69,6 +69,7 @@ interface MovieState {
   searchQuery: string;
   selectedGenre: string;
   selectedQuality: QualityFilter;
+  currentPage: number;
   adminProfile: ManagementMember | null;
   
   // Admin Data
@@ -85,15 +86,17 @@ interface MovieState {
   // Initialization
   isInitialized: boolean;
 
-  // Actions (only state setters)
+  // Actions
   setSearchQuery: (query: string) => void;
   setSelectedGenre: (genre: string) => void;
   setSelectedQuality: (quality: QualityFilter) => void;
+  setCurrentPage: (page: number) => void;
   setState: (state: Partial<MovieState>) => void;
   setComments: (comments: Comment[]) => void;
   setAllComments: (comments: Comment[]) => void;
   addCommentToState: (comment: Comment) => void;
   incrementReaction: (movieId: string, reaction: keyof Reactions) => void;
+  fetchInitialData: (isAdmin: boolean) => Promise<void>;
 }
 
 // =================================================================
@@ -107,6 +110,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
   searchQuery: '',
   selectedGenre: 'All Genres',
   selectedQuality: 'all',
+  currentPage: 1,
   contactInfo: { telegramUrl: '', whatsappUrl: '', instagramUrl: '', email: '', whatsappNumber: '' },
   suggestions: [],
   securityLogs: [],
@@ -120,15 +124,16 @@ const useMovieStore = create<MovieState>((set, get) => ({
   // --- Actions ---
   setSearchQuery: (query: string) => {
     if (get().searchQuery !== query) {
-      set({ searchQuery: query, selectedGenre: 'All Genres' });
+      set({ searchQuery: query, currentPage: 1 });
     }
   },
   setSelectedGenre: (genre: string) => {
     if (get().selectedGenre !== genre) {
-      set({ selectedGenre: genre, searchQuery: '' }); // Reset search when genre changes
+      set({ selectedGenre: genre, searchQuery: '', currentPage: 1 });
     }
   },
-  setSelectedQuality: (quality: QualityFilter) => set({ selectedQuality: quality }),
+  setSelectedQuality: (quality: QualityFilter) => set({ selectedQuality: quality, currentPage: 1 }),
+  setCurrentPage: (page: number) => set({ currentPage: page }),
   setState: (state: Partial<MovieState>) => set(state),
   setComments: (comments) => set({ comments }),
   setAllComments: (comments) => set({ allComments: comments }),
@@ -149,6 +154,59 @@ const useMovieStore = create<MovieState>((set, get) => ({
       featuredMovies: updateMovieInList(state.featuredMovies)
     };
   }),
+  fetchInitialData: async (isAdmin: boolean) => {
+    if (get().isInitialized || isFetchingData) {
+      return;
+    }
+    isFetchingData = true;
+    
+    try {
+      const [
+        allMovies,
+        notifications,
+        contactInfo,
+        managementTeam
+      ] = await Promise.all([
+        dbFetchMovies(),
+        dbFetchNotifications(),
+        dbFetchContactInfo(),
+        dbFetchManagementTeam(),
+      ]);
+
+      const adminName = getAdminName();
+      const adminProfile = managementTeam.find(m => m.name === adminName) || null;
+
+      const stateUpdate: Partial<MovieState> = {
+        allMovies: allMovies,
+        latestReleases: allMovies,
+        featuredMovies: allMovies.filter((movie: Movie) => movie.isFeatured),
+        notifications,
+        contactInfo,
+        managementTeam,
+        adminProfile,
+      };
+      
+      if (isAdmin) {
+        const [suggestions, securityLogs, allComments] = await Promise.all([
+          dbFetchSuggestions(),
+          dbFetchSecurityLogs(),
+          dbFetchAllComments(allMovies),
+        ]);
+        stateUpdate.suggestions = suggestions;
+        stateUpdate.securityLogs = securityLogs;
+        stateUpdate.allComments = allComments;
+        await checkAndUpdateOverdueTasks(managementTeam, allMovies);
+      }
+
+      set({ ...stateUpdate, isInitialized: true });
+
+    } catch (error) {
+      console.error("Failed to fetch initial data:", error);
+      set({ isInitialized: true });
+    } finally {
+      isFetchingData = false;
+    }
+  },
 }));
 
 
@@ -169,66 +227,7 @@ const isUploadCompleted = (movie: Movie): boolean => {
 };
 
 let isFetchingData = false;
-/**
- * Fetches all necessary initial data for the app.
- * Prevents multiple fetches from occurring simultaneously.
- * @param isAdmin - If true, fetches admin-specific data like suggestions and logs.
- */
-const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
-  if (isFetchingData) {
-    return;
-  }
-  isFetchingData = true;
-
-  try {
-    const [
-      allMovies,
-      notifications,
-      contactInfo,
-      managementTeam
-    ] = await Promise.all([
-      dbFetchMovies(),
-      dbFetchNotifications(),
-      dbFetchContactInfo(),
-      dbFetchManagementTeam(),
-    ]);
-
-    const adminName = getAdminName();
-    const adminProfile = managementTeam.find(m => m.name === adminName) || null;
-
-    const stateUpdate: Partial<MovieState> = {
-      allMovies: allMovies,
-      latestReleases: allMovies,
-      featuredMovies: allMovies.filter((movie: Movie) => movie.isFeatured),
-      notifications,
-      contactInfo,
-      managementTeam,
-      adminProfile,
-    };
-    
-    if (isAdmin) {
-      const [suggestions, securityLogs, allComments] = await Promise.all([
-        dbFetchSuggestions(),
-        dbFetchSecurityLogs(),
-        dbFetchAllComments(allMovies),
-      ]);
-      stateUpdate.suggestions = suggestions;
-      stateUpdate.securityLogs = securityLogs;
-      stateUpdate.allComments = allComments;
-      // After fetching all data, check for overdue tasks
-      await checkAndUpdateOverdueTasks(managementTeam, allMovies);
-    }
-
-    useMovieStore.setState({ ...stateUpdate, isInitialized: true });
-
-  } catch (error) {
-    console.error("Failed to fetch initial data:", error);
-    // Still set initialized to true to prevent re-fetching on error, but don't set fetching to false
-    useMovieStore.setState({ isInitialized: true });
-  } finally {
-    isFetchingData = false;
-  }
-};
+const fetchInitialData = useMovieStore.getState().fetchInitialData;
 
 
 const addSecurityLogEntry = async (action: string): Promise<void> => {
@@ -271,7 +270,6 @@ const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
 };
 
 const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
-  // IMPORTANT: Do not update uploadedBy or createdAt fields on edit.
   const updateData = { ...updatedMovieData };
   delete updateData.uploadedBy;
   delete updateData.createdAt;
@@ -489,9 +487,6 @@ const removeManagementMemberTask = async (memberId: string, taskId: string): Pro
     await addSecurityLogEntry(`Cancelled task "${taskTitle}" for ${member.name}.`);
 };
 
-/**
- * Checks all active admin tasks. If a task is overdue, its status is updated in the database.
- */
 const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<boolean> => {
     if (!team || !Array.isArray(team)) {
         console.error("checkAndUpdateOverdueTasks was called with invalid 'team' argument.");
@@ -507,7 +502,6 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
         let tasksNeedUpdate = false;
 
         const updatedTasks = member.tasks.map(task => {
-            // Skip tasks that are already finished
             if (task.status === 'completed' || task.status === 'cancelled') return task;
 
             const taskStartDate = parseISO(task.startDate);
@@ -529,8 +523,6 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
             }
             
             if (isCompleted) {
-                // If the task is now completed, update its status.
-                // This applies even if it was previously 'incompleted'.
                 tasksNeedUpdate = true;
                 anyTaskUpdated = true;
                 return { 
@@ -540,14 +532,12 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
                     completedCount: completedMoviesForTask.length
                 };
             } else if (isAfter(now, parseISO(task.deadline)) && task.status === 'active') {
-                // Only mark as 'incompleted' if it's currently 'active' and deadline has passed.
-                // This allows an 'incompleted' task to eventually become 'completed' if the work is done later.
                 tasksNeedUpdate = true;
                 anyTaskUpdated = true;
                 return { 
                     ...task, 
                     status: 'incompleted' as const, 
-                    endDate: new Date().toISOString(), // Mark when it became overdue
+                    endDate: new Date().toISOString(),
                     completedCount: completedMoviesForTask.length
                 };
             }
