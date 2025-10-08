@@ -102,6 +102,9 @@ interface MovieState {
 // =================================================================
 // 1. ZUSTAND STORE DEFINITION
 // =================================================================
+
+let isFetchingData = false;
+
 const useMovieStore = create<MovieState>((set, get) => ({
   // --- Initial State ---
   allMovies: [],
@@ -226,7 +229,6 @@ const isUploadCompleted = (movie: Movie): boolean => {
     return false;
 };
 
-let isFetchingData = false;
 const fetchInitialData = useMovieStore.getState().fetchInitialData;
 
 
