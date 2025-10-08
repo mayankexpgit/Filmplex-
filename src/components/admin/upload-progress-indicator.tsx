@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -52,7 +53,7 @@ export default function UploadProgressIndicator({ hasDownloadLinks }: UploadProg
           className="flex flex-col items-center justify-center"
         >
           <div className="relative flex h-48 w-48 items-center justify-center">
-            <div className="absolute inset-0 animate-[pulse-glow_3s_ease-in-out_infinite] rounded-full" />
+            <div className="absolute inset-0 animate-[pulse-glow_3s_ease-in_out_infinite] rounded-full" />
             <steps[currentStep].icon className="relative z-10 h-24 w-24 text-primary" />
           </div>
           <p className="mt-8 text-2xl font-bold text-foreground">{steps[currentStep].text}</p>
