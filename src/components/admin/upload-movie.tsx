@@ -170,7 +170,7 @@ export default function UploadMovie() {
   const [searchAllPages, setSearchAllPages] = useState(false);
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-
+  const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
 
   useEffect(() => {
     const movieId = searchParams.get('id');
@@ -368,10 +368,16 @@ export default function UploadMovie() {
 
 
   const handleSave = () => {
+    // Check for download links before starting the transition
+    const linksPresent =
+      (formData.contentType === 'movie' && (formData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
+      (formData.contentType === 'series' &&
+        ((formData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
+         (formData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
+    setHasDownloadLinks(linksPresent);
+
     startTransition(async () => {
-      // Show the progress indicator immediately
-      // The rest of the logic will run "in the background"
-      
+      // The rest of the logic runs after the animation has been triggered
       const movieData: Partial<Movie> = {
         ...formData,
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
@@ -392,14 +398,11 @@ export default function UploadMovie() {
       try {
         if (formData.id) {
           await updateMovie(formData.id, movieData);
-          // Don't show toast until after animation
         } else {
           await addMovie(movieData as Omit<Movie, 'id'>);
-           // Don't show toast until after animation
         }
-        // The isPending state will turn false, hiding the indicator
-        // Now we can show the final toast and reset
-         toast({ 
+        
+        toast({ 
             title: 'Upload Complete!', 
             description: `"${formData.title}" has been successfully saved.`,
             variant: 'success'
@@ -408,7 +411,6 @@ export default function UploadMovie() {
 
       } catch (error) {
         console.error("Database operation failed:", error);
-        // isPending will still turn false, hiding the indicator
         toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
       }
     });
@@ -417,10 +419,8 @@ export default function UploadMovie() {
   const triggerSave = (e: React.MouseEvent) => {
      if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      // Prevent the dialog from opening if validation fails
       e.preventDefault();
     }
-    // If validation passes, the AlertDialogTrigger will open the dialog.
   };
 
   const isFormDisabled = isPending || isFetchingAI || isSearching;
@@ -432,7 +432,7 @@ export default function UploadMovie() {
 
   return (
     <>
-      {isPending && <UploadProgressIndicator />}
+      {isPending && <UploadProgressIndicator hasDownloadLinks={hasDownloadLinks} />}
       <div className={cn(
         "grid grid-cols-1 gap-8",
         showPreview && "lg:grid-cols-2"

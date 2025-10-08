@@ -1,21 +1,31 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bot, ShieldCheck, Database, Server, CheckCircle } from 'lucide-react';
+import { Bot, ShieldCheck, Database, Server, CheckCircle, Link } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const steps = [
-  { text: 'Analyzing Data...', icon: Bot, key: 'analyze' },
-  { text: 'Validating Integrity...', icon: ShieldCheck, key: 'validate' },
-  { text: 'Encrypting & Uploading...', icon: Database, key: 'upload' },
-  { text: 'Finalizing on Server...', icon: Server, key: 'finalize' },
-  { text: 'Upload Complete!', icon: CheckCircle, key: 'complete' },
-];
+const STEP_DURATION = 1200; // 1.2 seconds per step
 
-const STEP_DURATION = 1500; // 1.5 seconds per step
+interface UploadProgressIndicatorProps {
+    hasDownloadLinks: boolean;
+}
 
-export default function UploadProgressIndicator() {
+export default function UploadProgressIndicator({ hasDownloadLinks }: UploadProgressIndicatorProps) {
   const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    { text: 'Analyzing Data...', icon: Bot, key: 'analyze' },
+    { text: 'Validating Integrity...', icon: ShieldCheck, key: 'validate' },
+    { 
+      text: hasDownloadLinks ? 'Verifying Download Links...' : 'Skipping Link Verification...', 
+      icon: Link, 
+      key: 'verify-links' 
+    },
+    { text: 'Encrypting & Uploading...', icon: Database, key: 'upload' },
+    { text: 'Finalizing on Server...', icon: Server, key: 'finalize' },
+    { text: 'Upload Complete!', icon: CheckCircle, key: 'complete' },
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,7 +39,7 @@ export default function UploadProgressIndicator() {
     }, STEP_DURATION);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [steps.length]);
 
   const { icon: Icon, text, key } = steps[currentStep];
 
