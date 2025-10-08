@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { format, parseISO, isAfter } from 'date-fns';
 import { useMemo, useState, useEffect } from 'react';
 import type { Movie, AdminTask } from '@/lib/data';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import AdminTaskStatus from './admin-task-status';
 import { Button } from '../ui/button';
 
@@ -38,7 +38,7 @@ function AdminTaskDialog() {
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogContent className="max-w-2xl" hideCloseButton={true} onPointerDownOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-3 text-2xl">
                         <Target className="h-8 w-8 text-primary" />
@@ -49,7 +49,8 @@ function AdminTaskDialog() {
                     </DialogDescription>
                 </DialogHeader>
                 <AdminTaskStatus task={unfinishedTask} allMovies={allMovies} adminName={adminProfile!.name} />
-                <DialogFooter>
+                <DialogFooter className="justify-between">
+                     <Button variant="outline" onClick={() => setIsOpen(false)}>Close</Button>
                     <Button asChild>
                         <Link href="/admin/upload-movie">
                             <Upload className="mr-2 h-4 w-4" />
