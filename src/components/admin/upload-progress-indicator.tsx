@@ -41,25 +41,24 @@ export default function UploadProgressIndicator({ hasDownloadLinks }: UploadProg
     return () => clearInterval(interval);
   }, [steps.length]);
 
-  const { icon: Icon, text, key } = steps[currentStep];
-
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
-      <div className="relative flex h-48 w-48 items-center justify-center">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={key}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.3, ease: 'backOut' }}
-            className="absolute flex flex-col items-center justify-center"
-          >
-            <Icon className="h-24 w-24 text-primary" />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-      <p className="mt-8 text-2xl font-bold text-foreground">{text}</p>
+    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={steps[currentStep].key}
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          transition={{ duration: 0.5, type: 'spring', damping: 15 }}
+          className="flex flex-col items-center justify-center"
+        >
+          <div className="relative flex h-48 w-48 items-center justify-center">
+            <div className="absolute inset-0 animate-[pulse-glow_3s_ease-in-out_infinite] rounded-full" />
+            <steps[currentStep].icon className="relative z-10 h-24 w-24 text-primary" />
+          </div>
+          <p className="mt-8 text-2xl font-bold text-foreground">{steps[currentStep].text}</p>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
