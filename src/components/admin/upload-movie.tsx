@@ -20,6 +20,8 @@ import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
+import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
+
 import {
   Dialog,
   DialogContent,
@@ -367,6 +369,9 @@ export default function UploadMovie() {
 
   const handleSave = () => {
     startTransition(async () => {
+      // Show the progress indicator immediately
+      // The rest of the logic will run "in the background"
+      
       const movieData: Partial<Movie> = {
         ...formData,
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
@@ -387,16 +392,23 @@ export default function UploadMovie() {
       try {
         if (formData.id) {
           await updateMovie(formData.id, movieData);
-          toast({ title: 'Success!', description: `"${formData.title}" has been updated.` });
-          router.push('/admin/movie-list');
+          // Don't show toast until after animation
         } else {
           await addMovie(movieData as Omit<Movie, 'id'>);
-          toast({ title: 'Success!', description: `"${formData.title}" has been added.` });
+           // Don't show toast until after animation
         }
+        // The isPending state will turn false, hiding the indicator
+        // Now we can show the final toast and reset
+         toast({ 
+            title: 'Upload Complete!', 
+            description: `"${formData.title}" has been successfully saved.`,
+            variant: 'success'
+        });
         resetForm();
 
       } catch (error) {
         console.error("Database operation failed:", error);
+        // isPending will still turn false, hiding the indicator
         toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
       }
     });
@@ -420,6 +432,7 @@ export default function UploadMovie() {
 
   return (
     <>
+      {isPending && <UploadProgressIndicator />}
       <div className={cn(
         "grid grid-cols-1 gap-8",
         showPreview && "lg:grid-cols-2"
