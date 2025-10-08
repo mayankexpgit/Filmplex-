@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition, useCallback } from 'react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import MovieCardLarge from '@/components/movie-card-large';
 import { Input } from './ui/input';
@@ -17,6 +17,7 @@ import {
 import MovieCardSmall from './movie-card-small';
 import { Badge } from './ui/badge';
 import FilmpilexLoader from '@/components/ui/filmplex-loader';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 
 function HomePageLoader() {
@@ -56,10 +57,29 @@ export function HomePageClient() {
     setSelectedGenre,
     featuredMovies,
     latestReleases,
-  } = useMovieStore();
-
-  const [localSearch, setLocalSearch] = useState(searchQuery);
+  } = useMovieStore(state => ({
+    isInitialized: state.isInitialized,
+    searchQuery: state.searchQuery,
+    setSearchQuery: state.setSearchQuery,
+    setSelectedGenre: state.setSelectedGenre,
+    featuredMovies: state.featuredMovies,
+    latestReleases: state.latestReleases,
+  }));
+  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [localSearch, setLocalSearch] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  // Effect to sync URL search param with Zustand store and local state
+  useEffect(() => {
+    const sQuery = searchParams.get('s');
+    const newSearchQuery = sQuery || '';
+    setLocalSearch(newSearchQuery);
+    if (newSearchQuery !== searchQuery) {
+        setSearchQuery(newSearchQuery);
+    }
+  }, [searchParams, setSearchQuery, searchQuery]);
   
   useEffect(() => {
     // Fetch data only if it hasn't been initialized yet.
@@ -67,19 +87,18 @@ export function HomePageClient() {
       fetchInitialData(false); // false for public user
     }
   }, [isInitialized]);
-  
-  useEffect(() => {
-    // Sync local search with global state if global state is cleared
-    if(!searchQuery) {
-        setLocalSearch('');
-    }
-  }, [searchQuery]);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     startTransition(() => {
-        setSearchQuery(localSearch);
+        const params = new URLSearchParams(searchParams);
+        if (localSearch) {
+            params.set('s', localSearch);
+        } else {
+            params.delete('s');
+        }
+        router.push(`/?${params.toString()}`);
     });
-  }
+  }, [localSearch, router, searchParams]);
 
   // Render the loader if the store is not yet initialized.
   if (!isInitialized) {

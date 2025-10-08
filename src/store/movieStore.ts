@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem } from '@/lib/data';
@@ -117,7 +118,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   isInitialized: false,
 
   // --- Actions ---
-  setSearchQuery: (query: string) => set({ searchQuery: query }),
+  setSearchQuery: (query: string) => {
+    if (get().searchQuery !== query) {
+      set({ searchQuery: query });
+    }
+  },
   setSelectedGenre: (genre: string) => {
     set({ selectedGenre: genre, searchQuery: '' }); // Reset search when genre changes
   },
@@ -168,8 +173,7 @@ let isFetchingData = false;
  * @param isAdmin - If true, fetches admin-specific data like suggestions and logs.
  */
 export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
-  const { isInitialized } = useMovieStore.getState();
-  if (isFetchingData || isInitialized) {
+  if (isFetchingData) {
     return;
   }
   isFetchingData = true;
