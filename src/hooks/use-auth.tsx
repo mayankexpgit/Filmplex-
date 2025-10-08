@@ -33,17 +33,18 @@ export function useAuth() {
   const managementTeam = useMovieStore(state => state.managementTeam);
 
   useEffect(() => {
-    if (adminName) {
+    if (adminName && managementTeam.length > 0) {
         const currentProfile = managementTeam.find(m => m.name === adminName);
         if (currentProfile) {
             if (JSON.stringify(adminProfile) !== JSON.stringify(currentProfile)) {
                 setAdminProfile(currentProfile);
             }
         } else {
+            // This case might happen if the admin is removed from another session
             logout();
         }
     }
-  }, [managementTeam, adminName, adminProfile]);
+  }, [managementTeam, adminName]);
 
 
   useEffect(() => {
@@ -51,6 +52,9 @@ export function useAuth() {
       try {
         const storedAdminName = getAdminName();
         if (storedAdminName) {
+          // Temporarily set loading to true until we verify the user
+          setIsLoading(true);
+
           const initialTeam = useMovieStore.getState().managementTeam.length > 0 
             ? useMovieStore.getState().managementTeam 
             : await fetchManagementTeam();
@@ -61,12 +65,16 @@ export function useAuth() {
             setAdminName(storedAdminName);
             setAdminProfile(memberProfile);
             setIsAuthenticated(true);
+            useMovieStore.setState({ managementTeam: initialTeam, adminProfile: memberProfile });
           } else {
+            // The stored admin name is invalid, so clear it
             localStorage.removeItem(ADMIN_STORAGE_KEY);
+            setIsAuthenticated(false);
           }
         }
       } catch (error) {
         console.error("Failed to check auth status:", error);
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
