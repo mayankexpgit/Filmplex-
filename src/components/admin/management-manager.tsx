@@ -161,7 +161,7 @@ function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: Admi
     );
 }
 
-function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove }: { member: ManagementMember; allMovies: Movie[], onTaskSet: (memberId: string, task: Omit<AdminTask, 'id' | 'status' | 'startDate'>) => void; onTaskRemove: (memberId: string, taskId: string) => void; }) {
+function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove, onClose }: { member: ManagementMember; allMovies: Movie[], onTaskSet: (memberId: string, task: Omit<AdminTask, 'id' | 'status' | 'startDate'>) => void; onTaskRemove: (memberId: string, taskId: string) => void; onClose: () => void }) {
     const { toast } = useToast();
     const [title, setTitle] = useState('');
     const [deadline, setDeadline] = useState<Date | undefined>();
@@ -315,9 +315,7 @@ function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove }: { mem
                 </div>
             </div>
             <DialogFooter>
-                <DialogClose asChild>
-                    <Button variant="outline">Close</Button>
-                </DialogClose>
+                <Button variant="outline" onClick={onClose}>Close</Button>
             </DialogFooter>
         </DialogContent>
 
@@ -348,7 +346,7 @@ export default function ManagementManager() {
 
   useEffect(() => {
     const checkTasks = async () => {
-        const updated = await checkAndUpdateOverdueTasks();
+        const updated = await checkAndUpdateOverdueTasks(managementTeam, allMovies);
         if (updated) {
             console.log("Overdue task statuses have been automatically updated.");
         }
@@ -482,6 +480,16 @@ export default function ManagementManager() {
     }
   }, [toast]);
 
+  const handleOpenTaskDialog = (member: ManagementMember) => {
+    setSelectedMember(member);
+    setIsTaskDialogOpen(true);
+  }
+
+  const handleCloseTaskDialog = () => {
+    setIsTaskDialogOpen(false);
+    setSelectedMember(null);
+  }
+
   const isFormDisabled = addPending || !isUnlocked || !canManageTeam;
 
   const getPerformanceBadgeVariant = (score: number): "destructive" | "secondary" | "success" => {
@@ -491,7 +499,7 @@ export default function ManagementManager() {
   }
 
   return (
-    <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+    <>
       <div className="space-y-8">
         <Card>
           <CardHeader>
@@ -573,7 +581,7 @@ export default function ManagementManager() {
                                     <Button 
                                     variant="outline" 
                                     size="icon" 
-                                    onClick={() => {setSelectedMember(member); setIsTaskDialogOpen(true)}}
+                                    onClick={() => handleOpenTaskDialog(member)}
                                     >
                                         <Briefcase className="h-4 w-4" />
                                     </Button>
@@ -623,7 +631,9 @@ export default function ManagementManager() {
         </Card>
 
       </div>
-      {selectedMember && <TaskHistoryDialog member={selectedMember} allMovies={allMovies} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} />}
-    </Dialog>
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        {selectedMember && <TaskHistoryDialog member={selectedMember} allMovies={allMovies} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} onClose={handleCloseTaskDialog} />}
+      </Dialog>
+    </>
   );
 }
