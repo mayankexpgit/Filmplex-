@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -79,6 +78,7 @@ export default function Changelog() {
         <SheetTitle>What's New in FILMPLEX</SheetTitle>
         <SheetDescription>
           Check out the latest features, bug fixes, and improvements we've made.
+          Note: Some version updates are for admin-only features and are not listed here.
         </SheetDescription>
       </SheetHeader>
       <ScrollArea className="h-[calc(100%-4rem)] pr-4 mt-4">
