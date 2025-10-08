@@ -42,7 +42,7 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   };
   
   const qualityToDisplay = getQualityBadge();
-  const linkHref = `/movie/${createSlug(movie.title, movie.year)}`;
+  const linkHref = `/${movie.contentType}/${createSlug(movie.title, movie.year)}`;
 
   const cardContent = (
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
