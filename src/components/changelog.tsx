@@ -16,12 +16,10 @@ import {
 import { Badge } from './ui/badge';
 import { CheckCircle } from 'lucide-react';
 
-const currentYear = new Date().getFullYear();
-
 const changelogData = [
   {
     version: '1.8',
-    date: `July 28, ${currentYear}`,
+    date: 'October 8, 2025',
     title: 'New Features & UI Polish',
     changes: [
       'Added a "What\'s New" changelog panel to keep you updated.',
@@ -32,7 +30,7 @@ const changelogData = [
   },
   {
     version: '1.7',
-    date: `July 27, ${currentYear}`,
+    date: 'July 23, 2025',
     title: 'URL-Driven Experience',
     changes: [
       'Implemented URL-based search queries (e.g., /?s=TheMatrix).',
@@ -42,7 +40,7 @@ const changelogData = [
   },
   {
     version: '1.5',
-    date: `July 25, ${currentYear}`,
+    date: 'May 12, 2025',
     title: 'User Interaction & Feedback',
     changes: [
       'Users can now react to movies with emojis (Like, Love, Haha, etc.).',
@@ -53,7 +51,7 @@ const changelogData = [
   },
   {
     version: '1.2',
-    date: `July 22, ${currentYear}`,
+    date: 'April 27, 2025',
     title: 'Series Support & Enhanced UI',
     changes: [
       'Added full support for TV Series, including episodes and season downloads.',
@@ -64,7 +62,7 @@ const changelogData = [
   },
   {
     version: '1.0',
-    date: `July 20, ${currentYear}`,
+    date: 'June 20, 2024',
     title: 'Initial Launch',
     changes: [
       'FILMPLEX is live!',
