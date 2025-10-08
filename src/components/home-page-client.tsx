@@ -111,7 +111,7 @@ export function HomePageClient() {
     } else {
         params.delete('s');
     }
-    params.set('page', '1'); // Reset to first page on new search
+    params.delete('page'); // Reset to first page on new search
     updateURL(params);
   }, [localSearch, searchParams]);
 
@@ -123,7 +123,7 @@ export function HomePageClient() {
         params.delete('genre');
     }
     params.delete('s'); // When genre changes, clear search query
-    params.set('page', '1'); // Reset to first page on new genre
+    params.delete('page'); // Reset to first page on new genre
     updateURL(params);
   }, [searchParams]);
 

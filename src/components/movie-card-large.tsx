@@ -113,7 +113,11 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
     if (newPage < 1 || newPage > totalPages) return;
     startTransition(() => {
         const params = new URLSearchParams(searchParams);
-        params.set('page', newPage.toString());
+        if (newPage === 1) {
+            params.delete('page');
+        } else {
+            params.set('page', newPage.toString());
+        }
         router.push(`/?${params.toString()}`);
     });
   }, [router, searchParams, totalPages]);
