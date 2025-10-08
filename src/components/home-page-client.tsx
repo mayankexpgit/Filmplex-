@@ -54,6 +54,7 @@ export function HomePageClient() {
     isInitialized,
     searchQuery,
     setSearchQuery,
+    selectedGenre,
     setSelectedGenre,
     featuredMovies,
     latestReleases,
@@ -61,6 +62,7 @@ export function HomePageClient() {
     isInitialized: state.isInitialized,
     searchQuery: state.searchQuery,
     setSearchQuery: state.setSearchQuery,
+    selectedGenre: state.selectedGenre,
     setSelectedGenre: state.setSelectedGenre,
     featuredMovies: state.featuredMovies,
     latestReleases: state.latestReleases,
@@ -71,20 +73,26 @@ export function HomePageClient() {
   const [localSearch, setLocalSearch] = useState('');
   const [isPending, startTransition] = useTransition();
 
-  // Effect to sync URL search param with Zustand store and local state
   useEffect(() => {
     const sQuery = searchParams.get('s');
+    const gQuery = searchParams.get('genre');
+    
     const newSearchQuery = sQuery || '';
+    const newGenre = gQuery || 'All Genres';
+
     setLocalSearch(newSearchQuery);
+    
     if (newSearchQuery !== searchQuery) {
         setSearchQuery(newSearchQuery);
     }
-  }, [searchParams, setSearchQuery, searchQuery]);
+    if (newGenre !== selectedGenre) {
+        setSelectedGenre(newGenre);
+    }
+  }, [searchParams, setSearchQuery, searchQuery, setSelectedGenre, selectedGenre]);
   
   useEffect(() => {
-    // Fetch data only if it hasn't been initialized yet.
     if (!isInitialized) {
-      fetchInitialData(false); // false for public user
+      fetchInitialData(false); 
     }
   }, [isInitialized]);
 
@@ -100,12 +108,24 @@ export function HomePageClient() {
     });
   }, [localSearch, router, searchParams]);
 
-  // Render the loader if the store is not yet initialized.
+  const handleGenreSelect = useCallback((genre: string) => {
+    startTransition(() => {
+        const params = new URLSearchParams(searchParams);
+        if (genre && genre !== 'All Genres') {
+            params.set('genre', genre);
+        } else {
+            params.delete('genre');
+        }
+        // When genre changes, we clear the search query from URL
+        params.delete('s'); 
+        router.push(`/?${params.toString()}`);
+    });
+  }, [router, searchParams]);
+
   if (!isInitialized) {
      return <HomePageLoader />;
   }
 
-  // Render the main content once data is available.
   return (
     <div className="container mx-auto py-8 md:py-12 space-y-8">
       
@@ -146,7 +166,7 @@ export function HomePageClient() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                   {genres.map((genre) => (
-                  <DropdownMenuItem key={genre} onSelect={() => setSelectedGenre(genre)}>
+                  <DropdownMenuItem key={genre} onSelect={() => handleGenreSelect(genre)}>
                       {genre}
                   </DropdownMenuItem>
                   ))}

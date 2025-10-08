@@ -99,7 +99,7 @@ interface MovieState {
 // =================================================================
 // 1. ZUSTAND STORE DEFINITION
 // =================================================================
-export const useMovieStore = create<MovieState>((set, get) => ({
+const useMovieStore = create<MovieState>((set, get) => ({
   // --- Initial State ---
   allMovies: [],
   featuredMovies: [],
@@ -120,11 +120,13 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   // --- Actions ---
   setSearchQuery: (query: string) => {
     if (get().searchQuery !== query) {
-      set({ searchQuery: query });
+      set({ searchQuery: query, selectedGenre: 'All Genres' });
     }
   },
   setSelectedGenre: (genre: string) => {
-    set({ selectedGenre: genre, searchQuery: '' }); // Reset search when genre changes
+    if (get().selectedGenre !== genre) {
+      set({ selectedGenre: genre, searchQuery: '' }); // Reset search when genre changes
+    }
   },
   setSelectedQuality: (quality: QualityFilter) => set({ selectedQuality: quality }),
   setState: (state: Partial<MovieState>) => set(state),
@@ -172,7 +174,7 @@ let isFetchingData = false;
  * Prevents multiple fetches from occurring simultaneously.
  * @param isAdmin - If true, fetches admin-specific data like suggestions and logs.
  */
-export const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
+const fetchInitialData = async (isAdmin: boolean): Promise<void> => {
   if (isFetchingData) {
     return;
   }
@@ -246,7 +248,7 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
     }
 };
 
-export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
+const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   const adminName = getAdminName();
   if (!adminName) {
     throw new Error("Cannot add movie: admin name not found.");
@@ -268,7 +270,7 @@ export const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   await addSecurityLogEntry(`Uploaded Movie: "${movieData.title}"`);
 };
 
-export const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
+const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
   // IMPORTANT: Do not update uploadedBy or createdAt fields on edit.
   const updateData = { ...updatedMovieData };
   delete updateData.uploadedBy;
@@ -293,7 +295,7 @@ export const updateMovie = async (id: string, updatedMovieData: Partial<Movie>):
   }
 };
 
-export const deleteMovie = async (id: string): Promise<void> => {
+const deleteMovie = async (id: string): Promise<void> => {
   const movie = useMovieStore.getState().latestReleases.find(m => m.id === id);
   if (movie) {
     await dbDeleteMovie(id);
@@ -306,13 +308,13 @@ export const deleteMovie = async (id: string): Promise<void> => {
   }
 };
 
-export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
+const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   await dbUpdateContactInfo(info);
   useMovieStore.setState({ contactInfo: info });
   await addSecurityLogEntry('Updated Help Center Info');
 };
 
-export const submitSuggestion = async (movieName: string, comment: string): Promise<void> => {
+const submitSuggestion = async (movieName: string, comment: string): Promise<void> => {
   const newSuggestionData = {
     movieName,
     comment,
@@ -325,7 +327,7 @@ export const submitSuggestion = async (movieName: string, comment: string): Prom
   await addSecurityLogEntry(`New suggestion received for: "${movieName}"`);
 };
 
-export const deleteSuggestion = async (id: string): Promise<void> => {
+const deleteSuggestion = async (id: string): Promise<void> => {
   await dbDeleteSuggestion(id);
   useMovieStore.setState((state) => ({
     suggestions: state.suggestions.filter((s) => s.id !== id)
@@ -333,7 +335,7 @@ export const deleteSuggestion = async (id: string): Promise<void> => {
   await addSecurityLogEntry(`Deleted Suggestion ID: ${id}`);
 };
 
-export const addNotification = async (notificationData: Omit<Notification, 'id'>): Promise<void> => {
+const addNotification = async (notificationData: Omit<Notification, 'id'>): Promise<void> => {
     const id = await dbAddNotification(notificationData);
     useMovieStore.setState((state) => ({
         notifications: [{ ...notificationData, id }, ...state.notifications],
@@ -341,7 +343,7 @@ export const addNotification = async (notificationData: Omit<Notification, 'id'>
     await addSecurityLogEntry(`Added upcoming notification for: "${notificationData.movieTitle}"`);
 };
 
-export const deleteNotification = async (id: string): Promise<void> => {
+const deleteNotification = async (id: string): Promise<void> => {
     const notif = useMovieStore.getState().notifications.find(n => n.id === id);
     await dbDeleteNotification(id);
     if(notif) {
@@ -354,7 +356,7 @@ export const deleteNotification = async (id: string): Promise<void> => {
 
 // --- Comments and Reactions ---
 
-export const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
+const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
   try {
     if (!movieId) return;
     const comments = await dbFetchComments(movieId);
@@ -364,7 +366,7 @@ export const fetchCommentsForMovie = async (movieId: string): Promise<void> => {
   }
 };
 
-export const submitComment = async (movieId: string, user: string, text: string): Promise<void> => {
+const submitComment = async (movieId: string, user: string, text: string): Promise<void> => {
     const newCommentData = {
         user,
         text,
@@ -375,7 +377,7 @@ export const submitComment = async (movieId: string, user: string, text: string)
     useMovieStore.getState().addCommentToState(newComment);
 };
 
-export const deleteComment = async (movieId: string, commentId: string): Promise<void> => {
+const deleteComment = async (movieId: string, commentId: string): Promise<void> => {
     const comment = useMovieStore.getState().comments.find(c => c.id === commentId);
     await dbDeleteComment(movieId, commentId);
     useMovieStore.setState(state => ({
@@ -386,7 +388,7 @@ export const deleteComment = async (movieId: string, commentId: string): Promise
     }
 };
 
-export const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
+const submitReaction = async (movieId: string, reaction: keyof Reactions): Promise<void> => {
     try {
         await dbUpdateReaction(movieId, reaction);
         useMovieStore.getState().incrementReaction(movieId, reaction);
@@ -397,7 +399,7 @@ export const submitReaction = async (movieId: string, reaction: keyof Reactions)
 
 // --- Management Team & Tasks ---
 
-export const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'timestamp'>): Promise<void> => {
+const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'timestamp'>): Promise<void> => {
     const fullMemberData = {
       ...memberData,
       timestamp: new Date().toISOString(),
@@ -409,7 +411,7 @@ export const addManagementMember = async (memberData: Omit<ManagementMember, 'id
     await addSecurityLogEntry(`Added management member: "${memberData.name}"`);
 };
 
-export const deleteManagementMember = async (id: string): Promise<void> => {
+const deleteManagementMember = async (id: string): Promise<void> => {
     const member = useMovieStore.getState().managementTeam.find(m => m.id === id);
     await dbDeleteManagementMember(id);
     if (member) {
@@ -420,7 +422,7 @@ export const deleteManagementMember = async (id: string): Promise<void> => {
     }));
 };
 
-export const updateManagementMemberTask = async (memberId: string, taskData: Omit<AdminTask, 'id' | 'status' | 'startDate'>): Promise<void> => {
+const updateManagementMemberTask = async (memberId: string, taskData: Omit<AdminTask, 'id' | 'status' | 'startDate'>): Promise<void> => {
     const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
     if (!member) return;
 
@@ -441,7 +443,7 @@ export const updateManagementMemberTask = async (memberId: string, taskData: Omi
 }
 
 
-export const updateAdminTask = async (memberId: string, taskId: string, itemIndex: number, completed: boolean): Promise<void> => {
+const updateAdminTask = async (memberId: string, taskId: string, itemIndex: number, completed: boolean): Promise<void> => {
     const { managementTeam } = useMovieStore.getState();
     const member = managementTeam.find(m => m.id === memberId);
     if (!member || !member.tasks) return;
@@ -463,7 +465,7 @@ export const updateAdminTask = async (memberId: string, taskId: string, itemInde
 }
 
 
-export const removeManagementMemberTask = async (memberId: string, taskId: string): Promise<void> => {
+const removeManagementMemberTask = async (memberId: string, taskId: string): Promise<void> => {
     const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
     if (!member || !member.tasks) return;
 
@@ -490,7 +492,7 @@ export const removeManagementMemberTask = async (memberId: string, taskId: strin
 /**
  * Checks all active admin tasks. If a task is overdue, its status is updated in the database.
  */
-export const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<boolean> => {
+const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<boolean> => {
     if (!team || !Array.isArray(team)) {
         console.error("checkAndUpdateOverdueTasks was called with invalid 'team' argument.");
         return false;
@@ -563,4 +565,27 @@ export const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMo
         }
     }
     return anyTaskUpdated;
+};
+
+export { 
+    useMovieStore, 
+    fetchInitialData,
+    addMovie,
+    updateMovie,
+    deleteMovie,
+    updateContactInfo,
+    submitSuggestion,
+    deleteSuggestion,
+    addNotification,
+    deleteNotification,
+    fetchCommentsForMovie,
+    submitComment,
+    deleteComment,
+    submitReaction,
+    addManagementMember,
+    deleteManagementMember,
+    updateManagementMemberTask,
+    updateAdminTask,
+    removeManagementMemberTask,
+    checkAndUpdateOverdueTasks,
 };
