@@ -2,17 +2,71 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks } from 'lucide-react';
+import { Upload, MessageCircle, Bell, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { Progress } from '@/components/ui/progress';
 import { format, parseISO, isAfter } from 'date-fns';
-import { useMemo } from 'react';
-import type { Movie } from '@/lib/data';
-import AdminTaskDialog from '@/components/admin/page';
+import { useMemo, useState, useEffect } from 'react';
+import type { Movie, AdminTask } from '@/lib/data';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import AdminTaskStatus from '@/components/admin/admin-task-status';
+import { Button } from '@/components/ui/button';
 
-const topLevelRoles = ['Regulator', 'Co-Founder'];
+function AdminTaskDialog() {
+    const { adminProfile } = useAuth();
+    const { allMovies } = useMovieStore();
+    const [isOpen, setIsOpen] = useState(false);
+
+    const unfinishedTask: AdminTask | undefined = useMemo(() => {
+        return adminProfile?.tasks?.find(t => t.status === 'active' || t.status === 'incompleted');
+    }, [adminProfile]);
+
+    useEffect(() => {
+        if (unfinishedTask) {
+            setIsOpen(true);
+        } else {
+            setIsOpen(false);
+        }
+    }, [unfinishedTask]);
+
+
+    if (!unfinishedTask) {
+        return null;
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-3 text-2xl">
+                        <Target className="h-8 w-8 text-primary" />
+                        My Current Task
+                    </DialogTitle>
+                    <DialogDescription>
+                        This is your currently assigned task. The dialog will close once the task is completed.
+                    </DialogDescription>
+                </DialogHeader>
+                <AdminTaskStatus task={unfinishedTask} allMovies={allMovies} adminName={adminProfile!.name} />
+                <DialogFooter className="justify-between">
+                     <Button variant="outline" asChild>
+                        <DialogClose>
+                            <span className="mr-2">X</span>
+                            Close
+                        </DialogClose>
+                     </Button>
+                    <Button asChild>
+                        <Link href="/admin/upload-movie">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Go to Upload
+                        </Link>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 const adminSections = [
   {
