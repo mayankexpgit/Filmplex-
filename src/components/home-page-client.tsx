@@ -137,7 +137,7 @@ export function HomePageClient() {
         <MovieCardSmall movies={featuredMovies} />
       </div>
 
-      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-xs md:text-base font-bold text-foreground">
+      <div className="bg-secondary p-3 rounded-lg border border-border text-center text-base md:text-lg font-bold text-foreground">
         Download in High Quality, 100% Free, No Hidden Charges!
       </div>
 
