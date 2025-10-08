@@ -13,88 +13,6 @@ import type { Movie, AdminTask } from '@/lib/data';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import AdminTaskStatus from './admin-task-status';
 
-const topLevelRoles = ['Regulator', 'Co-Founder'];
-
-const adminSections = [
-  {
-    title: 'Upload Movie',
-    description: 'Add new movies to the catalog.',
-    href: '/admin/upload-movie',
-    icon: Upload,
-    id: 'upload-movie',
-  },
-  {
-    title: 'Movie List',
-    description: 'Edit, view, and manage all movies.',
-    href: '/admin/movie-list',
-    icon: List,
-    id: 'movie-list',
-  },
-  {
-    title: 'My Tasks',
-    description: 'View and manage your assigned tasks.',
-    href: '/admin/my-tasks',
-    icon: ListChecks,
-    id: 'my-tasks',
-  },
-  {
-    title: 'Update Featured Movies',
-    description: 'Update posters for the featured carousel.',
-    href: '/admin/update-featured',
-    icon: Flame,
-    id: 'update-featured',
-  },
-  {
-    title: 'Help Center',
-    description: 'Update contact links and details.',
-    href: '/admin/help-center',
-    icon: LifeBuoy,
-    id: 'help-center',
-  },
-  {
-    title: 'Management Team',
-    description: 'Add or remove team members.',
-    href: '/admin/management',
-    icon: Users,
-    id: 'management',
-  },
-  {
-    title: 'Movie Notification',
-    description: 'Send notifications to users about new movies.',
-    href: '/admin/movie-notification',
-    icon: Bell,
-    id: 'movie-notification',
-  },
-  {
-    title: 'Manage Comments',
-    description: 'View comments and reactions for each movie.',
-    href: '/admin/comments',
-    icon: MessagesSquare,
-    id: 'manage-comments',
-  },
-  {
-    title: 'Suggestions Box',
-    description: 'View user suggestions and requests.',
-    href: '/admin/suggestions-box',
-    icon: MessageCircle,
-    id: 'suggestions-box',
-  },
-  {
-    title: 'Security Log',
-    description: 'Track all admin activities.',
-    href: '/admin/security-log',
-    icon: Shield,
-    id: 'security-log',
-  },
-  {
-    title: 'Admin Profile',
-    description: 'View upload analytics for the team.',
-    href: '/admin/profile',
-    icon: ProfileIcon,
-    id: 'admin-profile',
-  }
-];
-
 function AdminTaskDialog() {
     const { adminProfile } = useAuth();
     const { allMovies } = useMovieStore();
@@ -140,6 +58,86 @@ export default function AdminDashboardPage() {
   const { adminProfile } = useAuth();
   const suggestionCount = suggestions.length;
   const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && (t.status === 'active' || t.status === 'incompleted')).length || 0;
+
+  const adminSections = [
+    {
+      title: 'Upload Movie',
+      description: 'Add new movies to the catalog.',
+      href: '/admin/upload-movie',
+      icon: Upload,
+      id: 'upload-movie',
+    },
+    {
+      title: 'Movie List',
+      description: 'Edit, view, and manage all movies.',
+      href: '/admin/movie-list',
+      icon: List,
+      id: 'movie-list',
+    },
+    {
+      title: 'My Tasks',
+      description: 'View and manage your assigned tasks.',
+      href: '/admin/my-tasks',
+      icon: ListChecks,
+      id: 'my-tasks',
+    },
+    {
+      title: 'Update Featured Movies',
+      description: 'Update posters for the featured carousel.',
+      href: '/admin/update-featured',
+      icon: Flame,
+      id: 'update-featured',
+    },
+    {
+      title: 'Help Center',
+      description: 'Update contact links and details.',
+      href: '/admin/help-center',
+      icon: LifeBuoy,
+      id: 'help-center',
+    },
+    {
+      title: 'Management Team',
+      description: 'Add or remove team members.',
+      href: '/admin/management',
+      icon: Users,
+      id: 'management',
+    },
+    {
+      title: 'Movie Notification',
+      description: 'Send notifications to users about new movies.',
+      href: '/admin/movie-notification',
+      icon: Bell,
+      id: 'movie-notification',
+    },
+    {
+      title: 'Manage Comments',
+      description: 'View comments and reactions for each movie.',
+      href: '/admin/comments',
+      icon: MessagesSquare,
+      id: 'manage-comments',
+    },
+    {
+      title: 'Suggestions Box',
+      description: 'View user suggestions and requests.',
+      href: '/admin/suggestions-box',
+      icon: MessageCircle,
+      id: 'suggestions-box',
+    },
+    {
+      title: 'Security Log',
+      description: 'Track all admin activities.',
+      href: '/admin/security-log',
+      icon: Shield,
+      id: 'security-log',
+    },
+    {
+      title: 'Admin Profile',
+      description: 'View upload analytics for the team.',
+      href: '/admin/profile',
+      icon: ProfileIcon,
+      id: 'admin-profile',
+    }
+  ];
 
   return (
     <div className="container mx-auto py-8 md:py-12">
