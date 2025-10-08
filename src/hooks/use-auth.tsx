@@ -15,6 +15,7 @@ const ADMIN_STORAGE_KEY = 'filmplex_admin_name';
  */
 export const getAdminName = (): string | null => {
     try {
+        if (typeof window === 'undefined') return null;
         return localStorage.getItem(ADMIN_STORAGE_KEY);
     } catch (error) {
         console.error("Could not access localStorage:", error);
@@ -29,22 +30,20 @@ export function useAuth() {
   const [adminProfile, setAdminProfile] = useState<ManagementMember | null>(null);
   const router = useRouter();
   
-  // Connect to the movie store to get real-time updates for the management team.
   const managementTeam = useMovieStore(state => state.managementTeam);
 
   useEffect(() => {
-    // This effect ensures that if the admin's profile data changes in the global store
-    // (e.g., a task is updated), the local adminProfile state in this hook is updated too.
     if (adminName) {
         const currentProfile = managementTeam.find(m => m.name === adminName);
         if (currentProfile) {
-            setAdminProfile(currentProfile);
+            if (JSON.stringify(adminProfile) !== JSON.stringify(currentProfile)) {
+                setAdminProfile(currentProfile);
+            }
         } else {
-            // If the profile is gone for some reason, log out.
             logout();
         }
     }
-  }, [managementTeam, adminName]); // Rerun when the global team data or the local admin name changes
+  }, [managementTeam, adminName, adminProfile]);
 
 
   useEffect(() => {
@@ -52,17 +51,17 @@ export function useAuth() {
       try {
         const storedAdminName = getAdminName();
         if (storedAdminName) {
-          // No need to fetch here, the global store `fetchInitialData` handles it.
-          // We just need to check if the name is valid once data is loaded.
-          const initialTeam = await fetchManagementTeam();
+          const initialTeam = useMovieStore.getState().managementTeam.length > 0 
+            ? useMovieStore.getState().managementTeam 
+            : await fetchManagementTeam();
+            
           const memberProfile = initialTeam.find(member => member.name === storedAdminName);
           
           if (memberProfile) {
             setAdminName(storedAdminName);
             setAdminProfile(memberProfile);
-            setIsAuthenticated(true);
+            setIsAuthenticated(true); // This line was missing the state update
           } else {
-            // Clear invalid data from storage
             localStorage.removeItem(ADMIN_STORAGE_KEY);
           }
         }
@@ -91,12 +90,12 @@ export function useAuth() {
   const login = useCallback(async (name: string, username: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const [credentials, managementTeam] = await Promise.all([
+      const [credentials, team] = await Promise.all([
         fetchAdminCredentials(),
         fetchManagementTeam()
       ]);
       
-      const memberProfile = managementTeam.find(member => member.name.toLowerCase() === name.toLowerCase());
+      const memberProfile = team.find(member => member.name.toLowerCase() === name.toLowerCase());
       if (!memberProfile) {
         console.log(`Login failed: Admin name "${name}" not found in management team.`);
         return false;
@@ -112,6 +111,10 @@ export function useAuth() {
       setAdminName(name);
       setAdminProfile(memberProfile);
       localStorage.setItem(ADMIN_STORAGE_KEY, name);
+      
+      // Ensure the global store is updated with the fetched team
+      useMovieStore.setState({ managementTeam: team });
+
       return true;
 
     } catch (error) {
