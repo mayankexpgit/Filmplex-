@@ -100,6 +100,7 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
     if (task.type === 'target') {
         target = task.target || 0;
     } else if (task.type === 'todo') {
+        // For 'todo' tasks, the target is the number of items in the list.
         target = task.items?.length || 0;
     }
 

@@ -514,26 +514,36 @@ export const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMo
 
             if (task.type === 'target') {
                 target = task.target || 0;
-                if (target > 0 && completedMoviesForTask.length >= target) {
-                    isCompleted = true;
-                }
             } else if (task.type === 'todo') {
                 target = task.items?.length || 0;
-                 if (target > 0 && completedMoviesForTask.length >= target) {
-                    isCompleted = true;
-                }
+            }
+
+            if (target > 0 && completedMoviesForTask.length >= target) {
+                isCompleted = true;
             }
             
             if (isCompleted) {
+                // If the task is now completed, update its status.
+                // This applies even if it was previously 'incompleted'.
                 tasksNeedUpdate = true;
                 anyTaskUpdated = true;
-                return { ...task, status: 'completed' as const, endDate: new Date().toISOString() };
+                return { 
+                    ...task, 
+                    status: 'completed' as const, 
+                    endDate: new Date().toISOString(),
+                    completedCount: completedMoviesForTask.length
+                };
             } else if (isAfter(now, parseISO(task.deadline)) && task.status === 'active') {
                 // Only mark as 'incompleted' if it's currently 'active' and deadline has passed.
-                // This allows an 'incompleted' task to eventually become 'completed'.
+                // This allows an 'incompleted' task to eventually become 'completed' if the work is done later.
                 tasksNeedUpdate = true;
                 anyTaskUpdated = true;
-                return { ...task, status: 'incompleted' as const, endDate: new Date().toISOString() };
+                return { 
+                    ...task, 
+                    status: 'incompleted' as const, 
+                    endDate: new Date().toISOString(), // Mark when it became overdue
+                    completedCount: completedMoviesForTask.length
+                };
             }
             
             return task;
