@@ -151,7 +151,7 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
             Previous
           </Button>
           <span className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
+            Page {currentPage}
           </span>
           <Button onClick={() => handlePageChange(currentPage + 1)} variant="secondary" disabled={isPending || currentPage >= totalPages}>
             Next
