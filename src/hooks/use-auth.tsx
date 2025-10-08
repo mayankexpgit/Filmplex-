@@ -60,7 +60,7 @@ export function useAuth() {
           if (memberProfile) {
             setAdminName(storedAdminName);
             setAdminProfile(memberProfile);
-            setIsAuthenticated(true); // This line was missing the state update
+            setIsAuthenticated(true);
           } else {
             localStorage.removeItem(ADMIN_STORAGE_KEY);
           }
