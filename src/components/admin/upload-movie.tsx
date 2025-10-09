@@ -83,19 +83,38 @@ const initialFormState: FormData = {
 };
 
 
-function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled }: { index: number, link: DownloadLink, onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void, onRemoveLink: (index: number) => void, disabled: boolean }) {
+function DownloadLinkEditor({ 
+    index, 
+    link, 
+    onLinkChange, 
+    onRemoveLink, 
+    disabled, 
+    autoShorten 
+}: { 
+    index: number, 
+    link: DownloadLink, 
+    onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void, 
+    onRemoveLink: (index: number) => void, 
+    disabled: boolean,
+    autoShorten: boolean,
+}) {
   const [isShortening, setIsShortening] = useState(false);
   const { toast } = useToast();
 
   const handleUrlBlur = async () => {
     const originalUrl = link.url;
-    if (!originalUrl || originalUrl.includes('festive-bazaar.shop')) {
-      return; // Do not shorten empty or already shortened URLs
+    if (!autoShorten || !originalUrl || originalUrl.includes('festive-bazaar.shop')) {
+      return; // Do not shorten if disabled, empty, or already shortened
     }
     setIsShortening(true);
     try {
       const shortUrl = await shortenUrl(originalUrl);
       onLinkChange(index, 'url', shortUrl);
+      toast({
+        title: 'URL Shortened!',
+        description: 'The link has been successfully shortened.',
+        variant: 'success'
+      })
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -145,7 +164,7 @@ function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled 
   );
 }
 
-function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled, currentEpisodes }: { epIndex: number, episode: Episode, onEpisodeChange: (field: 'episodes', value: Episode[]) => void, onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void, onAddLink: (epIndex: number) => void, onRemoveLink: (epIndex: number, linkIndex: number) => void, onRemoveEpisode: (epIndex: number) => void, disabled: boolean, currentEpisodes: Episode[] }) {
+function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled, currentEpisodes, autoShorten }: { epIndex: number, episode: Episode, onEpisodeChange: (field: 'episodes', value: Episode[]) => void, onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void, onAddLink: (epIndex: number) => void, onRemoveLink: (epIndex: number, linkIndex: number) => void, onRemoveEpisode: (epIndex: number) => void, disabled: boolean, currentEpisodes: Episode[], autoShorten: boolean }) {
     
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newEpisodes = [...currentEpisodes];
@@ -167,7 +186,15 @@ function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddL
             </div>
             <div className="space-y-3 pl-4 border-l-2 border-border">
                 {episode.downloadLinks.map((link, linkIndex) => (
-                    <DownloadLinkEditor key={linkIndex} index={linkIndex} link={link} onLinkChange={(idx, field, val) => onLinkChange(epIndex, idx, field, val)} onRemoveLink={(idx) => onRemoveLink(epIndex, idx)} disabled={disabled} />
+                    <DownloadLinkEditor 
+                        key={linkIndex} 
+                        index={linkIndex} 
+                        link={link} 
+                        onLinkChange={(idx, field, val) => onLinkChange(epIndex, idx, field, val)} 
+                        onRemoveLink={(idx) => onRemoveLink(epIndex, idx)} 
+                        disabled={disabled}
+                        autoShorten={autoShorten}
+                    />
                 ))}
             </div>
              <Button variant="outline" size="sm" onClick={() => onAddLink(epIndex)} disabled={disabled}>
@@ -196,6 +223,7 @@ export default function UploadMovie() {
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
+  const [autoShorten, setAutoShorten] = useState(true);
 
 
   useEffect(() => {
@@ -393,64 +421,75 @@ export default function UploadMovie() {
   };
 
 
-  const handleSave = () => {
-    // Check for download links before starting the transition
-    const linksPresent =
-      (formData.contentType === 'movie' && (formData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
-      (formData.contentType === 'series' &&
-        ((formData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
-         (formData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
-    setHasDownloadLinks(linksPresent);
-
-    startTransition(async () => {
-      let movieData: Partial<Movie> = { ...formData };
+  const handleSave = async () => {
+    // This function will now be simpler, as shortening happens onBlur
+    // The final data preparation logic remains
+    let movieData: Partial<Movie> = { ...formData };
       
-      // Final data preparation
-      movieData = {
-        ...movieData,
-        tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
-      };
+    // Final data preparation
+    movieData = {
+      ...movieData,
+      tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+      screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
+    };
 
-      if (formData.contentType === 'movie') {
-        movieData.downloadLinks = (movieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
-        delete movieData.episodes;
-        delete movieData.seasonDownloadLinks;
-        delete movieData.numberOfEpisodes;
+    if (formData.contentType === 'movie') {
+      movieData.downloadLinks = (movieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
+      delete movieData.episodes;
+      delete movieData.seasonDownloadLinks;
+      delete movieData.numberOfEpisodes;
+    } else {
+      movieData.episodes = (movieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
+      movieData.seasonDownloadLinks = (movieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
+      delete movieData.downloadLinks;
+    }
+    delete (movieData as any).tagsString;
+      
+    try {
+      if (formData.id) {
+        await updateMovie(formData.id, movieData);
       } else {
-        movieData.episodes = (movieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
-        movieData.seasonDownloadLinks = (movieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
-        delete movieData.downloadLinks;
+        await addMovie(movieData as Omit<Movie, 'id'>);
       }
-      delete (movieData as any).tagsString;
       
-      try {
-        if (formData.id) {
-          await updateMovie(formData.id, movieData);
-        } else {
-          await addMovie(movieData as Omit<Movie, 'id'>);
-        }
-        
-        toast({ 
-            title: 'Upload Complete!', 
-            description: `"${formData.title}" has been successfully saved.`,
-            variant: 'success'
-        });
-        resetForm();
+      toast({ 
+          title: 'Upload Complete!', 
+          description: `"${formData.title}" has been successfully saved.`,
+          variant: 'success'
+      });
+      resetForm();
 
-      } catch (error) {
-        console.error("Database operation failed:", error);
-        toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
-      }
-    });
+    } catch (error) {
+      console.error("Database operation failed:", error);
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
+    }
   };
   
   const triggerSave = (e: React.MouseEvent) => {
      if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
       e.preventDefault();
+      return;
     }
+
+    const linksPresent =
+      (formData.contentType === 'movie' && (formData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
+      (formData.contentType === 'series' &&
+        ((formData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
+         (formData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
+    setHasDownloadLinks(linksPresent);
+    startTransition(handleSave);
   };
+
+  const confirmAndSave = (e: React.MouseEvent) => {
+    // This wrapper is for the AlertDialog trigger to prevent default form submission
+    // and to run checks before showing the dialog.
+    if (!formData.title || !formData.genre) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
+      e.preventDefault();
+    }
+  }
+
 
   const isFormDisabled = isPending || isFetchingAI || isSearching;
 
@@ -601,13 +640,26 @@ export default function UploadMovie() {
 
                 <Separator />
                 
+                {/* Auto Shorten Switch */}
+                <div className="flex items-center space-x-2 pt-2">
+                    <Switch id="auto-shorten" checked={autoShorten} onCheckedChange={setAutoShorten} disabled={isFormDisabled} />
+                    <Label htmlFor="auto-shorten">Auto Shorten Links</Label>
+                </div>
 
                 {/* Download Links Section */}
                 {formData.contentType === 'movie' ? (
                   <div className="space-y-4 pt-2">
                     <Label>Download Links</Label>
                     {(formData.downloadLinks || []).map((link, index) => (
-                      <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleMovieLinkChange} onRemoveLink={removeMovieLink} disabled={isFormDisabled} />
+                      <DownloadLinkEditor 
+                        key={index} 
+                        index={index} 
+                        link={link} 
+                        onLinkChange={handleMovieLinkChange} 
+                        onRemoveLink={removeMovieLink} 
+                        disabled={isFormDisabled} 
+                        autoShorten={autoShorten}
+                      />
                     ))}
                     <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
                       <PlusCircle className="mr-2 h-4 w-4" /> Add Link
@@ -635,6 +687,7 @@ export default function UploadMovie() {
                                       onRemoveEpisode={removeEpisode} 
                                       disabled={isFormDisabled} 
                                       currentEpisodes={formData.episodes || []}
+                                      autoShorten={autoShorten}
                                   />
                               ))}
                           </div>
@@ -644,7 +697,15 @@ export default function UploadMovie() {
                           <Label className="text-lg mb-4 block">Full Season Download Links</Label>
                           <div className="space-y-4">
                               {(formData.seasonDownloadLinks || []).map((link, index) => (
-                                  <DownloadLinkEditor key={index} index={index} link={link} onLinkChange={handleSeasonLinkChange} onRemoveLink={removeSeasonLink} disabled={isFormDisabled} />
+                                  <DownloadLinkEditor 
+                                    key={index} 
+                                    index={index} 
+                                    link={link} 
+                                    onLinkChange={handleSeasonLinkChange} 
+                                    onRemoveLink={removeSeasonLink} 
+                                    disabled={isFormDisabled}
+                                    autoShorten={autoShorten}
+                                  />
                               ))}
                               <Button variant="outline" size="sm" onClick={addSeasonLink} disabled={isFormDisabled}>
                                   <PlusCircle className="mr-2 h-4 w-4" /> Add Season Link
@@ -701,7 +762,7 @@ export default function UploadMovie() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button onClick={triggerSave} disabled={isFormDisabled}>
+                      <Button onClick={confirmAndSave} disabled={isFormDisabled}>
                           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {formData.id ? 'Update Content' : 'Confirm & Upload'}
                       </Button>
@@ -715,7 +776,7 @@ export default function UploadMovie() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSave}>Continue</AlertDialogAction>
+                      <AlertDialogAction onClick={triggerSave}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
@@ -794,5 +855,3 @@ export default function UploadMovie() {
     </>
   );
 }
-
-    
