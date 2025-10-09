@@ -35,13 +35,15 @@ export const shortenUrl = async (originalUrl: string): Promise<string> => {
   }
 
   try {
-    // Generate a unique alias to avoid API errors for shortening the same link.
-    const uniqueAlias = `filmplex${Date.now()}${Math.floor(Math.random() * 100)}`;
     const encodedUrl = encodeURIComponent(longUrl);
     
-    const apiUrl = `${API_ENDPOINT}?api=${apiKey}&url=${encodedUrl}&alias=${uniqueAlias}`;
+    const apiUrl = `${API_ENDPOINT}?api=${apiKey}&url=${encodedUrl}&format=json`;
 
-    const response = await axios.get(apiUrl, { timeout: 10000 });
+    const response = await axios.get(apiUrl, { 
+      timeout: 10000,
+      headers: { "Accept": "application/json" },
+    });
+    
     const result = response.data;
 
     if (result.status === 'error') {
