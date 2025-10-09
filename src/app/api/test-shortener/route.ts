@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 import https from 'https';
 
-// ✅ Force Node.js runtime (not edge) and ignore SSL errors
-export const runtime = 'nodejs';
+// Force dynamic rendering and disable caching for this route.
+export const dynamic = 'force-dynamic';
+
+// Agent to ignore SSL certificate errors
 const agent = new https.Agent({
   rejectUnauthorized: false,
 });
