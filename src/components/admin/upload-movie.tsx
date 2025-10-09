@@ -20,7 +20,6 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
-import { shortenUrlAction } from '@/actions/shortenUrlAction';
 
 import {
   Dialog,
@@ -81,6 +80,22 @@ const initialFormState: FormData = {
   seasonDownloadLinks: [],
 };
 
+const shortenUrl = async (longUrl: string): Promise<string> => {
+    const res = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: longUrl }),
+    });
+
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to shorten URL');
+    }
+
+    const data = await res.json();
+    return data.shortUrl;
+}
+
 
 function DownloadLinkEditor({
     index,
@@ -107,17 +122,13 @@ function DownloadLinkEditor({
     }
     setIsShortening(true);
     try {
-      const result = await shortenUrlAction(originalUrl);
-      if (result.success && result.shortUrl) {
-        onLinkChange(index, 'url', result.shortUrl);
-        toast({
-          title: 'URL Shortened!',
-          description: 'The link has been successfully shortened.',
-          variant: 'success',
-        });
-      } else {
-        throw new Error(result.error || 'Failed to shorten URL');
-      }
+      const shortUrl = await shortenUrl(originalUrl);
+      onLinkChange(index, 'url', shortUrl);
+      toast({
+        title: 'URL Shortened!',
+        description: 'The link has been successfully shortened.',
+        variant: 'success',
+      });
     } catch (error: any) {
       toast({
         variant: 'destructive',
