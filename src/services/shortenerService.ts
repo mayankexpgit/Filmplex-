@@ -3,10 +3,11 @@
 
 import axios from 'axios';
 
-const API_ENDPOINT = 'https://festive-bazaar.shop/api';
+const API_ENDPOINT = 'https://festive-bazaar.shop/api/shorten';
 
 /**
  * Shortens a given URL using the festive-bazaar API.
+ * This implementation now uses a POST request with an Authorization header as per user's guidance.
  * @param longUrl The original, long URL to shorten.
  * @returns The shortened URL.
  * @throws Will throw an error if the API key is missing or the request fails.
@@ -16,34 +17,43 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
 
   if (!apiKey) {
     console.error('Link shortener API key is not configured. Skipping shortening.');
-    // Return original URL if API key is not available to avoid breaking the flow.
     return longUrl;
   }
 
   if (!longUrl || !longUrl.startsWith('http')) {
-      // Don't try to shorten invalid or empty URLs
-      return longUrl;
+    // Don't try to shorten invalid or empty URLs
+    return longUrl;
   }
 
   try {
-    // The festive-bazaar.shop API uses a GET request with query parameters
-    const response = await axios.get(API_ENDPOINT, {
-      params: {
-        api: apiKey,
-        url: longUrl,
-      },
-      timeout: 10000, // 10 second timeout
-    });
+    const response = await axios.post(
+      API_ENDPOINT,
+      { url: longUrl }, // Send the URL in the request body as JSON
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`, // Use Bearer token for authorization
+        },
+        timeout: 10000, // 10 second timeout
+      }
+    );
 
     const data = response.data;
     
-    // The API responds with a structure like { "status": "success", "shortenedUrl": "..." }
-    if (data?.status === 'success' && data?.shortenedUrl) {
-      return data.shortenedUrl;
+    // The API might respond with a structure like { "status": "success", "shortenedUrl": "..." } or other formats
+    const shortened =
+      data?.shortenedUrl ??
+      data?.shortUrl ??
+      data?.result?.short_link ??
+      data?.data?.short_url ??
+      data?.short_link ??
+      null;
+
+    if (shortened) {
+      return shortened;
     } else {
-      // If API gives a success status but no URL, or a failed status
       console.warn('API did not return a valid shortened URL. Response:', data);
-      return longUrl;
+      return longUrl; // Fallback to original URL
     }
   } catch (error: any) {
     // Log detailed error so you can debug (response body, status)
@@ -52,3 +62,4 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
     return longUrl;
   }
 };
+
