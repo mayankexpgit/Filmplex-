@@ -3,11 +3,11 @@
 
 import axios from 'axios';
 
-const API_ENDPOINT = 'https://festive-bazaar.shop/api/shorten';
+const API_ENDPOINT = 'https://festive-bazaar.shop/api';
 
 /**
  * Shortens a given URL using the festive-bazaar API.
- * This implementation now uses a POST request with an Authorization header as per user's guidance.
+ * This implementation now uses a GET request with the API key in the query parameters.
  * @param longUrl The original, long URL to shorten.
  * @returns The shortened URL.
  * @throws Will throw an error if the API key is missing or the request fails.
@@ -26,13 +26,12 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
   }
 
   try {
-    const response = await axios.post(
+    const response = await axios.get(
       API_ENDPOINT,
-      { url: longUrl }, // Send the URL in the request body as JSON
       {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`, // Use Bearer token for authorization
+        params: {
+          api: apiKey,
+          url: longUrl,
         },
         timeout: 10000, // 10 second timeout
       }
@@ -62,4 +61,3 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
     return longUrl;
   }
 };
-
