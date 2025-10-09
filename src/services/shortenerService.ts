@@ -6,24 +6,29 @@ import axios from 'axios';
 const API_ENDPOINT = 'https://festive-bazaar.shop/api';
 
 /**
- * Shortens a given URL using the festive-bazaar API, based on the provided PHP example.
+ * Shortens a given URL using the festive-bazaar API.
  * This implementation uses a GET request with the API key in the query parameters.
- * @param longUrl The original, long URL to shorten.
+ * @param originalUrl The original, long URL to shorten.
  * @returns The shortened URL.
  * @throws Will throw an error if the API responds with a status of 'error'.
  */
-export const shortenUrl = async (longUrl: string): Promise<string> => {
+export const shortenUrl = async (originalUrl: string): Promise<string> => {
   const apiKey = process.env.LINK_SHORTENER_API_KEY;
 
   if (!apiKey) {
     console.error('Link shortener API key is not configured. Skipping shortening.');
-    // In production, we fall back to the long URL to prevent data loss.
-    return longUrl;
+    return originalUrl;
+  }
+  
+  // Automatically prepend 'https://' if the URL doesn't have a protocol.
+  let longUrl = originalUrl.trim();
+  if (!longUrl.startsWith('http://') && !longUrl.startsWith('https://')) {
+    longUrl = `https://` + longUrl;
   }
 
   // Don't try to shorten invalid or empty URLs, or already shortened URLs.
   if (!longUrl || !longUrl.startsWith('http') || longUrl.includes('festive-bazaar.shop')) {
-    return longUrl;
+    return originalUrl;
   }
 
   try {
@@ -32,9 +37,9 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
       {
         params: {
           api: apiKey,
-          url: longUrl, // axios automatically URL-encodes parameters
+          url: longUrl,
         },
-        timeout: 10000, // 10-second timeout
+        timeout: 10000,
       }
     );
 
@@ -51,11 +56,11 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
 
     // Fallback if the response is not in the expected format
     console.warn('API did not return a valid shortened URL. Response:', result);
-    return longUrl;
+    return originalUrl;
 
   } catch (error: any) {
-    // If axios throws an error (e.g., network issue) or we threw an error above,
-    // re-throw it so the calling component can handle it.
+    // If axios throws an error or we threw an error above, re-throw it.
+    // The calling component can then display the specific error message from the API.
     console.error('Error during URL shortening process:', error.message);
     throw error;
   }
