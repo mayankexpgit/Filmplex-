@@ -1,5 +1,6 @@
 
 import { NextResponse } from 'next/server';
+import https from "https";
 
 export async function POST(req: Request) {
   try {
@@ -14,16 +15,13 @@ export async function POST(req: Request) {
       url
     )}`;
 
-    // Using a timeout to prevent long-running requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    const agent = new https.Agent({ rejectUnauthorized: false });
 
     const res = await fetch(apiUrl, { 
       cache: "no-store",
-      signal: controller.signal
+      // @ts-expect-error In Node.js fetch, you can pass a custom agent.
+      agent,
     });
-    
-    clearTimeout(timeoutId);
 
     if (!res.ok) {
         const errorText = await res.text();
@@ -40,9 +38,6 @@ export async function POST(req: Request) {
 
   } catch (err: any) {
     console.error("Shortener API Error:", err.message);
-    if (err.name === 'AbortError') {
-      return NextResponse.json({ error: 'Request to shortener API timed out.' }, { status: 504 });
-    }
     return NextResponse.json(
       { error: err.message || "An unknown error occurred" },
       { status: 500 }
