@@ -1,3 +1,4 @@
+
 'use server';
 
 import fetch from 'node-fetch';
@@ -7,6 +8,24 @@ import https from 'https';
 const agent = new https.Agent({
   rejectUnauthorized: false,
 });
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Request timed out"));
+    }, ms);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
 
 export async function shortenUrlAction(longUrl: string): Promise<{ success: boolean, shortUrl?: string, error?: string }> {
   if (!longUrl) {
@@ -23,11 +42,12 @@ export async function shortenUrlAction(longUrl: string): Promise<{ success: bool
   const apiUrl = `https://festive-bazaar.shop/api?api=${apiToken}&url=${encodedUrl}`;
 
   try {
-    const res = await fetch(apiUrl, {
+    const fetchPromise = fetch(apiUrl, {
       // @ts-ignore - Using custom agent with node-fetch
       agent,
-      signal: AbortSignal.timeout(15000), // 15-second timeout
     });
+    
+    const res = await withTimeout(fetchPromise, 15000); // 15-second timeout
     
     if (!res.ok) {
         const errorText = await res.text();
@@ -45,7 +65,7 @@ export async function shortenUrlAction(longUrl: string): Promise<{ success: bool
     }
   } catch (err: any) {
     console.error('Shortener action error:', err.message);
-    if (err.name === 'AbortError') {
+    if (err.message === 'Request timed out') {
         return { success: false, error: 'Request to shortener API timed out.' };
     }
     return { success: false, error: err.message || 'An unknown error occurred during shortening.' };

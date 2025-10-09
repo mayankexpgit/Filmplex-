@@ -3,13 +3,29 @@ import { NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 import https from 'https';
 
-// Force Node.js runtime to use the https agent
 export const runtime = 'nodejs';
 
-// Agent to ignore SSL certificate errors
 const agent = new https.Agent({
   rejectUnauthorized: false,
 });
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Request timed out"));
+    }, ms);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
 
 export async function GET(req: Request) {
   try {
@@ -25,11 +41,12 @@ export async function GET(req: Request) {
 
     const apiUrl = `https://festive-bazaar.shop/api?api=${apiToken}&url=${encodedUrl}`;
 
-    const res = await fetch(apiUrl, {
+    const fetchPromise = fetch(apiUrl, {
       // @ts-ignore - Using custom agent for fetch which is allowed in Node.js runtime
       agent,
-      signal: AbortSignal.timeout(15000), // 15-second timeout
     });
+
+    const res = await withTimeout(fetchPromise, 15000); // 15-second timeout
 
     if (!res.ok) {
         const errorText = await res.text();
@@ -48,8 +65,7 @@ export async function GET(req: Request) {
     }
   } catch (err: any) {
     console.error('Shortener proxy error:', err.message);
-    // Differentiate between timeout and other errors
-    if (err.name === 'AbortError') {
+    if (err.message === 'Request timed out') {
         return NextResponse.json({ error: 'Request to shortener API timed out.' }, { status: 504 });
     }
     return NextResponse.json({ error: err.message || 'An unknown error occurred' }, { status: 500 });
