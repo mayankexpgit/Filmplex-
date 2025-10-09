@@ -9,11 +9,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
+    // Correct API token and URL structure
     const apiToken = '9879833b4eadc06c67574fad1eb6f6530fd22178';
-    const apiUrl = `https://festive-bazaar.shop/api?api=${apiToken}&url=${encodeURIComponent(
-      url
-    )}`;
+    const apiUrl = `https://festive-bazaar.shop/api?api=${apiToken}&url=${encodeURIComponent(url)}`;
 
+    // Custom agent to bypass SSL verification in development environments
     const agent = new https.Agent({ rejectUnauthorized: false });
 
     const res = await fetch(apiUrl, { 
@@ -24,7 +24,8 @@ export async function POST(req: Request) {
 
     if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(`Shortener API returned status ${res.status}: ${errorText}`);
+        console.error(`Shortener API returned status ${res.status}: ${errorText}`);
+        throw new Error(`Shortener API returned an error. Please try again.`);
     }
 
     const data = await res.json();
@@ -32,13 +33,14 @@ export async function POST(req: Request) {
     if (data.status === 'success' && data.shortenedUrl) {
       return NextResponse.json({ shortUrl: data.shortenedUrl });
     } else {
+      console.error("Shortener API Error:", data.message || 'Unknown API error');
       throw new Error(data.message || 'Shortening failed due to an unknown API error.');
     }
 
   } catch (err: any) {
-    console.error("Shortener API Error:", err.message);
+    console.error("Error in /api/shorten route:", err.message);
     return NextResponse.json(
-      { error: err.message || "An unknown error occurred" },
+      { error: err.message || "An unknown server error occurred" },
       { status: 500 }
     );
   }
