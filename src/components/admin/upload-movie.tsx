@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
+import { shortenUrl } from '@/services/shortenerService';
 
 import {
   Dialog,
@@ -171,6 +172,8 @@ export default function UploadMovie() {
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
+  const [autoShorten, setAutoShorten] = useState(true);
+
 
   useEffect(() => {
     const movieId = searchParams.get('id');
@@ -377,20 +380,56 @@ export default function UploadMovie() {
     setHasDownloadLinks(linksPresent);
 
     startTransition(async () => {
-      // The rest of the logic runs after the animation has been triggered
-      const movieData: Partial<Movie> = {
-        ...formData,
+      let movieData: Partial<Movie> = { ...formData };
+      
+      if (autoShorten && linksPresent) {
+        toast({ title: 'Shortening links...', description: 'Please wait, this may take a moment.' });
+        
+        try {
+          const shortenLink = async (link: DownloadLink): Promise<DownloadLink> => {
+            if (link.url) {
+              const shortUrl = await shortenUrl(link.url);
+              return { ...link, url: shortUrl };
+            }
+            return link;
+          };
+
+          if (movieData.contentType === 'movie' && movieData.downloadLinks) {
+            movieData.downloadLinks = await Promise.all(movieData.downloadLinks.map(shortenLink));
+          } else if (movieData.contentType === 'series') {
+            if (movieData.episodes) {
+              movieData.episodes = await Promise.all(
+                movieData.episodes.map(async (ep) => ({
+                  ...ep,
+                  downloadLinks: await Promise.all(ep.downloadLinks.map(shortenLink)),
+                }))
+              );
+            }
+            if (movieData.seasonDownloadLinks) {
+              movieData.seasonDownloadLinks = await Promise.all(movieData.seasonDownloadLinks.map(shortenLink));
+            }
+          }
+           toast({ title: 'Links Shortened!', description: 'All links were successfully shortened.', variant: 'success' });
+        } catch (error) {
+          toast({ variant: 'destructive', title: 'Shortener Failed', description: 'Could not shorten links, saving original links instead.' });
+        }
+      }
+
+      // Final data preparation
+      movieData = {
+        ...movieData,
         tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
         screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
       };
+
       if (formData.contentType === 'movie') {
-        movieData.downloadLinks = (formData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
+        movieData.downloadLinks = (movieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
         delete movieData.episodes;
         delete movieData.seasonDownloadLinks;
         delete movieData.numberOfEpisodes;
       } else {
-        movieData.episodes = (formData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
-        movieData.seasonDownloadLinks = (formData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
+        movieData.episodes = (movieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
+        movieData.seasonDownloadLinks = (movieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
         delete movieData.downloadLinks;
       }
       delete (movieData as any).tagsString;
@@ -571,6 +610,13 @@ export default function UploadMovie() {
                 </div>
 
                 <Separator />
+                
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch id="auto-shorten-links" checked={autoShorten} onCheckedChange={setAutoShorten} disabled={isFormDisabled} />
+                    <Label htmlFor="auto-shorten-links">Auto Shorten Links</Label>
+                  </div>
+                </div>
 
                 {/* Download Links Section */}
                 {formData.contentType === 'movie' ? (
