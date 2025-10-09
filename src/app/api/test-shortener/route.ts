@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 import https from 'https';
 
-// Force dynamic rendering and disable caching for this route.
-export const dynamic = 'force-dynamic';
+// Force Node.js runtime to use the https agent
+export const runtime = 'nodejs';
 
 // Agent to ignore SSL certificate errors
 const agent = new https.Agent({
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     const apiUrl = `https://festive-bazaar.shop/api?api=${apiToken}&url=${encodedUrl}`;
 
     const res = await fetch(apiUrl, {
-      // @ts-ignore - Using custom agent for fetch
+      // @ts-ignore - Using custom agent for fetch which is allowed in Node.js runtime
       agent,
       signal: AbortSignal.timeout(15000), // 15-second timeout
     });
