@@ -1,3 +1,4 @@
+
 'use server';
 
 import { URLSearchParams } from 'url';
@@ -10,7 +11,8 @@ import { URLSearchParams } from 'url';
  * @throws Will throw an error if the API responds with a status of 'error'.
  */
 export const shortenUrl = async (originalUrl: string): Promise<string> => {
-  const apiKey = process.env.LINK_SHORTENER_API_KEY;
+  // Directly using the key for debugging purposes.
+  const apiKey = '9879833b4eadc06c67574fad1eb6f6530fd22178';
 
   if (!apiKey) {
     const errorMessage = 'Link shortener API key is not configured.';
