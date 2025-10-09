@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -21,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
+import { shortenUrlAction } from '@/actions/shortenUrlAction';
 
 import {
   Dialog,
@@ -103,45 +103,26 @@ function DownloadLinkEditor({
   const handleUrlBlur = async () => {
     const originalUrl = link.url;
     if (!autoShorten || !originalUrl || originalUrl.includes('festive-bazaar.shop')) {
-      return; // Do not shorten if disabled, empty, or already shortened
+      return;
     }
     setIsShortening(true);
     try {
-        let longUrl = originalUrl.trim();
-        if (!longUrl.startsWith('http://') && !longUrl.startsWith('https://')) {
-            longUrl = `https://` + longUrl;
-        }
-
-        const encodedUrl = encodeURIComponent(longUrl);
-        const proxyApiUrl = `/api/test-shortener?url=${encodedUrl}`;
-
-        const response = await fetch(proxyApiUrl, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
+      const result = await shortenUrlAction(originalUrl);
+      if (result.success && result.shortUrl) {
+        onLinkChange(index, 'url', result.shortUrl);
+        toast({
+          title: 'URL Shortened!',
+          description: 'The link has been successfully shortened.',
+          variant: 'success',
         });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.error || `Shortener failed with status: ${response.status}`);
-        }
-
-        if (result.short) {
-            onLinkChange(index, 'url', result.short);
-            toast({
-                title: 'URL Shortened!',
-                description: 'The link has been successfully shortened.',
-                variant: 'success',
-            });
-        } else {
-             throw new Error('Proxy response did not contain a short URL.');
-        }
-
+      } else {
+        throw new Error(result.error || 'Failed to shorten URL');
+      }
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Shortener Failed',
-        description: error.message || 'Could not shorten the URL. Please check the link and try again.',
+        description: error.message || 'Could not shorten the URL.',
       });
     } finally {
       setIsShortening(false);
