@@ -21,7 +21,6 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
-import { shortenUrl } from '@/services/shortenerService';
 
 import {
   Dialog,
@@ -83,18 +82,18 @@ const initialFormState: FormData = {
 };
 
 
-function DownloadLinkEditor({ 
-    index, 
-    link, 
-    onLinkChange, 
-    onRemoveLink, 
-    disabled, 
-    autoShorten 
-}: { 
-    index: number, 
-    link: DownloadLink, 
-    onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void, 
-    onRemoveLink: (index: number) => void, 
+function DownloadLinkEditor({
+    index,
+    link,
+    onLinkChange,
+    onRemoveLink,
+    disabled,
+    autoShorten
+}: {
+    index: number,
+    link: DownloadLink,
+    onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void,
+    onRemoveLink: (index: number) => void,
     disabled: boolean,
     autoShorten: boolean,
 }) {
@@ -108,13 +107,36 @@ function DownloadLinkEditor({
     }
     setIsShortening(true);
     try {
-      const shortUrl = await shortenUrl(originalUrl);
-      onLinkChange(index, 'url', shortUrl);
-      toast({
-        title: 'URL Shortened!',
-        description: 'The link has been successfully shortened.',
-        variant: 'success'
-      })
+        let longUrl = originalUrl.trim();
+        if (!longUrl.startsWith('http://') && !longUrl.startsWith('https://')) {
+            longUrl = `https://` + longUrl;
+        }
+
+        const encodedUrl = encodeURIComponent(longUrl);
+        const proxyApiUrl = `/api/test-shortener?url=${encodedUrl}`;
+
+        const response = await fetch(proxyApiUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || `Shortener failed with status: ${response.status}`);
+        }
+
+        if (result.short) {
+            onLinkChange(index, 'url', result.short);
+            toast({
+                title: 'URL Shortened!',
+                description: 'The link has been successfully shortened.',
+                variant: 'success',
+            });
+        } else {
+             throw new Error('Proxy response did not contain a short URL.');
+        }
+
     } catch (error: any) {
       toast({
         variant: 'destructive',
