@@ -84,6 +84,29 @@ const initialFormState: FormData = {
 
 
 function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled }: { index: number, link: DownloadLink, onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void, onRemoveLink: (index: number) => void, disabled: boolean }) {
+  const [isShortening, setIsShortening] = useState(false);
+  const { toast } = useToast();
+
+  const handleUrlBlur = async () => {
+    const originalUrl = link.url;
+    if (!originalUrl || originalUrl.includes('festive-bazaar.shop')) {
+      return; // Do not shorten empty or already shortened URLs
+    }
+    setIsShortening(true);
+    try {
+      const shortUrl = await shortenUrl(originalUrl);
+      onLinkChange(index, 'url', shortUrl);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Shortener Failed',
+        description: 'Could not shorten the URL. Please check the link and try again.',
+      });
+    } finally {
+      setIsShortening(false);
+    }
+  };
+
   return (
     <div className="p-3 border rounded-lg space-y-3 bg-secondary/50">
       <div className="flex justify-between items-center">
@@ -108,9 +131,10 @@ function DownloadLinkEditor({ index, link, onLinkChange, onRemoveLink, disabled 
               </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 relative">
           <Label htmlFor={`url-${index}`} className="text-xs">URL</Label>
-          <Input id={`url-${index}`} value={link.url} onChange={e => onLinkChange(index, 'url', e.target.value)} disabled={disabled} placeholder="https://..." />
+          <Input id={`url-${index}`} value={link.url} onChange={e => onLinkChange(index, 'url', e.target.value)} onBlur={handleUrlBlur} disabled={disabled || isShortening} placeholder="https://..." />
+          {isShortening && <Loader2 className="absolute right-2 top-6 h-4 w-4 animate-spin" />}
         </div>
         <div className="space-y-1">
           <Label htmlFor={`size-${index}`} className="text-xs">Size</Label>
@@ -172,7 +196,6 @@ export default function UploadMovie() {
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
-  const [autoShorten, setAutoShorten] = useState(true);
 
 
   useEffect(() => {
@@ -382,39 +405,6 @@ export default function UploadMovie() {
     startTransition(async () => {
       let movieData: Partial<Movie> = { ...formData };
       
-      if (autoShorten && linksPresent) {
-        toast({ title: 'Shortening links...', description: 'Please wait, this may take a moment.' });
-        
-        try {
-          const shortenLink = async (link: DownloadLink): Promise<DownloadLink> => {
-            if (link.url) {
-              const shortUrl = await shortenUrl(link.url);
-              return { ...link, url: shortUrl };
-            }
-            return link;
-          };
-
-          if (movieData.contentType === 'movie' && movieData.downloadLinks) {
-            movieData.downloadLinks = await Promise.all(movieData.downloadLinks.map(shortenLink));
-          } else if (movieData.contentType === 'series') {
-            if (movieData.episodes) {
-              movieData.episodes = await Promise.all(
-                movieData.episodes.map(async (ep) => ({
-                  ...ep,
-                  downloadLinks: await Promise.all(ep.downloadLinks.map(shortenLink)),
-                }))
-              );
-            }
-            if (movieData.seasonDownloadLinks) {
-              movieData.seasonDownloadLinks = await Promise.all(movieData.seasonDownloadLinks.map(shortenLink));
-            }
-          }
-           toast({ title: 'Links Shortened!', description: 'All links were successfully shortened.', variant: 'success' });
-        } catch (error) {
-          toast({ variant: 'destructive', title: 'Shortener Failed', description: 'Could not shorten links, saving original links instead.' });
-        }
-      }
-
       // Final data preparation
       movieData = {
         ...movieData,
@@ -611,12 +601,6 @@ export default function UploadMovie() {
 
                 <Separator />
                 
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch id="auto-shorten-links" checked={autoShorten} onCheckedChange={setAutoShorten} disabled={isFormDisabled} />
-                    <Label htmlFor="auto-shorten-links">Auto Shorten Links</Label>
-                  </div>
-                </div>
 
                 {/* Download Links Section */}
                 {formData.contentType === 'movie' ? (
@@ -810,3 +794,5 @@ export default function UploadMovie() {
     </>
   );
 }
+
+    
