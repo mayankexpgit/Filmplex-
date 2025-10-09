@@ -26,22 +26,28 @@ export const shortenUrl = async (longUrl: string): Promise<string> => {
   }
 
   try {
+    // The festive-bazaar.shop API uses a GET request with query parameters
     const response = await axios.get(API_ENDPOINT, {
       params: {
         api: apiKey,
         url: longUrl,
       },
+      timeout: 10000, // 10 second timeout
     });
 
-    if (response.data?.status === 'success' && response.data?.shortenedUrl) {
-      return response.data.shortenedUrl;
+    const data = response.data;
+    
+    // The API responds with a structure like { "status": "success", "shortenedUrl": "..." }
+    if (data?.status === 'success' && data?.shortenedUrl) {
+      return data.shortenedUrl;
     } else {
       // If API gives a success status but no URL, or a failed status
-      console.warn('API did not return a valid shortened URL. Response:', response.data);
+      console.warn('API did not return a valid shortened URL. Response:', data);
       return longUrl;
     }
-  } catch (error) {
-    console.error('Error shortening URL:', error);
+  } catch (error: any) {
+    // Log detailed error so you can debug (response body, status)
+    console.error('Error calling shortener API:', error?.response?.status, error?.response?.data ?? error.message);
     // In case of an API error, return the original URL to prevent data loss
     return longUrl;
   }
