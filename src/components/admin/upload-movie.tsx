@@ -115,11 +115,11 @@ function DownloadLinkEditor({
         description: 'The link has been successfully shortened.',
         variant: 'success'
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Shortener Failed',
-        description: 'Could not shorten the URL. Please check the link and try again.',
+        description: error.message || 'Could not shorten the URL. Please check the link and try again.',
       });
     } finally {
       setIsShortening(false);
