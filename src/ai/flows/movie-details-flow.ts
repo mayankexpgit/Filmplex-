@@ -64,7 +64,7 @@ const getMovieDetailsFlow = ai.defineFlow(
 
     // Step 3: Combine all data into the final output
     return {
-      ...tmdbData,
+      ...tmdbData, // This now correctly includes posterUrl and other fetched fields
       synopsis: tmdbData.synopsis, // Use the direct synopsis from TMDb
       description: description,
       tags: tags,
