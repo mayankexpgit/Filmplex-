@@ -4,16 +4,12 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'image.tmdb.org',
-        port: '',
-        pathname: '/t/p/**',
+        hostname: '**',
       },
       {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      }
+        protocol: 'http',
+        hostname: '**',
+      },
     ],
   },
 };
