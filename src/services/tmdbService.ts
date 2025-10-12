@@ -4,8 +4,6 @@
 
 import axios, { type AxiosRequestConfig } from 'axios';
 
-const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-
 // --- API Key Management ---
 const getTMDbKeys = (): string[] => {
     const keys: string[] = [];
@@ -89,16 +87,13 @@ export interface FormattedTMDbData {
 
 const getPosterUrl = (path: string | null): string => {
     if (!path) {
-        return 'https://placehold.co/300x450/000000/FFFFFF?text=No+Image';
+        return 'https://placehold.co/400x600/0a0a0a/404040?text=No+Poster';
     }
     // Check if the path is a full URL from another service (like an old entry)
     if (path.startsWith('http')) {
         return path;
     }
-    // Determine which base URL to use
-    const baseUrl = path.includes('media.themoviedb.org') 
-        ? '' // path is already a full URL in some cases
-        : 'https://image.tmdb.org/t/p/w500';
+    const baseUrl = 'https://image.tmdb.org/t/p/w500';
     return `${baseUrl}${path}`;
 };
 
