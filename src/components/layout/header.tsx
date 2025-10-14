@@ -20,7 +20,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { useMovieStore } from '@/store/movieStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
@@ -43,6 +43,12 @@ import {
 function NotificationRePrompt() {
   const { toast, notificationPermission } = useToast();
   const [showPrompt, setShowPrompt] = useState(false);
+  const [render, setRender] = useState(false);
+  
+  useEffect(() => {
+    // This ensures the component only renders on the client side after hydration.
+    setRender(true);
+  }, []);
 
   const handleRePrompt = () => {
     setShowPrompt(true);
@@ -57,7 +63,7 @@ function NotificationRePrompt() {
     setShowPrompt(false);
   };
   
-  if (notificationPermission !== 'denied') {
+  if (!render || notificationPermission !== 'denied') {
     return null;
   }
 
