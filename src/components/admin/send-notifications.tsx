@@ -15,8 +15,6 @@ import Image from 'next/image';
 import { Send, BellRing, Loader2, ShieldCheck, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '../ui/switch';
-import { getFirestore, collection, getCountFromServer } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import axios from 'axios';
 
 const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: string; body: string }) => (
@@ -87,21 +85,7 @@ export default function NotificationSender() {
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [notificationTitle, setNotificationTitle] = useState('');
     const [notificationBody, setNotificationBody] = useState('');
-
-    useEffect(() => {
-        const fetchSubscribedCount = async () => {
-            try {
-                const tokensCollection = collection(db, 'fcmTokens');
-                const snapshot = await getCountFromServer(tokensCollection);
-                setSubscribedCount(snapshot.data().count);
-            } catch (error) {
-                console.error("Could not fetch subscribed count:", error);
-                setSubscribedCount(0);
-            }
-        };
-        fetchSubscribedCount();
-    }, []);
-
+    
     const recentMovies = useMemo(() => {
         const threshold = subHours(new Date(), 48);
         return allMovies
@@ -128,17 +112,16 @@ export default function NotificationSender() {
                 };
                 const response = await axios.post('/api/send-notification', payload);
                 const result = response.data;
-
+                
+                setSubscribedCount(result.totalSubscribers);
 
                 toast({
                     title: 'Notification Sent!',
-                    description: `Successfully sent to ${result.successCount} devices. ${result.failureCount} failed. ${result.tokensRemoved} invalid tokens removed.`,
-                    variant: 'success'
+                    description: `Sent to ${result.successCount} devices. ${result.failureCount} failed. ${result.tokensRemoved} removed. Total subs: ${result.totalSubscribers}.`,
+                    variant: 'success',
+                    duration: 9000,
                 });
-                // Refetch count after sending and cleaning
-                const tokensCollection = collection(db, 'fcmTokens');
-                const snapshot = await getCountFromServer(tokensCollection);
-                setSubscribedCount(snapshot.data().count);
+
             } catch(error: any) {
                 const errorMessage = error.response?.data?.error || 'Could not send notifications. Please try again later.';
                 toast({
