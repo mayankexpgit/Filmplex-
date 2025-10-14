@@ -230,6 +230,7 @@ function useToast() {
     setNotificationPermission: (permission: NotificationPermission) => dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission }),
     showPermissionPrompt: () => dispatch({ type: "SHOW_PERMISSION_PROMPT" }),
     hidePermissionPrompt: () => dispatch({ type: "HIDE_PERMISSION_PROMPT" }),
+    triggerPermissionPrompt: () => dispatch({ type: "SHOW_PERMISSION_PROMPT" }),
   }
 }
 

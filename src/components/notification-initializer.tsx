@@ -39,7 +39,7 @@ export default function NotificationInitializer() {
   const { 
     isPermissionPromptVisible, 
     setNotificationPermission, 
-    showPermissionPrompt,
+    triggerPermissionPrompt,
     hidePermissionPrompt,
     notificationPermission
   } = useToast();
@@ -60,7 +60,7 @@ export default function NotificationInitializer() {
       } else if (currentPermission === 'default' && permissionStatusInStore !== 'denied') {
         // Only show if the user hasn't explicitly said "no thanks" in our custom flow before
         setTimeout(() => {
-           showPermissionPrompt();
+           triggerPermissionPrompt();
         }, 3000); // Show after 3 seconds
       }
 
@@ -76,7 +76,7 @@ export default function NotificationInitializer() {
         // but for this, we assume it's okay to detach.
       };
     }
-  }, [pathname, setNotificationPermission, notificationPermission, showPermissionPrompt]);
+  }, [pathname, setNotificationPermission, notificationPermission, triggerPermissionPrompt]);
 
   const handleAllow = () => {
     hidePermissionPrompt();
