@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 function NotificationRePrompt() {
-  const { toast, notificationPermission } = useToast();
+  const { showPermissionPrompt, notificationPermission } = useToast();
   const [showPrompt, setShowPrompt] = useState(false);
   const [render, setRender] = useState(false);
   
@@ -56,7 +56,7 @@ function NotificationRePrompt() {
 
   const handleAllow = () => {
     setShowPrompt(false);
-    toast.showPermissionPrompt();
+    showPermissionPrompt();
   };
 
   const handleDeny = () => {
