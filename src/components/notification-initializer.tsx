@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from './ui/button';
 import { ShieldCheck, BellRing } from 'lucide-react';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 
 const NOTIFICATION_PROMPT_SEEN_KEY = 'filmplex_notification_prompt_seen';
@@ -86,10 +88,14 @@ export default function NotificationInitializer() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary border border-border">
-          <ShieldCheck className="h-8 w-8 text-green-500" />
-          <div>
-            <h4 className="font-semibold text-foreground">Your Privacy is Important</h4>
-            <p className="text-xs text-muted-foreground">We will never spam you or share your data. This is just for movie release alerts.</p>
+          <ShieldCheck className="h-8 w-8 text-green-500 flex-shrink-0" />
+          <div className="flex-1">
+            <h4 className="font-semibold text-foreground">Smart Protection</h4>
+            <p className="text-xs text-muted-foreground">Avoid Malware, virus and any apk download.</p>
+          </div>
+          <div className="flex items-center space-x-2">
+              <Switch id="smart-protection-switch" checked={true} readOnly disabled className="opacity-100 cursor-default" />
+              <Label htmlFor="smart-protection-switch" className="text-sm font-medium">Enable</Label>
           </div>
         </div>
         <AlertDialogFooter>
@@ -102,3 +108,4 @@ export default function NotificationInitializer() {
     </AlertDialog>
   );
 }
+
