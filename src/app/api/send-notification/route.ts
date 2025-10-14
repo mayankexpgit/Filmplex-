@@ -104,6 +104,8 @@ export async function POST(req: NextRequest) {
     let errorMessage = "An internal server error occurred.";
     if (error instanceof z.ZodError) {
       errorMessage = "Invalid request payload.";
+    } else if (error.message.includes('The default Firebase app does not exist')) {
+      errorMessage = "Server configuration error. Firebase Admin SDK not initialized. This feature works on deployed versions only.";
     } else if (error.message) {
       errorMessage = error.message;
     }

@@ -1,8 +1,7 @@
-
 'use server';
 /**
- * @fileOverview An AI flow to fetch movie details.
- * This flow uses the Trakt.tv API for factual data and then uses an LLM to generate creative text.
+ * @fileOverview A flow to fetch movie details.
+ * This flow uses the TMDb API for factual data and manually constructs other fields.
  *
  * - getMovieDetails - A function that fetches movie details based on the title and year.
  * - MovieDetailsInput - The input type for the getMovieDetails function.
@@ -11,8 +10,6 @@
 
 import { z } from 'zod';
 import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
-import axios from 'axios';
-
 
 const MovieDetailsInputSchema = z.object({
   tmdbId: z.number().describe('The TMDb ID of the movie or series to fetch details for.'),
