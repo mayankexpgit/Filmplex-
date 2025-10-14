@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -18,7 +19,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
-import { searchMoviesOnTMDb, type TMDbSearchResult, type ContentType } from '@/services/tmdbService';
+import { searchMoviesOnTMDb, type TMDbSearchResult } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
 
 import {
@@ -340,7 +341,7 @@ export default function UploadMovie() {
     
     const { dismiss } = toast({
       title: 'Fetching Details...',
-      description: 'AI is generating content. Please wait.',
+      description: 'Please wait, fetching all content details.',
     });
 
     try {
@@ -375,7 +376,7 @@ export default function UploadMovie() {
         });
     } catch (error: any) {
         dismiss();
-        console.error("AI auto-fill failed:", error);
+        console.error("Auto-fill failed:", error);
         toast({
             variant: 'destructive',
             title: 'API Error',

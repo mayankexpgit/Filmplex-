@@ -1,6 +1,5 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -9,7 +8,6 @@ import { getMessaging } from 'firebase-admin/messaging';
 // This is a server-side only file.
 
 // Initialize Firebase Admin SDK if it hasn't been already.
-// This is the critical step to ensure Firebase services are available on the server.
 if (!getApps().length) {
   try {
     const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!);
@@ -19,7 +17,6 @@ if (!getApps().length) {
     console.log("Firebase Admin SDK initialized successfully in API route.");
   } catch (e: any) {
     console.error("Firebase Admin SDK initialization error in API route:", e.message);
-    // Log the error but don't throw, to allow the flow to proceed and potentially fail with a more specific message.
   }
 }
 
@@ -31,20 +28,8 @@ const FcmNotificationInputSchema = z.object({
   image: z.string().optional().describe('The URL of an image to display in the notification.'),
 });
 
-const FcmNotificationOutputSchema = z.object({
-  successCount: z.number().describe('The number of messages that were sent successfully.'),
-  failureCount: z.number().describe('The number of messages that failed to be sent.'),
-  tokensRemoved: z.number().describe('The number of invalid tokens that were removed.'),
-});
 
-const sendFcmNotificationFlow = ai.defineFlow(
-  {
-    name: 'sendFcmNotificationFlow',
-    inputSchema: FcmNotificationInputSchema,
-    outputSchema: FcmNotificationOutputSchema,
-  },
-  async (input) => {
-    // Moved Firestore and Messaging initialization inside the flow execution
+async function sendFcmNotification(input: z.infer<typeof FcmNotificationInputSchema>) {
     const db = getFirestore();
     const messaging = getMessaging();
 
@@ -106,16 +91,13 @@ const sendFcmNotificationFlow = ai.defineFlow(
         failureCount: batchResponse.failureCount,
         tokensRemoved: tokensToRemove.length,
     };
-  }
-);
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const input = FcmNotificationInputSchema.parse(body);
-
-    const result = await sendFcmNotificationFlow(input);
-
+    const result = await sendFcmNotification(input);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("API Error in /api/send-notification: ", error);

@@ -9,9 +9,8 @@
  * - MovieDetailsOutput - The return type for the getMovieDetails function.
  */
 
-import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { fetchMovieDetailsFromTMDb, type ContentType } from '@/services/tmdbService';
+import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
 import axios from 'axios';
 
 
@@ -42,49 +41,32 @@ const MovieDetailsOutputSchema = z.object({
 export type MovieDetailsOutput = z.infer<typeof MovieDetailsOutputSchema>;
 
 
-const getMovieDetailsFlow = ai.defineFlow(
-  {
-    name: 'getMovieDetailsFlow',
-    inputSchema: MovieDetailsInputSchema,
-    outputSchema: MovieDetailsOutputSchema,
-  },
-  async (input) => {
-    
+export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDetailsOutput> {
+  try {
     // Step 1: Get all factual data from TMDb API using the TMDb ID
     const tmdbData = await fetchMovieDetailsFromTMDb(input.tmdbId, input.type);
     
-    // Step 2: Construct all fields directly from the factual data, removing the unreliable AI step.
+    // Step 2: Manually construct the fields that were previously AI-generated
     
-    // Manually construct the cardInfoText to ensure accuracy
     const cardInfoText = `Filmplex – ${tmdbData.title} (${tmdbData.year})\nDual Audio [Hindi-Eng]\n1080p, 720p & 480p\n[WEB-DL]\nx264 | HEVC`;
 
-    // Create a reliable description from the fetched data
     const description = `<p><span style="color:#ff4d4d;">✅ <b>Download ${tmdbData.title} (${tmdbData.year}) WEB-DL Full Movie</b></span><br><span style="color:#ffa64d;">(Hindi-English)</span><br><span style="color:#4da6ff;">480p, 720p & 1080p qualities</span>.<br><span style="color:#99cc00;">This is a masterpiece in the ${tmdbData.genre} genre</span>,<br><span style="color:#ff66b3;">blending drama, action, and powerful performances</span>,<br>now <span style="color:#00cccc;">available in high definition</span>.</p><br><br><p>🎬 <span style="color:#ff944d;"><b>Your Ultimate Destination for Fast, Secure Anime Downloads!</b></span> 🎬</p><p>At <span style="color:#33cc33;"><b>FilmPlex</b></span>, dive into the world of<br><span style="color:#3399ff;">high-speed anime and movie downloads</span><br>with <span style="color:#ff4da6;">direct Google Drive (G-Drive) links</span>.<br>Enjoy <span style="color:#ffcc00;">blazing-fast access</span>,<br><span style="color:#cc66ff;">rock-solid security</span>,<br>and <span style="color:#00cc99;">zero waiting time</span>!</p>`;
     
-    // Use genres as tags for reliability
     const tags = tmdbData.genre.split(',').map(g => g.trim()).filter(Boolean);
 
     // Step 3: Combine all data into the final output
-    return {
-      ...tmdbData, // This now correctly includes posterUrl and other fetched fields
-      genre: tmdbData.genre, // Explicitly set the genre field
-      synopsis: tmdbData.synopsis, // Use the direct synopsis from TMDb
+    const result: MovieDetailsOutput = {
+      ...tmdbData,
+      genre: tmdbData.genre,
+      synopsis: tmdbData.synopsis,
       description: description,
       tags: tags,
       cardInfoText: cardInfoText,
     };
-  }
-);
-
-export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDetailsOutput> {
-  // This function now acts as a client-side wrapper that calls our API route.
-  // The API route will then invoke the actual Genkit flow on the server.
-  try {
-    const response = await axios.post('/api/get-movie-details', input);
-    return response.data;
+    
+    return result;
   } catch (error: any) {
-    console.error("Error calling getMovieDetails API: ", error);
-    const errorMessage = error.response?.data?.error || 'Could not fetch movie details. Please check the ID or fill manually.';
-    throw new Error(errorMessage);
+    console.error("Error in getMovieDetails:", error);
+    throw new Error(error.message || 'Could not fetch movie details. Please check the ID or fill manually.');
   }
 }
