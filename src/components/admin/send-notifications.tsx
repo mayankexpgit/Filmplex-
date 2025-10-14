@@ -49,7 +49,7 @@ const PermissionPromptPreview = () => (
                 <div className="text-center sm:text-left">
                     <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
                         <BellRing className="h-6 w-6 text-primary" />
-                        Get Notified About New Movies!
+                        Get Notified About New Movies & Web Series!
                     </h3>
                     <p className="text-sm text-muted-foreground mt-2">
                          Click "Yes, notify me" to receive instant alerts when new movies and web series are available. We respect your privacy and will only send you important updates. You can manage these settings in your browser anytime.
@@ -67,8 +67,8 @@ const PermissionPromptPreview = () => (
                     </div>
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
-                    <Button variant="outline">No, thanks</Button>
-                    <Button>Yes, notify me</Button>
+                    <Button variant="outline">⚠️ No, thanks</Button>
+                    <Button>😄 Yes, notify me</Button>
                 </div>
             </div>
         </CardContent>

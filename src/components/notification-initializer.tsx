@@ -81,7 +81,7 @@ export default function NotificationInitializer() {
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <BellRing className="h-6 w-6 text-primary" />
-            Get Notified About New Movies!
+            Get Notified About New Movies & Web Series!
           </AlertDialogTitle>
           <AlertDialogDescription>
             Click "Yes, notify me" to receive instant alerts when new movies and web series are available. We respect your privacy and will only send you important updates. You can manage these settings in your browser anytime.
@@ -99,9 +99,9 @@ export default function NotificationInitializer() {
           </div>
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleDeny}>No, thanks</AlertDialogCancel>
+          <AlertDialogCancel onClick={handleDeny}>⚠️ No, thanks</AlertDialogCancel>
           <AlertDialogAction onClick={handleAllow}>
-            Yes, notify me
+            😄 Yes, notify me
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
