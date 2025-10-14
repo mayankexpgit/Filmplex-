@@ -16,20 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 
 const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: string; body: string }) => (
     <div className="bg-black/70 backdrop-blur-sm p-4 rounded-3xl max-w-sm mx-auto border border-gray-700">
-        <div className="flex items-center gap-3">
-            <div className="relative w-12 h-12 flex-shrink-0">
-                <Image
-                    src="/android-chrome-192x192.png"
-                    alt="App Icon"
-                    fill
-                    className="rounded-full"
-                />
-            </div>
-            <div className="flex-1">
-                <p className="text-sm font-bold text-white">FILMPLEX</p>
-                <p className="text-xs text-gray-300">now</p>
-            </div>
-             <div className="relative w-16 h-16 flex-shrink-0">
+        <div className="flex items-start gap-4">
+            <div className="relative w-24 h-36 flex-shrink-0">
                 <Image
                     src={movie.posterUrl}
                     alt="Movie Poster"
@@ -37,10 +25,12 @@ const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: stri
                     className="rounded-lg object-cover"
                 />
             </div>
-        </div>
-        <div className="mt-3">
-            <p className="font-semibold text-white">{title}</p>
-            <p className="text-sm text-gray-200">{body}</p>
+            <div className="flex-1 space-y-1">
+                <p className="text-sm font-bold text-white">FILMPLEX</p>
+                <p className="text-xs text-gray-300">now</p>
+                <p className="font-semibold text-white pt-2">{title}</p>
+                <p className="text-sm text-gray-200">{body}</p>
+            </div>
         </div>
     </div>
 );
