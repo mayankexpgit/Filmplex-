@@ -182,7 +182,7 @@ export default function NotificationSender() {
                                             <p className="font-semibold">{movie.title}</p>
                                             <p className="text-sm text-muted-foreground">{movie.year} &bull; {movie.genre}</p>
                                         </div>
-                                        <Button size="sm" onClick={() => handlePrepareNotification(movie)}>
+                                        <Button size="sm" onClick={() => handlePrepareNotification(movie)} className="whitespace-nowrap">
                                             <BellRing className="mr-2 h-4 w-4" />
                                             Prepare Notification
                                         </Button>
@@ -250,5 +250,3 @@ export default function NotificationSender() {
         </div>
     );
 }
-
-    
