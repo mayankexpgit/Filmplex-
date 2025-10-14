@@ -17,7 +17,7 @@ const smartFilterTags: Record<string, string[]> = {
     'Anime': ['anime', 'animation', 'japanese'],
     'Dubbed': ['dubbed', 'hindi-dubbed'],
     '18+ Adult': ['18+', 'adult', 'erotic'],
-    'South Dubbed': ['south-dubbed', 'telugu dubbed', 'tamil dubbed', 'malayalam dubbed', 'kannada dubbed'],
+    'South Dubbed': ['south', 'south dubbed', 'telugu', 'tamil', 'kannada', 'malayalam'],
 }
 
 const getQualityBadge = (movie: Movie): '4K' | 'HD' | null => {
@@ -77,15 +77,18 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         if (selectedGenre === 'Web Series') {
             currentMovies = currentMovies.filter(movie => movie.contentType === 'series');
         } else {
-            const lowerCaseGenre = selectedGenre.toLowerCase();
-            const tagsToMatch = smartFilterTags[selectedGenre] || [lowerCaseGenre];
-            currentMovies = currentMovies.filter((movie) =>
-                tagsToMatch.some(tag => 
-                    (movie.genre?.toLowerCase().includes(tag)) ||
-                    (movie.tags?.some(t => t.toLowerCase().includes(tag))) ||
-                    (movie.language?.toLowerCase().includes(tag))
-                )
-            );
+            const tagsToMatch = smartFilterTags[selectedGenre] || [selectedGenre.toLowerCase()];
+            
+            currentMovies = currentMovies.filter((movie) => {
+                const searchableText = [
+                    movie.title,
+                    movie.genre,
+                    ...(movie.tags || []),
+                    movie.language
+                ].join(' ').toLowerCase();
+
+                return tagsToMatch.some(tag => searchableText.includes(tag));
+            });
         }
     }
     
