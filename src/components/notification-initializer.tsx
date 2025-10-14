@@ -37,8 +37,9 @@ function requestPermissionAndToken(setPermissionStatus: (status: 'granted' | 'de
 export default function NotificationInitializer() {
   const pathname = usePathname();
   const { 
-    showPermissionPrompt, 
+    showPermissionPrompt: isPermissionPromptVisible, 
     setNotificationPermission, 
+    showPermissionPrompt,
     hidePermissionPrompt,
     notificationPermission
   } = useToast();
@@ -88,7 +89,7 @@ export default function NotificationInitializer() {
   };
 
   return (
-    <AlertDialog open={showPermissionPrompt} onOpenChange={(isOpen) => !isOpen && handleDeny()}>
+    <AlertDialog open={isPermissionPromptVisible} onOpenChange={(isOpen) => !isOpen && handleDeny()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">

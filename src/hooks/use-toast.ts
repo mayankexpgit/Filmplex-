@@ -210,14 +210,6 @@ function toast({ ...props }: Toast) {
   }
 }
 
-// Add actions for notification permission to the toast object
-toast.setNotificationPermission = (permission: NotificationPermission) =>
-  dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission });
-
-toast.showPermissionPrompt = () => dispatch({ type: "SHOW_PERMISSION_PROMPT" });
-toast.hidePermissionPrompt = () => dispatch({ type: "HIDE_PERMISSION_PROMPT" });
-
-
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -235,9 +227,9 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
-    setNotificationPermission: toast.setNotificationPermission,
-    showPermissionPrompt: toast.showPermissionPrompt,
-    hidePermissionPrompt: toast.hidePermissionPrompt,
+    setNotificationPermission: (permission: NotificationPermission) => dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission }),
+    showPermissionPrompt: () => dispatch({ type: "SHOW_PERMISSION_PROMPT" }),
+    hidePermissionPrompt: () => dispatch({ type: "HIDE_PERMISSION_PROMPT" }),
   }
 }
 
