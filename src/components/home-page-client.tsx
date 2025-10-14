@@ -32,6 +32,7 @@ const genres = [
   'All Genres',
   'Bollywood',
   'Hollywood',
+  'Web Series',
   'Anime',
   'Dubbed',
   'South Dubbed',

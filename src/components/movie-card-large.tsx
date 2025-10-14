@@ -74,15 +74,19 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
     let currentMovies = sortedMovies;
     
     if (selectedGenre && selectedGenre !== 'All Genres') {
-        const lowerCaseGenre = selectedGenre.toLowerCase();
-        const tagsToMatch = smartFilterTags[selectedGenre] || [lowerCaseGenre];
-        currentMovies = currentMovies.filter((movie) =>
-            tagsToMatch.some(tag => 
-                (movie.genre?.toLowerCase().includes(tag)) ||
-                (movie.tags?.some(t => t.toLowerCase().includes(tag))) ||
-                (movie.language?.toLowerCase().includes(tag))
-            )
-        );
+        if (selectedGenre === 'Web Series') {
+            currentMovies = currentMovies.filter(movie => movie.contentType === 'series');
+        } else {
+            const lowerCaseGenre = selectedGenre.toLowerCase();
+            const tagsToMatch = smartFilterTags[selectedGenre] || [lowerCaseGenre];
+            currentMovies = currentMovies.filter((movie) =>
+                tagsToMatch.some(tag => 
+                    (movie.genre?.toLowerCase().includes(tag)) ||
+                    (movie.tags?.some(t => t.toLowerCase().includes(tag))) ||
+                    (movie.language?.toLowerCase().includes(tag))
+                )
+            );
+        }
     }
     
     if (searchQuery) {
