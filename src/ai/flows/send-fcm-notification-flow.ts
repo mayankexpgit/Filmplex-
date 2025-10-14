@@ -10,13 +10,13 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { getApps, initializeApp } from 'firebase-admin/app';
 
-// --- Initialize Firebase Admin SDK ---
-// This ensures the SDK is initialized only once.
-if (!getApps().length) {
-    initializeApp();
+// Ensure Firebase is initialized only once
+if (getApps().length === 0) {
+  initializeApp();
 }
+
 const db = getFirestore();
 const messaging = getMessaging();
 
