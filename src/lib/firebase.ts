@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig = {
   projectId: "vexel-cinema",
@@ -15,6 +16,36 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
-export { db };
+const getMessagingToken = async () => {
+    let messaging;
+    if (typeof window !== 'undefined') {
+      messaging = getMessaging(app);
+      try {
+        const currentToken = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY_HERE' }); // You need to generate this in Firebase Console
+        if (currentToken) {
+          console.log('FCM Token:', currentToken);
+          // You would typically send this to your server to store it
+        } else {
+          console.log('No registration token available. Request permission to generate one.');
+        }
+      } catch (err) {
+        console.log('An error occurred while retrieving token. ', err);
+      }
+    }
+    return messaging;
+}
+
+const onMessageListener = () =>
+  new Promise((resolve) => {
+    if (typeof window !== 'undefined') {
+      const messaging = getMessaging(app);
+      onMessage(messaging, (payload) => {
+        resolve(payload);
+      });
+    }
+  });
+
+
+export { db, getMessagingToken, onMessageListener };
 
     

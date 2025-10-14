@@ -2,6 +2,9 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { useEffect } from 'react';
+import { getMessagingToken, onMessageListener } from '@/lib/firebase';
+import { usePathname } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'FILMPLEX',
@@ -27,20 +30,41 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+
+function requestPermission() {
+  console.log('Requesting permission...');
+  Notification.requestPermission().then((permission) => {
+    if (permission === 'granted') {
+      console.log('Notification permission granted.');
+      getMessagingToken();
+    } else {
+      console.log('Unable to get permission to notify.');
+    }
+  });
+}
+
+function ClientSideLayout({ children }: { children: React.ReactNode }) {
+  'use client';
+  
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // We don't want to ask for permission on admin routes
+    if (pathname && pathname.startsWith('/admin')) {
+        return;
+    }
+      
+    if ('Notification' in window) {
+      requestPermission();
+    }
+    onMessageListener().then(payload => {
+        // You can handle foreground messages here, e.g., show a custom toast
+        console.log('Received foreground message: ', payload);
+    }).catch(err => console.log('failed: ', err));
+  }, [pathname]);
+
   return (
-    <html lang="en" className="dark">
-      <head>
-        <meta charSet="UTF-8" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased flex flex-col min-h-screen">
+    <>
         <div className="flex-grow">
           {children}
         </div>
@@ -50,6 +74,27 @@ export default function RootLayout({
             <p>&copy; {new Date().getFullYear()} FILMPLEX. All Rights Reserved. | Version 1.9</p>
           </div>
         </footer>
+    </>
+  );
+}
+
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+
+  return (
+    <html lang="en" className="dark">
+      <head>
+        <meta charSet="UTF-8" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="font-body antialiased flex flex-col min-h-screen">
+        <ClientSideLayout>{children}</ClientSideLayout>
       </body>
     </html>
   );
