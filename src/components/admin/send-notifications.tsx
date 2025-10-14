@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -13,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import Image from 'next/image';
 import { Send, BellRing, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { sendNotification } from '@/ai/flows/send-fcm-notification-flow';
 
 const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: string; body: string }) => (
     <div className="bg-black/70 backdrop-blur-sm p-4 rounded-3xl max-w-sm mx-auto border border-gray-700">
@@ -62,19 +64,28 @@ export default function NotificationSender() {
         if (!selectedMovie) return;
         
         startTransition(async () => {
-            // TODO: Call the actual function to send the notification via FCM
-            console.log('Sending notification for:', selectedMovie.title);
-            console.log('Title:', notificationTitle);
-            console.log('Body:', notificationBody);
+            try {
+                const result = await sendNotification({
+                    title: notificationTitle,
+                    body: notificationBody,
+                    icon: '/favicon-32x32.png', // A small icon
+                    image: selectedMovie.posterUrl
+                });
 
-            // Placeholder for the actual API call.
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            toast({
-                title: 'Notification Sent!',
-                description: `A notification for "${selectedMovie.title}" has been sent to all subscribed users.`,
-            });
-            setSelectedMovie(null);
+                toast({
+                    title: 'Notification Sent!',
+                    description: `Successfully sent to ${result.successCount} devices. ${result.failureCount} failed.`,
+                    variant: 'success'
+                });
+            } catch(error: any) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Sending Failed',
+                    description: error.message || 'Could not send notifications. Please try again later.'
+                });
+            } finally {
+                setSelectedMovie(null);
+            }
         });
     }
 

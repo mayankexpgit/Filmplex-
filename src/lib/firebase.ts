@@ -1,9 +1,9 @@
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
-const firebaseConfig = {
+const firebaseConfig: FirebaseOptions = {
   projectId: "vexel-cinema",
   appId: "1:936879818073:web:0cb4d11556a047cc1b7848",
   storageBucket: "vexel-cinema.appspot.com",
@@ -12,19 +12,37 @@ const firebaseConfig = {
   messagingSenderId: "936879818073"
 };
 
+// VAPID key for web push notifications
+const VAPID_KEY = 'BKanWzFG6j_3mLa-j9mQJmGr3S6M9Z6mZ-Y_4d2b2z-M1X8sQ4g6c3C5j2r1R3oF4A2Z7r7W0A0J8K9l4c1R9jA';
+
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
+const saveFCMToken = async (token: string): Promise<void> => {
+    try {
+        // Use the token as the document ID to prevent duplicates
+        const tokenDocRef = doc(db, 'fcmTokens', token);
+        await setDoc(tokenDocRef, { 
+            token: token,
+            createdAt: new Date().toISOString() 
+        });
+        console.log('FCM token saved to Firestore.');
+    } catch (error) {
+        console.error('Error saving FCM token to Firestore:', error);
+    }
+}
+
 const getMessagingToken = async () => {
     let messaging;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         messaging = getMessaging(app);
         try {
-            const currentToken = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY_HERE' }); // Replace with your VAPID key
+            const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
             if (currentToken) {
                 console.log('FCM Token:', currentToken);
-                // You would typically send this token to your server to store it.
+                await saveFCMToken(currentToken);
             } else {
                 console.log('No registration token available. Request permission to generate one.');
             }
@@ -35,7 +53,7 @@ const getMessagingToken = async () => {
 };
 
 const onMessageListener = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         const messaging = getMessaging(app);
         return new Promise((resolve) => {
             onMessage(messaging, (payload) => {
@@ -44,6 +62,7 @@ const onMessageListener = () => {
             });
         });
     }
+    // Return a promise that never resolves if not in a browser environment
     return new Promise(()=>{});
 };
 
