@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles } from 'lucide-react';
+import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -83,6 +83,13 @@ const adminSections = [
     href: '/admin/my-tasks',
     icon: ListChecks,
     id: 'my-tasks',
+  },
+  {
+    title: 'Send Notifications',
+    description: 'Manually send new content notifications.',
+    href: '/admin/notifications',
+    icon: Bell,
+    id: 'send-notifications',
   },
   {
     title: 'Update Featured Movies',
