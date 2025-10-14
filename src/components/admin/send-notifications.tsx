@@ -12,9 +12,10 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import Image from 'next/image';
-import { Send, BellRing, Loader2 } from 'lucide-react';
+import { Send, BellRing, Loader2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { sendNotification } from '@/ai/flows/send-fcm-notification-flow';
+import { Switch } from '../ui/switch';
 
 const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: string; body: string }) => (
     <div className="bg-black/70 backdrop-blur-sm p-4 rounded-3xl max-w-sm mx-auto border border-gray-700">
@@ -35,6 +36,43 @@ const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: stri
             </div>
         </div>
     </div>
+);
+
+const PermissionPromptPreview = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Permission Prompt Preview</CardTitle>
+            <CardDescription>This is what new users see when they are first asked for notification permission.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="w-full max-w-md mx-auto p-6 rounded-lg bg-background border shadow-lg text-foreground">
+                <div className="text-center sm:text-left">
+                    <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+                        <BellRing className="h-6 w-6 text-primary" />
+                        Get Notified About New Movies!
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-2">
+                         Click "Yes, notify me" to receive instant alerts when new movies and web series are available. We respect your privacy and will only send you important updates. You can manage these settings in your browser anytime.
+                    </p>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary border border-border my-4">
+                    <ShieldCheck className="h-8 w-8 text-green-500 flex-shrink-0" />
+                    <div className="flex-1">
+                        <h4 className="font-semibold text-foreground">Smart Protection</h4>
+                        <p className="text-xs text-muted-foreground">Avoid Malware, virus and any apk download.</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Switch id="smart-protection-switch-preview" checked={true} readOnly disabled className="opacity-100 cursor-default" />
+                        <Label htmlFor="smart-protection-switch-preview" className="text-sm font-medium">Enable</Label>
+                    </div>
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+                    <Button variant="outline">No, thanks</Button>
+                    <Button>Yes, notify me</Button>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
 );
 
 
@@ -90,7 +128,7 @@ export default function NotificationSender() {
     }
 
     return (
-        <>
+        <div className="space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>Send Push Notifications</CardTitle>
@@ -120,6 +158,8 @@ export default function NotificationSender() {
                     </ScrollArea>
                 </CardContent>
             </Card>
+
+            <PermissionPromptPreview />
 
             <Dialog open={!!selectedMovie} onOpenChange={(isOpen) => !isOpen && setSelectedMovie(null)}>
                 <DialogContent className="max-w-md">
@@ -170,6 +210,6 @@ export default function NotificationSender() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 }
