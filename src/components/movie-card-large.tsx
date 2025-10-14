@@ -80,9 +80,13 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
             const tagsToMatch = smartFilterTags[selectedGenre] || [selectedGenre.toLowerCase()];
             
             currentMovies = currentMovies.filter((movie) => {
+                // Also check the specific genre field for a direct match.
+                const genreString = (movie.genre || '').toLowerCase();
+                const hasGenreMatch = tagsToMatch.some(tag => genreString.includes(tag));
+                if (hasGenreMatch) return true;
+
                 const searchableText = [
                     movie.title,
-                    movie.genre,
                     ...(movie.tags || []),
                     movie.language
                 ].join(' ').toLowerCase();
