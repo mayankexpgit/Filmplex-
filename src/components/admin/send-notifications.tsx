@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { useMovieStore } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { isAfter, subHours, parseISO } from 'date-fns';
@@ -12,10 +12,12 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import Image from 'next/image';
-import { Send, BellRing, Loader2, ShieldCheck } from 'lucide-react';
+import { Send, BellRing, Loader2, ShieldCheck, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { sendNotification } from '@/ai/flows/send-fcm-notification-flow';
 import { Switch } from '../ui/switch';
+import { getFirestore, collection, getCountFromServer } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: string; body: string }) => (
     <div className="bg-black/70 backdrop-blur-sm p-4 rounded-3xl max-w-sm mx-auto border border-gray-700">
@@ -80,10 +82,25 @@ export default function NotificationSender() {
     const { allMovies } = useMovieStore();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
+    const [subscribedCount, setSubscribedCount] = useState<number | null>(null);
 
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [notificationTitle, setNotificationTitle] = useState('');
     const [notificationBody, setNotificationBody] = useState('');
+
+    useEffect(() => {
+        const fetchSubscribedCount = async () => {
+            try {
+                const tokensCollection = collection(db, 'fcmTokens');
+                const snapshot = await getCountFromServer(tokensCollection);
+                setSubscribedCount(snapshot.data().count);
+            } catch (error) {
+                console.error("Could not fetch subscribed count:", error);
+                setSubscribedCount(0);
+            }
+        };
+        fetchSubscribedCount();
+    }, []);
 
     const recentMovies = useMemo(() => {
         const threshold = subHours(new Date(), 48);
@@ -112,9 +129,13 @@ export default function NotificationSender() {
 
                 toast({
                     title: 'Notification Sent!',
-                    description: `Successfully sent to ${result.successCount} devices. ${result.failureCount} failed.`,
+                    description: `Successfully sent to ${result.successCount} devices. ${result.failureCount} failed. ${result.tokensRemoved} invalid tokens removed.`,
                     variant: 'success'
                 });
+                // Refetch count after sending and cleaning
+                const tokensCollection = collection(db, 'fcmTokens');
+                const snapshot = await getCountFromServer(tokensCollection);
+                setSubscribedCount(snapshot.data().count);
             } catch(error: any) {
                 toast({
                     variant: 'destructive',
@@ -132,7 +153,15 @@ export default function NotificationSender() {
             <Card>
                 <CardHeader>
                     <CardTitle>Send Push Notifications</CardTitle>
-                    <CardDescription>Manually send a push notification to all subscribed users for recently uploaded content.</CardDescription>
+                    <CardDescription className="flex items-center gap-4">
+                        <span>Manually send a push notification to all subscribed users.</span>
+                         {subscribedCount !== null && (
+                            <div className="flex items-center gap-2 text-sm font-semibold p-2 rounded-md bg-secondary">
+                                <Users className="h-5 w-5 text-primary"/>
+                                <span>Total Subscribed Devices: {subscribedCount}</span>
+                            </div>
+                        )}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <h3 className="text-lg font-semibold mb-2">Movies Uploaded in Last 48 Hours</h3>
