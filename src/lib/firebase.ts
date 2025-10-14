@@ -4,11 +4,12 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig: FirebaseOptions = {
-    apiKey: "AIzaSyDBgesKMmtY5qmzV83LswRIcgGkZ5eGuPM",
     projectId: "vexel-cinema",
-    storageBucket: "vexel-cinema.appspot.com",
-    messagingSenderId: "936879818073",
     appId: "1:936879818073:web:0cb4d11556a047cc1b7848",
+    storageBucket: "vexel-cinema.appspot.com",
+    apiKey: "AIzaSyDBgesKMmtY5qmzV83LswRIcgGkZ5eGuPM",
+    authDomain: "vexel-cinema.firebaseapp.com",
+    messagingSenderId: "936879818073"
 };
 
 // VAPID key for web push notifications
