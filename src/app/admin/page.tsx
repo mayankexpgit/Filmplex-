@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell } from 'lucide-react';
+import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell, Send } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -85,11 +85,18 @@ const adminSections = [
     icon: ListChecks,
     id: 'my-tasks',
   },
-  {
-    title: 'Send Notifications',
-    description: 'Manually send new content notifications.',
-    href: '/admin/notifications',
+   {
+    title: 'Upcoming Releases',
+    description: 'Manage upcoming movie announcements.',
+    href: '/admin/upcoming-releases',
     icon: Bell,
+    id: 'upcoming-releases',
+  },
+  {
+    title: 'Send Push Notifications',
+    description: 'Send notifications for new content.',
+    href: '/admin/send-notifications',
+    icon: Send,
     id: 'send-notifications',
   },
   {
@@ -151,7 +158,7 @@ const adminSections = [
 ];
 
 export default function AdminDashboardPage() {
-  const { suggestions } = useMovieStore();
+  const { suggestions, notifications } = useMovieStore();
   const { adminProfile } = useAuth();
   const suggestionCount = suggestions.length;
   const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && (t.status === 'active' || t.status === 'incompleted')).length || 0;
@@ -177,6 +184,11 @@ export default function AdminDashboardPage() {
                       {section.id === 'suggestions-box' && suggestionCount > 0 && (
                         <Badge variant="destructive" className="animate-pulse">
                           {suggestionCount}
+                        </Badge>
+                      )}
+                      {section.id === 'upcoming-releases' && notifications.length > 0 && (
+                        <Badge variant="secondary">
+                          {notifications.length}
                         </Badge>
                       )}
                     </CardTitle>
