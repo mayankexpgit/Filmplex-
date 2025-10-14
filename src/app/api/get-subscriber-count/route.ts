@@ -1,14 +1,11 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
-import { collection } from 'firebase/firestore';
-
 
 export async function GET() {
   try {
-    const tokensCollection = collection(db, 'fcmTokens');
-    // Firestore admin SDK does not have a direct .count() on collections in the same way.
-    // We need to get the snapshot and then the size.
+    const tokensCollection = db.collection('fcmTokens');
+    // Firestore admin SDK uses .get() on a collection reference.
     const snapshot = await tokensCollection.get();
     const count = snapshot.size;
     
