@@ -1,6 +1,5 @@
 
 // Flows will be imported for their side effects in this file.
-import './flows/movie-details-flow';
-// The FCM notification flow is server-only and should not be imported here
-// to prevent client-side build errors.
-// import './flows/send-fcm-notification-flow';
+// We are removing all imports from this file to prevent server-side code
+// from being included in the client bundle, which was causing the Vercel application error.
+// The Genkit flows are defined with 'use server' and will be loaded by the server environment when called.
