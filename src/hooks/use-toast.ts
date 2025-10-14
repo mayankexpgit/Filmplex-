@@ -28,7 +28,7 @@ const actionTypes = {
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
   SET_NOTIFICATION_PERMISSION: "SET_NOTIFICATION_PERMISSION",
-  SHOW_PERMISSION_PROMPT: "SHOW_PERMISSION_PROMPT",
+  TRIGGER_PERMISSION_PROMPT: "TRIGGER_PERMISSION_PROMPT",
   HIDE_PERMISSION_PROMPT: "HIDE_PERMISSION_PROMPT",
 } as const
 
@@ -63,7 +63,7 @@ type Action =
       permission: NotificationPermission
     }
   | {
-      type: ActionType["SHOW_PERMISSION_PROMPT"]
+      type: ActionType["TRIGGER_PERMISSION_PROMPT"]
     }
   | {
       type: ActionType["HIDE_PERMISSION_PROMPT"]
@@ -113,8 +113,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -156,7 +154,7 @@ export const reducer = (state: State, action: Action): State => {
         notificationPermission: action.permission
       }
     
-    case "SHOW_PERMISSION_PROMPT":
+    case "TRIGGER_PERMISSION_PROMPT":
       return { ...state, isPermissionPromptVisible: true }
       
     case "HIDE_PERMISSION_PROMPT":
@@ -168,8 +166,8 @@ const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { 
   toasts: [],
-  notificationPermission: (typeof window !== 'undefined' ? localStorage.getItem(NOTIFICATION_PERMISSION_KEY) as NotificationPermission : 'default') || 'default',
-  isPermissionPromptVisible: false
+  notificationPermission: 'default',
+  isPermissionPromptVisible: false,
 };
 
 function dispatch(action: Action) {
@@ -211,26 +209,31 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
+  const [state, setState] = React.useState<State>(memoryState);
 
   React.useEffect(() => {
-    listeners.push(setState)
+    // This effect runs only on the client, safely accessing localStorage.
+    const savedPermission = localStorage.getItem(NOTIFICATION_PERMISSION_KEY) as NotificationPermission | null;
+    if (savedPermission && savedPermission !== memoryState.notificationPermission) {
+      dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission: savedPermission });
+    }
+
+    listeners.push(setState);
     return () => {
-      const index = listeners.indexOf(setState)
+      const index = listeners.indexOf(setState);
       if (index > -1) {
-        listeners.splice(index, 1)
+        listeners.splice(index, 1);
       }
     }
-  }, [state])
+  }, []);
 
   return {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
     setNotificationPermission: (permission: NotificationPermission) => dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission }),
-    showPermissionPrompt: () => dispatch({ type: "SHOW_PERMISSION_PROMPT" }),
     hidePermissionPrompt: () => dispatch({ type: "HIDE_PERMISSION_PROMPT" }),
-    triggerPermissionPrompt: () => dispatch({ type: "SHOW_PERMISSION_PROMPT" }),
+    triggerPermissionPrompt: () => dispatch({ type: "TRIGGER_PERMISSION_PROMPT" }),
   }
 }
 
