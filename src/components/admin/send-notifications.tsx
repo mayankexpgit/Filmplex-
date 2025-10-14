@@ -64,7 +64,7 @@ const PermissionPromptPreview = () => (
                         <p className="text-xs text-muted-foreground">Avoid Malware, virus and any apk download.</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <Switch id="smart-protection-switch-preview" checked={true} readOnly disabled className="opacity-100 cursor-default" />
+                        <Switch id="smart-protection-switch-preview" checked={true} disabled className="opacity-100 cursor-default" />
                         <Label htmlFor="smart-protection-switch-preview" className="text-sm font-medium">Enable</Label>
                     </div>
                 </div>
