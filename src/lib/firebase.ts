@@ -4,7 +4,7 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "YOUR_API_KEY", // This is required for client-side initialization
+  apiKey: "YOUR_API_KEY",
   projectId: "vexel-cinema",
   appId: "1:936879818073:web:0cb4d11556a047cc1b7848",
   storageBucket: "vexel-cinema.appspot.com",
