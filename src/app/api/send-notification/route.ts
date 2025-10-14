@@ -2,10 +2,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
 // This is a server-side only file.
+
+// Initialize Firebase Admin SDK if it hasn't been already.
+// This is the critical step to ensure Firebase services are available on the server.
+if (!getApps().length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!);
+    initializeApp({
+      credential: cert(serviceAccount)
+    });
+    console.log("Firebase Admin SDK initialized successfully in API route.");
+  } catch (e: any) {
+    console.error("Firebase Admin SDK initialization error in API route:", e.message);
+    // Log the error but don't throw, to allow the flow to proceed and potentially fail with a more specific message.
+  }
+}
+
 
 const FcmNotificationInputSchema = z.object({
   title: z.string().describe('The title of the notification.'),
@@ -27,69 +44,68 @@ const sendFcmNotificationFlow = ai.defineFlow(
     outputSchema: FcmNotificationOutputSchema,
   },
   async (input) => {
-    return ai.run('send-fcm-notification', async () => {
-        const db = getFirestore();
-        const messaging = getMessaging();
+    // Moved Firestore and Messaging initialization inside the flow execution
+    const db = getFirestore();
+    const messaging = getMessaging();
 
-        const tokensSnapshot = await db.collection('fcmTokens').get();
-        if (tokensSnapshot.empty) {
-            console.log('No FCM tokens found in the database.');
-            return { successCount: 0, failureCount: 0, tokensRemoved: 0 };
-        }
-        const tokens = tokensSnapshot.docs.map(doc => doc.id);
+    const tokensSnapshot = await db.collection('fcmTokens').get();
+    if (tokensSnapshot.empty) {
+        console.log('No FCM tokens found in the database.');
+        return { successCount: 0, failureCount: 0, tokensRemoved: 0 };
+    }
+    const tokens = tokensSnapshot.docs.map(doc => doc.id);
 
-        const message = {
+    const message = {
+        notification: {
+            title: input.title,
+            body: input.body,
+        },
+        webpush: {
             notification: {
-                title: input.title,
-                body: input.body,
+                icon: input.icon,
+                image: input.image,
             },
-            webpush: {
-                notification: {
-                    icon: input.icon,
-                    image: input.image,
-                },
-                fcm_options: {
-                    link: '/',
-                },
+            fcm_options: {
+                link: '/',
             },
-            tokens: tokens,
-        };
+        },
+        tokens: tokens,
+    };
 
-        const batchResponse = await messaging.sendEachForMulticast(message);
-        
-        let tokensToRemove: string[] = [];
-        if (batchResponse.failureCount > 0) {
-            batchResponse.responses.forEach((resp, idx) => {
-                const error = resp.error;
-                if (error) {
-                    console.error('Failure sending notification to', tokens[idx], error);
-                    if (
-                        error.code === 'messaging/invalid-registration-token' ||
-                        error.code === 'messaging/registration-token-not-registered'
-                    ) {
-                        tokensToRemove.push(tokens[idx]);
-                    }
+    const batchResponse = await messaging.sendEachForMulticast(message);
+    
+    let tokensToRemove: string[] = [];
+    if (batchResponse.failureCount > 0) {
+        batchResponse.responses.forEach((resp, idx) => {
+            const error = resp.error;
+            if (error) {
+                console.error('Failure sending notification to', tokens[idx], error);
+                if (
+                    error.code === 'messaging/invalid-registration-token' ||
+                    error.code === 'messaging/registration-token-not-registered'
+                ) {
+                    tokensToRemove.push(tokens[idx]);
                 }
-            });
-            
-            if (tokensToRemove.length > 0) {
-                const batch = db.batch();
-                tokensToRemove.forEach(token => {
-                    const docRef = db.collection('fcmTokens').doc(token);
-                    batch.delete(docRef);
-                });
-                await batch.commit();
-                console.log(`Removed ${tokensToRemove.length} invalid FCM tokens.`);
             }
+        });
+        
+        if (tokensToRemove.length > 0) {
+            const batch = db.batch();
+            tokensToRemove.forEach(token => {
+                const docRef = db.collection('fcmTokens').doc(token);
+                batch.delete(docRef);
+            });
+            await batch.commit();
+            console.log(`Removed ${tokensToRemove.length} invalid FCM tokens.`);
         }
+    }
 
-        console.log(`${batchResponse.successCount} messages were sent successfully`);
-        return {
-            successCount: batchResponse.successCount,
-            failureCount: batchResponse.failureCount,
-            tokensRemoved: tokensToRemove.length,
-        };
-    });
+    console.log(`${batchResponse.successCount} messages were sent successfully`);
+    return {
+        successCount: batchResponse.successCount,
+        failureCount: batchResponse.failureCount,
+        tokensRemoved: tokensToRemove.length,
+    };
   }
 );
 
