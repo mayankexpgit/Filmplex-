@@ -14,10 +14,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import Image from 'next/image';
 import { Send, BellRing, Loader2, ShieldCheck, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { sendNotification } from '@/ai/flows/send-fcm-notification-flow';
 import { Switch } from '../ui/switch';
 import { getFirestore, collection, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import axios from 'axios';
 
 const NotificationPreview = ({ movie, title, body }: { movie: Movie; title: string; body: string }) => (
     <div className="bg-black/70 backdrop-blur-sm p-4 rounded-3xl max-w-sm mx-auto border border-gray-700">
@@ -120,12 +120,15 @@ export default function NotificationSender() {
         
         startTransition(async () => {
             try {
-                const result = await sendNotification({
+                const payload = {
                     title: notificationTitle,
                     body: notificationBody,
-                    icon: '/favicon-32x32.png', // A small icon
-                    image: selectedMovie.posterUrl
-                });
+                    icon: '/favicon-32x32.png',
+                    image: selectedMovie.posterUrl,
+                };
+                const response = await axios.post('/api/send-notification', payload);
+                const result = response.data;
+
 
                 toast({
                     title: 'Notification Sent!',
@@ -137,10 +140,11 @@ export default function NotificationSender() {
                 const snapshot = await getCountFromServer(tokensCollection);
                 setSubscribedCount(snapshot.data().count);
             } catch(error: any) {
+                const errorMessage = error.response?.data?.error || 'Could not send notifications. Please try again later.';
                 toast({
                     variant: 'destructive',
                     title: 'Sending Failed',
-                    description: error.message || 'Could not send notifications. Please try again later.'
+                    description: errorMessage
                 });
             } finally {
                 setSelectedMovie(null);

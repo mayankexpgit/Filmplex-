@@ -1,18 +1,11 @@
 
-'use server';
-
-/**
- * @fileOverview An AI flow to send FCM push notifications.
- * This flow retrieves all FCM tokens from Firestore and sends a multicast message.
- */
-
+import { NextRequest, NextResponse } from 'next/server';
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
-
-// --- Zod Schemas for Input and Output ---
+// This is a server-side only file.
 
 const FcmNotificationInputSchema = z.object({
   title: z.string().describe('The title of the notification.'),
@@ -20,17 +13,12 @@ const FcmNotificationInputSchema = z.object({
   icon: z.string().optional().describe('The URL of a small icon for the notification.'),
   image: z.string().optional().describe('The URL of an image to display in the notification.'),
 });
-export type FcmNotificationInput = z.infer<typeof FcmNotificationInputSchema>;
 
 const FcmNotificationOutputSchema = z.object({
   successCount: z.number().describe('The number of messages that were sent successfully.'),
   failureCount: z.number().describe('The number of messages that failed to be sent.'),
   tokensRemoved: z.number().describe('The number of invalid tokens that were removed.'),
 });
-export type FcmNotificationOutput = z.infer<typeof FcmNotificationOutputSchema>;
-
-
-// --- Genkit Flow Definition ---
 
 const sendFcmNotificationFlow = ai.defineFlow(
   {
@@ -39,13 +27,10 @@ const sendFcmNotificationFlow = ai.defineFlow(
     outputSchema: FcmNotificationOutputSchema,
   },
   async (input) => {
-    // By wrapping the logic in ai.run, we ensure that the Firebase Admin SDK
-    // is initialized correctly within the Genkit and Vercel server environment.
     return ai.run('send-fcm-notification', async () => {
         const db = getFirestore();
         const messaging = getMessaging();
 
-        // 1. Fetch all FCM tokens from the 'fcmTokens' collection in Firestore.
         const tokensSnapshot = await db.collection('fcmTokens').get();
         if (tokensSnapshot.empty) {
             console.log('No FCM tokens found in the database.');
@@ -53,7 +38,6 @@ const sendFcmNotificationFlow = ai.defineFlow(
         }
         const tokens = tokensSnapshot.docs.map(doc => doc.id);
 
-        // 2. Construct the FCM message payload.
         const message = {
             notification: {
                 title: input.title,
@@ -65,24 +49,20 @@ const sendFcmNotificationFlow = ai.defineFlow(
                     image: input.image,
                 },
                 fcm_options: {
-                    // A default link to open when the notification is clicked.
                     link: '/',
                 },
             },
             tokens: tokens,
         };
 
-        // 3. Send the multicast message.
         const batchResponse = await messaging.sendEachForMulticast(message);
         
-        // 4. Handle responses and remove invalid tokens.
         let tokensToRemove: string[] = [];
         if (batchResponse.failureCount > 0) {
             batchResponse.responses.forEach((resp, idx) => {
                 const error = resp.error;
                 if (error) {
                     console.error('Failure sending notification to', tokens[idx], error);
-                    // Check for errors indicating an invalid or unregistered token.
                     if (
                         error.code === 'messaging/invalid-registration-token' ||
                         error.code === 'messaging/registration-token-not-registered'
@@ -103,7 +83,6 @@ const sendFcmNotificationFlow = ai.defineFlow(
             }
         }
 
-        // 5. Return the result.
         console.log(`${batchResponse.successCount} messages were sent successfully`);
         return {
             successCount: batchResponse.successCount,
@@ -114,15 +93,22 @@ const sendFcmNotificationFlow = ai.defineFlow(
   }
 );
 
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const input = FcmNotificationInputSchema.parse(body);
 
-// --- Exported Wrapper Function ---
+    const result = await sendFcmNotificationFlow(input);
 
-/**
- * Sends a push notification to all subscribed users by calling the Genkit flow directly.
- * @param input The notification payload.
- * @returns An object with the counts of successful and failed sends.
- */
-export async function sendNotification(input: FcmNotificationInput): Promise<FcmNotificationOutput> {
-  // This function now directly invokes the server-side Genkit flow.
-  return await sendFcmNotificationFlow(input);
+    return NextResponse.json(result);
+  } catch (error: any) {
+    console.error("API Error in /api/send-notification: ", error);
+    let errorMessage = "An internal server error occurred.";
+    if (error instanceof z.ZodError) {
+      errorMessage = "Invalid request payload.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
 }
