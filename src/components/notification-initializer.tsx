@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { getMessagingToken, onMessageListener } from '@/lib/firebase';
 import {
@@ -14,40 +14,56 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from './ui/button';
 import { ShieldCheck, BellRing } from 'lucide-react';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 
-const NOTIFICATION_PROMPT_SEEN_KEY = 'filmplex_notification_prompt_seen';
-
-function requestPermissionAndToken() {
+function requestPermissionAndToken(setPermissionStatus: (status: 'granted' | 'denied') => void) {
   console.log('Requesting notification permission...');
   Notification.requestPermission().then((permission) => {
     if (permission === 'granted') {
       console.log('Notification permission granted.');
+      setPermissionStatus('granted');
       getMessagingToken();
     } else {
       console.log('Unable to get permission to notify.');
+      setPermissionStatus('denied');
     }
   });
 }
 
 export default function NotificationInitializer() {
   const pathname = usePathname();
-  const [showCustomPrompt, setShowCustomPrompt] = useState(false);
+  const { 
+    showPermissionPrompt, 
+    setNotificationPermission, 
+    hidePermissionPrompt 
+  } = useToast(state => ({
+    showPermissionPrompt: state.showPermissionPrompt,
+    setNotificationPermission: state.setNotificationPermission,
+    hidePermissionPrompt: state.hidePermissionPrompt
+  }));
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !pathname.startsWith('/admin')) {
-      const promptSeen = localStorage.getItem(NOTIFICATION_PROMPT_SEEN_KEY);
       
-      // Show custom prompt only if not seen before and permission is 'default'
-      if (!promptSeen && Notification.permission === 'default') {
-        setShowCustomPrompt(true);
-      } else if (Notification.permission === 'granted') {
-        // If permission is already granted, just get the token silently.
+      const currentPermission = Notification.permission;
+      const permissionStatusInStore = useToast.getState().notificationPermission;
+
+      if (currentPermission === 'granted') {
+        if (permissionStatusInStore !== 'granted') {
+            setNotificationPermission('granted');
+        }
         getMessagingToken();
+      } else if (currentPermission === 'denied' && permissionStatusInStore !== 'denied') {
+        setNotificationPermission('denied');
+      } else if (currentPermission === 'default' && permissionStatusInStore !== 'denied') {
+        // Only show if the user hasn't explicitly said "no thanks" in our custom flow before
+        setTimeout(() => {
+           useToast.getState().showPermissionPrompt();
+        }, 3000); // Show after 3 seconds
       }
 
       const unsubscribe = onMessageListener()
@@ -62,21 +78,20 @@ export default function NotificationInitializer() {
         // but for this, we assume it's okay to detach.
       };
     }
-  }, [pathname]);
+  }, [pathname, setNotificationPermission]);
 
   const handleAllow = () => {
-    localStorage.setItem(NOTIFICATION_PROMPT_SEEN_KEY, 'true');
-    setShowCustomPrompt(false);
-    requestPermissionAndToken();
+    hidePermissionPrompt();
+    requestPermissionAndToken(setNotificationPermission);
   };
 
   const handleDeny = () => {
-    localStorage.setItem(NOTIFICATION_PROMPT_SEEN_KEY, 'true');
-    setShowCustomPrompt(false);
+    hidePermissionPrompt();
+    setNotificationPermission('denied');
   };
 
   return (
-    <AlertDialog open={showCustomPrompt} onOpenChange={setShowCustomPrompt}>
+    <AlertDialog open={showPermissionPrompt} onOpenChange={(isOpen) => !isOpen && handleDeny()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
@@ -84,7 +99,7 @@ export default function NotificationInitializer() {
             Get Notified About New Movies & Web Series!
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Click "Yes, notify me" to receive instant alerts when new movies and web series are available. We respect your privacy and will only send you important updates. You can manage these settings in your browser anytime.
+             Click "Yes, notify me" to receive instant alerts when new movies and web series are available. We respect your privacy and will only send you important updates. You can manage these settings in your browser anytime.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary border border-border">
@@ -108,4 +123,3 @@ export default function NotificationInitializer() {
     </AlertDialog>
   );
 }
-

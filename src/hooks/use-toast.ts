@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -10,6 +11,7 @@ import type {
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
+const NOTIFICATION_PERMISSION_KEY = 'filmplex_notification_permission_status';
 
 type ToasterToast = ToastProps & {
   id: string
@@ -18,11 +20,16 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
+type NotificationPermission = 'default' | 'granted' | 'denied';
+
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
+  SET_NOTIFICATION_PERMISSION: "SET_NOTIFICATION_PERMISSION",
+  SHOW_PERMISSION_PROMPT: "SHOW_PERMISSION_PROMPT",
+  HIDE_PERMISSION_PROMPT: "HIDE_PERMISSION_PROMPT",
 } as const
 
 let count = 0
@@ -51,9 +58,22 @@ type Action =
       type: ActionType["REMOVE_TOAST"]
       toastId?: ToasterToast["id"]
     }
+  | {
+      type: ActionType["SET_NOTIFICATION_PERMISSION"],
+      permission: NotificationPermission
+    }
+  | {
+      type: ActionType["SHOW_PERMISSION_PROMPT"]
+    }
+  | {
+      type: ActionType["HIDE_PERMISSION_PROMPT"]
+    }
+
 
 interface State {
-  toasts: ToasterToast[]
+  toasts: ToasterToast[];
+  notificationPermission: NotificationPermission;
+  showPermissionPrompt: boolean;
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
@@ -126,12 +146,31 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       }
+    
+    case "SET_NOTIFICATION_PERMISSION":
+      if (typeof window !== "undefined") {
+        localStorage.setItem(NOTIFICATION_PERMISSION_KEY, action.permission);
+      }
+      return {
+        ...state,
+        notificationPermission: action.permission
+      }
+    
+    case "SHOW_PERMISSION_PROMPT":
+      return { ...state, showPermissionPrompt: true }
+      
+    case "HIDE_PERMISSION_PROMPT":
+      return { ...state, showPermissionPrompt: false }
   }
 }
 
 const listeners: Array<(state: State) => void> = []
 
-let memoryState: State = { toasts: [] }
+let memoryState: State = { 
+  toasts: [],
+  notificationPermission: (typeof window !== 'undefined' ? localStorage.getItem(NOTIFICATION_PERMISSION_KEY) as NotificationPermission : 'default') || 'default',
+  showPermissionPrompt: false
+};
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
@@ -171,6 +210,14 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Add actions for notification permission to the toast object
+toast.setNotificationPermission = (permission: NotificationPermission) =>
+  dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission });
+
+toast.showPermissionPrompt = () => dispatch({ type: "SHOW_PERMISSION_PROMPT" });
+toast.hidePermissionPrompt = () => dispatch({ type: "HIDE_PERMISSION_PROMPT" });
+
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -188,6 +235,9 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    setNotificationPermission: toast.setNotificationPermission,
+    showPermissionPrompt: toast.showPermissionPrompt,
+    hidePermissionPrompt: toast.hidePermissionPrompt,
   }
 }
 
