@@ -55,7 +55,7 @@ export default function NotificationInitializer() {
             setNotificationPermission('granted');
         }
         getMessagingToken();
-      } else if (currentPermission === 'denied' && permissionStatusInStore !== 'denied') {
+      } else if (current.Permission === 'denied' && permissionStatusInStore !== 'denied') {
         setNotificationPermission('denied');
       } else if (currentPermission === 'default' && permissionStatusInStore !== 'denied') {
         // Only show if the user hasn't explicitly said "no thanks" in our custom flow before
@@ -120,10 +120,10 @@ export default function NotificationInitializer() {
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={handleDeny}>
-            <span role="img" aria-label="Warning">⚠️</span> No, thanks
+            <span className="mr-2">{"\u{26A0}"}</span> No, thanks
           </AlertDialogCancel>
           <AlertDialogAction onClick={handleAllow}>
-            <span role="img" aria-label="Happy face">😄</span> Yes, notify me
+            <span className="mr-2">{"\u{1F604}"}</span> Yes, notify me
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
