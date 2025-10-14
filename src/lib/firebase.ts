@@ -6,8 +6,6 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 const firebaseConfig: FirebaseOptions = {
   projectId: "vexel-cinema",
   appId: "1:936879818073:web:0cb4d11556a047cc1b7848",
-  apiKey: "AIzaSyDBgesKMmtY5qmzV83LswRIcgGkZ5eGuPM",
-  authDomain: "vexel-cinema.firebaseapp.com",
   messagingSenderId: "936879818073"
 };
 
