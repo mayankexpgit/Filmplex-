@@ -39,18 +39,15 @@ export default function NotificationInitializer() {
   const { 
     showPermissionPrompt, 
     setNotificationPermission, 
-    hidePermissionPrompt 
-  } = useToast(state => ({
-    showPermissionPrompt: state.showPermissionPrompt,
-    setNotificationPermission: state.setNotificationPermission,
-    hidePermissionPrompt: state.hidePermissionPrompt
-  }));
+    hidePermissionPrompt,
+    notificationPermission
+  } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !pathname.startsWith('/admin')) {
       
       const currentPermission = Notification.permission;
-      const permissionStatusInStore = useToast.getState().notificationPermission;
+      const permissionStatusInStore = notificationPermission;
 
       if (currentPermission === 'granted') {
         if (permissionStatusInStore !== 'granted') {
@@ -62,7 +59,7 @@ export default function NotificationInitializer() {
       } else if (currentPermission === 'default' && permissionStatusInStore !== 'denied') {
         // Only show if the user hasn't explicitly said "no thanks" in our custom flow before
         setTimeout(() => {
-           useToast.getState().showPermissionPrompt();
+           showPermissionPrompt();
         }, 3000); // Show after 3 seconds
       }
 
@@ -78,7 +75,7 @@ export default function NotificationInitializer() {
         // but for this, we assume it's okay to detach.
       };
     }
-  }, [pathname, setNotificationPermission]);
+  }, [pathname, setNotificationPermission, notificationPermission, showPermissionPrompt]);
 
   const handleAllow = () => {
     hidePermissionPrompt();
