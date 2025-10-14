@@ -8,9 +8,12 @@ let app: App;
 
 if (!getApps().length) {
   try {
-    const serviceAccount = JSON.parse(
-      process.env.GOOGLE_APPLICATION_CREDENTIALS as string
-    );
+    const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (!serviceAccountString) {
+      throw new Error("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
+    }
+    const serviceAccount = JSON.parse(serviceAccountString);
+    
     app = initializeApp({
       credential: cert(serviceAccount),
     });
