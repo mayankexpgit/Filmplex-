@@ -10,7 +10,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
-import axios from 'axios';
 
 
 // --- Zod Schemas for Input and Output ---
@@ -118,18 +117,11 @@ const sendFcmNotificationFlow = ai.defineFlow(
 // --- Exported Wrapper Function ---
 
 /**
- * Sends a push notification to all subscribed users by calling the API route.
+ * Sends a push notification to all subscribed users by calling the Genkit flow directly.
  * @param input The notification payload.
  * @returns An object with the counts of successful and failed sends.
  */
 export async function sendNotification(input: FcmNotificationInput): Promise<FcmNotificationOutput> {
-  // This function now acts as a client-side wrapper that calls our API route.
-  try {
-    const response = await axios.post('/api/send-notification', input);
-    return response.data;
-  } catch (error: any) {
-    console.error("Error calling sendNotification API: ", error);
-    const errorMessage = error.response?.data?.error || 'Could not send notification.';
-    throw new Error(errorMessage);
-  }
+  // This function now directly invokes the server-side Genkit flow.
+  return await sendFcmNotificationFlow(input);
 }
