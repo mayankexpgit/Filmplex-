@@ -27,6 +27,7 @@ import { Separator } from '../ui/separator';
 import SuggestionForm from '../suggestion-form';
 import type { ManagementMember } from '@/lib/data';
 import Changelog from '../changelog';
+import NotificationInitializer from '../notification-initializer';
 
 function UpcomingReleasesPanel() {
   const notifications = useMovieStore((state) => state.notifications);
@@ -262,6 +263,7 @@ function ChangelogPanel() {
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <NotificationInitializer />
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
