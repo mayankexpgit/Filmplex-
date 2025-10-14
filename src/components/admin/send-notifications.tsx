@@ -157,7 +157,7 @@ export default function NotificationSender() {
             <Card>
                 <CardHeader>
                     <CardTitle>Send Push Notifications</CardTitle>
-                    <CardDescription className="flex items-center gap-4">
+                    <div className="text-sm text-muted-foreground flex items-center gap-4">
                         <span>Manually send a push notification to all subscribed users.</span>
                          {subscribedCount !== null && (
                             <div className="flex items-center gap-2 text-sm font-semibold p-2 rounded-md bg-secondary">
@@ -165,7 +165,7 @@ export default function NotificationSender() {
                                 <span>Total Subscribed Devices: {subscribedCount}</span>
                             </div>
                         )}
-                    </CardDescription>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <h3 className="text-lg font-semibold mb-2">Movies Uploaded in Last 48 Hours</h3>
