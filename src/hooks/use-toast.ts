@@ -213,9 +213,11 @@ function useToast() {
 
   React.useEffect(() => {
     // This effect runs only on the client, safely accessing localStorage.
-    const savedPermission = localStorage.getItem(NOTIFICATION_PERMISSION_KEY) as NotificationPermission | null;
-    if (savedPermission && savedPermission !== memoryState.notificationPermission) {
-      dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission: savedPermission });
+    if (typeof window !== "undefined") {
+      const savedPermission = localStorage.getItem(NOTIFICATION_PERMISSION_KEY) as NotificationPermission | null;
+      if (savedPermission && savedPermission !== memoryState.notificationPermission) {
+        dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission: savedPermission });
+      }
     }
 
     listeners.push(setState);
@@ -232,8 +234,8 @@ function useToast() {
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
     setNotificationPermission: (permission: NotificationPermission) => dispatch({ type: "SET_NOTIFICATION_PERMISSION", permission }),
-    hidePermissionPrompt: () => dispatch({ type: "HIDE_PERMISSION_PROMPT" }),
     triggerPermissionPrompt: () => dispatch({ type: "TRIGGER_PERMISSION_PROMPT" }),
+    hidePermissionPrompt: () => dispatch({ type: "HIDE_PERMISSION_PROMPT" }),
   }
 }
 
