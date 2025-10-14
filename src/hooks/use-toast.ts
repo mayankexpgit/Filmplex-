@@ -73,7 +73,7 @@ type Action =
 interface State {
   toasts: ToasterToast[];
   notificationPermission: NotificationPermission;
-  showPermissionPrompt: boolean;
+  isPermissionPromptVisible: boolean;
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
@@ -157,10 +157,10 @@ export const reducer = (state: State, action: Action): State => {
       }
     
     case "SHOW_PERMISSION_PROMPT":
-      return { ...state, showPermissionPrompt: true }
+      return { ...state, isPermissionPromptVisible: true }
       
     case "HIDE_PERMISSION_PROMPT":
-      return { ...state, showPermissionPrompt: false }
+      return { ...state, isPermissionPromptVisible: false }
   }
 }
 
@@ -169,7 +169,7 @@ const listeners: Array<(state: State) => void> = []
 let memoryState: State = { 
   toasts: [],
   notificationPermission: (typeof window !== 'undefined' ? localStorage.getItem(NOTIFICATION_PERMISSION_KEY) as NotificationPermission : 'default') || 'default',
-  showPermissionPrompt: false
+  isPermissionPromptVisible: false
 };
 
 function dispatch(action: Action) {
