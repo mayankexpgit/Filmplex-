@@ -119,12 +119,8 @@ export default function NotificationInitializer() {
           </div>
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleDeny}>
-            <span className="mr-2" role="img" aria-label="Warning">⚠️</span>No, thanks
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleAllow}>
-            <span className="mr-2" role="img" aria-label="Happy face">😄</span>Yes, notify me
-          </AlertDialogAction>
+          <AlertDialogCancel onClick={handleDeny}>⚠️ No, thanks</AlertDialogCancel>
+          <AlertDialogAction onClick={handleAllow}>😄 Yes, notify me</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -11,12 +11,11 @@ import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getApps, initializeApp } from 'firebase-admin/app';
+import axios from 'axios';
 
-// Ensure Firebase is initialized only once, Genkit handles this.
-if (getApps().length === 0) {
-    initializeApp();
-}
 
+// Genkit will handle initialization when running in the Firebase environment.
+// No need for manual `initializeApp()`.
 const db = getFirestore();
 const messaging = getMessaging();
 
@@ -119,10 +118,18 @@ const sendFcmNotificationFlow = ai.defineFlow(
 // --- Exported Wrapper Function ---
 
 /**
- * Sends a push notification to all subscribed users.
+ * Sends a push notification to all subscribed users by calling the API route.
  * @param input The notification payload.
  * @returns An object with the counts of successful and failed sends.
  */
 export async function sendNotification(input: FcmNotificationInput): Promise<FcmNotificationOutput> {
-  return sendFcmNotificationFlow(input);
+  // This function now acts as a client-side wrapper that calls our API route.
+  try {
+    const response = await axios.post('/api/send-notification', input);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error calling sendNotification API: ", error);
+    const errorMessage = error.response?.data?.error || 'Could not send notification.';
+    throw new Error(errorMessage);
+  }
 }

@@ -12,6 +12,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { fetchMovieDetailsFromTMDb, type ContentType } from '@/services/tmdbService';
+import axios from 'axios';
+
 
 const MovieDetailsInputSchema = z.object({
   tmdbId: z.number().describe('The TMDb ID of the movie or series to fetch details for.'),
@@ -74,13 +76,15 @@ const getMovieDetailsFlow = ai.defineFlow(
   }
 );
 
-
 export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDetailsOutput> {
+  // This function now acts as a client-side wrapper that calls our API route.
+  // The API route will then invoke the actual Genkit flow on the server.
   try {
-    return await getMovieDetailsFlow(input);
+    const response = await axios.post('/api/get-movie-details', input);
+    return response.data;
   } catch (error: any) {
-    // Re-throw with a more user-friendly message
-    console.error("Error in getMovieDetails flow: ", error);
-    throw new Error(error.message || 'Could not fetch movie details. Please check the ID or fill manually.');
+    console.error("Error calling getMovieDetails API: ", error);
+    const errorMessage = error.response?.data?.error || 'Could not fetch movie details. Please check the ID or fill manually.';
+    throw new Error(errorMessage);
   }
 }
