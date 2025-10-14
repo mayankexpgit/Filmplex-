@@ -7,5 +7,5 @@ export const ai = genkit({
     googleAI(),
     firebase(), // This plugin will automatically use GOOGLE_APPLICATION_CREDENTIALS on Vercel
   ],
-  model: "googleai/gemini-2.0-flash",
+  model: "googleai/gemini-pro",
 });
