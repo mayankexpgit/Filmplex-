@@ -89,7 +89,14 @@ export default function NotificationInitializer() {
   };
 
   return (
-    <AlertDialog open={isPermissionPromptVisible} onOpenChange={(isOpen) => !isOpen && handleDeny()}>
+    <AlertDialog
+      open={isPermissionPromptVisible}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleDeny();
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
