@@ -34,6 +34,7 @@ const genres = [
   'Hollywood',
   'Anime',
   'Dubbed',
+  'South Dubbed',
   '18+ Adult',
   'Action',
   'Adventure',

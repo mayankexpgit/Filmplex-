@@ -16,7 +16,8 @@ const smartFilterTags: Record<string, string[]> = {
     'Hollywood': ['hollywood', 'english'],
     'Anime': ['anime', 'animation', 'japanese'],
     'Dubbed': ['dubbed', 'hindi-dubbed'],
-    '18+ Adult': ['18+', 'adult'],
+    '18+ Adult': ['18+', 'adult', 'erotic'],
+    'South Dubbed': ['south-dubbed', 'telugu dubbed', 'tamil dubbed', 'malayalam dubbed', 'kannada dubbed'],
 }
 
 const getQualityBadge = (movie: Movie): '4K' | 'HD' | null => {
