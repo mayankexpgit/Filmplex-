@@ -37,7 +37,7 @@ function requestPermissionAndToken(setPermissionStatus: (status: 'granted' | 'de
 export default function NotificationInitializer() {
   const pathname = usePathname();
   const { 
-    showPermissionPrompt: isPermissionPromptVisible, 
+    isPermissionPromptVisible, 
     setNotificationPermission, 
     showPermissionPrompt,
     hidePermissionPrompt,
