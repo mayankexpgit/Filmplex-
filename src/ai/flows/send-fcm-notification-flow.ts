@@ -10,14 +10,8 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
-import { getApps, initializeApp } from 'firebase-admin/app';
 import axios from 'axios';
 
-
-// Genkit will handle initialization when running in the Firebase environment.
-// No need for manual `initializeApp()`.
-const db = getFirestore();
-const messaging = getMessaging();
 
 // --- Zod Schemas for Input and Output ---
 
@@ -46,6 +40,12 @@ const sendFcmNotificationFlow = ai.defineFlow(
     outputSchema: FcmNotificationOutputSchema,
   },
   async (input) => {
+    // Initialize Admin SDK services inside the flow execution.
+    // This ensures they are only initialized when the flow is called on the server,
+    // after Genkit has configured the environment.
+    const db = getFirestore();
+    const messaging = getMessaging();
+
     // 1. Fetch all FCM tokens from the 'fcmTokens' collection in Firestore.
     const tokensSnapshot = await db.collection('fcmTokens').get();
     if (tokensSnapshot.empty) {
