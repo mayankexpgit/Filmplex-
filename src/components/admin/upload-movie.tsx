@@ -80,22 +80,6 @@ const initialFormState: FormData = {
   seasonDownloadLinks: [],
 };
 
-const shortenUrl = async (longUrl: string): Promise<string> => {
-    const res = await fetch('/api/shorten', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: longUrl }),
-    });
-
-    if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to shorten URL');
-    }
-
-    const data = await res.json();
-    return data.shortUrl;
-}
-
 
 function DownloadLinkEditor({
     index,
@@ -103,43 +87,14 @@ function DownloadLinkEditor({
     onLinkChange,
     onRemoveLink,
     disabled,
-    autoShorten
 }: {
     index: number,
     link: DownloadLink,
     onLinkChange: (index: number, field: keyof DownloadLink, value: string) => void,
     onRemoveLink: (index: number) => void,
     disabled: boolean,
-    autoShorten: boolean,
 }) {
-  const [isShortening, setIsShortening] = useState(false);
-  const { toast } = useToast();
-
-  const handleUrlBlur = async () => {
-    const originalUrl = link.url;
-    if (!autoShorten || !originalUrl || originalUrl.includes('festive-bazaar.shop')) {
-      return;
-    }
-    setIsShortening(true);
-    try {
-      const shortUrl = await shortenUrl(originalUrl);
-      onLinkChange(index, 'url', shortUrl);
-      toast({
-        title: 'URL Shortened!',
-        description: 'The link has been successfully shortened.',
-        variant: 'success',
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Shortener Failed',
-        description: error.message || 'Could not shorten the URL.',
-      });
-    } finally {
-      setIsShortening(false);
-    }
-  };
-
+  
   return (
     <div className="p-3 border rounded-lg space-y-3 bg-secondary/50">
       <div className="flex justify-between items-center">
@@ -166,8 +121,7 @@ function DownloadLinkEditor({
         </div>
         <div className="space-y-1 relative">
           <Label htmlFor={`url-${index}`} className="text-xs">URL</Label>
-          <Input id={`url-${index}`} value={link.url} onChange={e => onLinkChange(index, 'url', e.target.value)} onBlur={handleUrlBlur} disabled={disabled || isShortening} placeholder="https://..." />
-          {isShortening && <Loader2 className="absolute right-2 top-6 h-4 w-4 animate-spin" />}
+          <Input id={`url-${index}`} value={link.url} onChange={e => onLinkChange(index, 'url', e.target.value)} disabled={disabled} placeholder="https://..." />
         </div>
         <div className="space-y-1">
           <Label htmlFor={`size-${index}`} className="text-xs">Size</Label>
@@ -178,7 +132,7 @@ function DownloadLinkEditor({
   );
 }
 
-function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled, currentEpisodes, autoShorten }: { epIndex: number, episode: Episode, onEpisodeChange: (field: 'episodes', value: Episode[]) => void, onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void, onAddLink: (epIndex: number) => void, onRemoveLink: (epIndex: number, linkIndex: number) => void, onRemoveEpisode: (epIndex: number) => void, disabled: boolean, currentEpisodes: Episode[], autoShorten: boolean }) {
+function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddLink, onRemoveLink, onRemoveEpisode, disabled, currentEpisodes }: { epIndex: number, episode: Episode, onEpisodeChange: (field: 'episodes', value: Episode[]) => void, onLinkChange: (epIndex: number, linkIndex: number, field: keyof DownloadLink, value: string) => void, onAddLink: (epIndex: number) => void, onRemoveLink: (epIndex: number, linkIndex: number) => void, onRemoveEpisode: (epIndex: number) => void, disabled: boolean, currentEpisodes: Episode[] }) {
     
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newEpisodes = [...currentEpisodes];
@@ -207,7 +161,6 @@ function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddL
                         onLinkChange={(idx, field, val) => onLinkChange(epIndex, idx, field, val)} 
                         onRemoveLink={(idx) => onRemoveLink(epIndex, idx)} 
                         disabled={disabled}
-                        autoShorten={autoShorten}
                     />
                 ))}
             </div>
@@ -237,7 +190,6 @@ export default function UploadMovie() {
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
-  const [autoShorten, setAutoShorten] = useState(true);
 
 
   useEffect(() => {
@@ -654,12 +606,6 @@ export default function UploadMovie() {
 
                 <Separator />
                 
-                {/* Auto Shorten Switch */}
-                <div className="flex items-center space-x-2 pt-2">
-                    <Switch id="auto-shorten" checked={autoShorten} onCheckedChange={setAutoShorten} disabled={isFormDisabled} />
-                    <Label htmlFor="auto-shorten">Auto Shorten Links</Label>
-                </div>
-
                 {/* Download Links Section */}
                 {formData.contentType === 'movie' ? (
                   <div className="space-y-4 pt-2">
@@ -672,7 +618,6 @@ export default function UploadMovie() {
                         onLinkChange={handleMovieLinkChange} 
                         onRemoveLink={removeMovieLink} 
                         disabled={isFormDisabled} 
-                        autoShorten={autoShorten}
                       />
                     ))}
                     <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
@@ -701,7 +646,6 @@ export default function UploadMovie() {
                                       onRemoveEpisode={removeEpisode} 
                                       disabled={isFormDisabled} 
                                       currentEpisodes={formData.episodes || []}
-                                      autoShorten={autoShorten}
                                   />
                               ))}
                           </div>
@@ -718,7 +662,6 @@ export default function UploadMovie() {
                                     onLinkChange={handleSeasonLinkChange} 
                                     onRemoveLink={removeSeasonLink} 
                                     disabled={isFormDisabled}
-                                    autoShorten={autoShorten}
                                   />
                               ))}
                               <Button variant="outline" size="sm" onClick={addSeasonLink} disabled={isFormDisabled}>
