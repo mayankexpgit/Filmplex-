@@ -12,9 +12,9 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { getApps, initializeApp } from 'firebase-admin/app';
 
-// Ensure Firebase is initialized only once
+// Ensure Firebase is initialized only once, Genkit handles this.
 if (getApps().length === 0) {
-  initializeApp();
+    initializeApp();
 }
 
 const db = getFirestore();
