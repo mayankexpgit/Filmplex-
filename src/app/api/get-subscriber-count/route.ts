@@ -1,29 +1,16 @@
 
 import { NextResponse } from 'next/server';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { db } from '@/lib/firebase-admin';
+import { collection } from 'firebase/firestore';
 
-// Ensure Firebase Admin is initialized
-if (!getApps().length) {
-  try {
-    const serviceAccount = JSON.parse(
-      process.env.GOOGLE_APPLICATION_CREDENTIALS as string
-    );
-    initializeApp({
-      credential: cert(serviceAccount),
-    });
-    console.log("Firebase Admin SDK initialized for get-subscriber-count.");
-  } catch (e: any) {
-    console.error("Firebase Admin SDK initialization error in get-subscriber-count:", e.message);
-  }
-}
 
 export async function GET() {
   try {
-    const db = getFirestore();
     const tokensCollection = collection(db, 'fcmTokens');
-    const snapshot = await tokensCollection.count().get();
-    const count = snapshot.data().count;
+    // Firestore admin SDK does not have a direct .count() on collections in the same way.
+    // We need to get the snapshot and then the size.
+    const snapshot = await tokensCollection.get();
+    const count = snapshot.size;
     
     return NextResponse.json({ count });
 
@@ -43,5 +30,3 @@ export async function GET() {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
-    

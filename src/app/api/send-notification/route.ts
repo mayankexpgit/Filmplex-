@@ -3,24 +3,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore, collection, getCountFromServer } from 'firebase-admin/firestore';
-import { getMessaging } from 'firebase-admin/messaging';
-
-// Ensure Firebase Admin is initialized
-if (!getApps().length) {
-  try {
-    const serviceAccount = JSON.parse(
-      process.env.GOOGLE_APPLICATION_CREDENTIALS as string
-    );
-    initializeApp({
-      credential: cert(serviceAccount),
-    });
-    console.log("Firebase Admin SDK initialized successfully for send-notification.");
-  } catch (e: any) {
-    console.error("Firebase Admin SDK initialization error in send-notification:", e.message);
-  }
-}
+import { db, messaging } from '@/lib/firebase-admin';
+import { collection } from 'firebase/firestore';
 
 const FcmNotificationInputSchema = z.object({
   title: z.string().describe('The title of the notification.'),
@@ -33,9 +17,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const input = FcmNotificationInputSchema.parse(body);
-    
-    const db = getFirestore();
-    const messaging = getMessaging();
 
     const tokensSnapshot = await db.collection('fcmTokens').get();
     if (tokensSnapshot.empty) {
