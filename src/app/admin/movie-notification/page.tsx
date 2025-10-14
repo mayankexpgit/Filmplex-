@@ -1,3 +1,4 @@
+
 import MovieNotification from '@/components/admin/movie-notification';
 
 export default function MovieNotificationPage() {
