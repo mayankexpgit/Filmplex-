@@ -19,6 +19,19 @@ import { Badge } from '../ui/badge';
 import { CheckCircle } from 'lucide-react';
 
 const adminChangelogData = [
+  {
+    version: '2.0',
+    date: 'October 11, 2025',
+    title: 'Complete Push Notification System',
+    changes: [
+      'The manual push notification system is now fully functional. Admins can now send real notifications to all subscribed users from the dashboard.',
+      'A secure Genkit backend flow (`send-fcm-notification-flow.ts`) has been created to handle the sending of notifications to all subscribed devices.',
+      'User FCM tokens are now automatically saved to the Firestore database when they grant notification permission, ensuring a deliverable audience.',
+      'The admin dashboard now displays the total number of subscribed devices, providing valuable insight into audience reach.',
+      'Added a user-friendly, custom permission prompt to encourage users to subscribe to notifications, complete with a "Smart Protection" section to build trust.',
+      'For users who initially deny permission, a non-intrusive banner now appears in the header, offering them a second chance to subscribe.',
+    ],
+  },
    {
     version: '1.9',
     date: 'October 9, 2025',
