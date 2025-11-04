@@ -1,4 +1,5 @@
 
+
 'use server';
 import { db } from '@/lib/firebase';
 import {
@@ -292,9 +293,11 @@ const calculateEarnings = (movie: Movie, isLegacy: boolean): number => {
     }
 
     if (isLegacy) {
+        // Flat rate of ₹0.20 for any legacy upload with at least one valid link.
         return 0.20;
     }
 
+    // New rule calculation for uploads after the wallet feature date.
     const linkCount = getLinkCount(movie);
     if (movie.contentType === 'movie') {
         const earnings = Math.floor(linkCount / 2) * 0.15;
