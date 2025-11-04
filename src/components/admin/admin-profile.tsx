@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '../ui/scroll-area';
 import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee, HelpCircle, Film, Tv } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee, HelpCircle, Film, Tv, TrendingDown } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
@@ -349,6 +349,15 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                                     </li>
                                 </ul>
                             </div>
+                            <div>
+                                <h4 className="font-semibold text-base mb-2">Penalties</h4>
+                                <ul className="space-y-2 text-sm text-muted-foreground pl-4">
+                                     <li className="flex items-start gap-2">
+                                        <TrendingDown className="h-4 w-4 mt-1 text-destructive"/>
+                                        <span>A penalty of <b>₹0.50</b> is deducted from the total earnings for each task that is not completed by its deadline.</span>
+                                    </li>
+                                </ul>
+                            </div>
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
@@ -533,10 +542,11 @@ export default function AdminProfile() {
         const triggerWalletCalculation = async () => {
             if (managementTeam.length > 0 && allMovies.length > 0) {
                 const adminData = managementTeam.find(m => m.name === (selectedAdminName || adminProfile?.name));
-                // Force re-calculation if wallet is undefined for the selected admin
+                // Force re-calculation if wallet is undefined for the selected admin, or if it hasn't been calculated recently
                 if (adminData && adminData.wallet === undefined) {
                     setIsCalculating(true);
                     try {
+                        // This function now calculates wallets for everyone and updates the store
                         await calculateAllWallets(managementTeam, allMovies);
                     } catch (error) {
                         console.error("Wallet calculation failed:", error);

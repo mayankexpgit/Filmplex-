@@ -316,7 +316,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
     const updatedTeam = team.map(member => {
         const memberMovies = movies.filter(m => m.uploadedBy === member.name && m.createdAt);
         
-        let total = 0;
+        let totalEarnings = 0;
         let monthly = 0;
         let weekly = 0;
 
@@ -324,7 +324,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             const movieDate = parseISO(movie.createdAt!);
             const earnings = calculateEarnings(movie, walletCalculationDate);
             
-            total += earnings;
+            totalEarnings += earnings;
             if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
                 monthly += earnings;
             }
@@ -333,8 +333,14 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             }
         });
 
+        // Penalty for incompleted tasks
+        const incompletedTasksCount = member.tasks?.filter(t => t.status === 'incompleted').length || 0;
+        const penalty = incompletedTasksCount * 0.50;
+
+        const totalAfterPenalty = totalEarnings - penalty;
+
         const wallet: Wallet = {
-            total: parseFloat(total.toFixed(2)),
+            total: parseFloat(totalAfterPenalty.toFixed(2)),
             monthly: parseFloat(monthly.toFixed(2)),
             weekly: parseFloat(weekly.toFixed(2)),
         };
