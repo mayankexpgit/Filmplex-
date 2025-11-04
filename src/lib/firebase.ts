@@ -7,7 +7,7 @@ const firebaseConfig: FirebaseOptions = {
     projectId: "vexel-cinema",
     appId: "1:936879818073:web:0cb4d11556a047cc1b7848",
     storageBucket: "vexel-cinema.appspot.com",
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    apiKey: "AIzaSyDBgesKMmtY5qmzV83LswRIcgGkZ5eGuPM",
     authDomain: "vexel-cinema.firebaseapp.com",
     messagingSenderId: "936879818073"
 };
