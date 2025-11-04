@@ -227,18 +227,35 @@ export default function UploadMovie() {
   };
 
   useEffect(() => {
-    if (formData.contentType === 'series') {
-        const { title, seasonNumber, partNumber } = formData;
-        if (title) {
-            let newCardInfo = title;
-            if (seasonNumber) {
-                newCardInfo += ` - Season ${String(seasonNumber).padStart(2, '0')}`;
-            }
-            if (partNumber) {
-                newCardInfo += ` (Part ${String(partNumber).padStart(2, '0')})`;
-            }
-            setFormData(prev => ({...prev, cardInfoText: newCardInfo}));
+    if (formData.contentType === 'series' && formData.title) {
+      setFormData(prev => {
+        const { title, seasonNumber, partNumber, cardInfoText } = prev;
+        
+        // Construct the new first line
+        let newTitleLine = title;
+        if (seasonNumber) {
+          newTitleLine += ` - Season ${String(seasonNumber).padStart(2, '0')}`;
         }
+        if (partNumber) {
+          newTitleLine += ` (Part ${String(partNumber).padStart(2, '0')})`;
+        }
+
+        // Split the existing cardInfoText into lines
+        const lines = cardInfoText?.split('\n') || [];
+        
+        // Replace the first line with the new constructed title line
+        lines[0] = newTitleLine;
+        
+        // Join the lines back together
+        const newCardInfo = lines.join('\n');
+
+        // Only update if it's different to prevent infinite loops
+        if (newCardInfo !== cardInfoText) {
+          return { ...prev, cardInfoText: newCardInfo };
+        }
+
+        return prev;
+      });
     }
   }, [formData.title, formData.seasonNumber, formData.partNumber, formData.contentType]);
 
@@ -571,7 +588,7 @@ export default function UploadMovie() {
 
                 <div className="space-y-2">
                   <Label htmlFor="card-info-text">Card Info Text</Label>
-                  <Input id="card-info-text" value={formData.cardInfoText || ''} onChange={(e) => handleInputChange('cardInfoText', e.target.value)} disabled={isFormDisabled} placeholder="e.g. 2024 • Hindi • IMDb 8.5" />
+                  <Textarea id="card-info-text" value={formData.cardInfoText || ''} onChange={(e) => handleInputChange('cardInfoText', e.target.value)} disabled={isFormDisabled} placeholder="Line 1: Title and Year&#10;Line 2: Audio Info&#10;Line 3: Qualities" rows={5} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -874,5 +891,3 @@ export default function UploadMovie() {
     </>
   );
 }
-
-    
