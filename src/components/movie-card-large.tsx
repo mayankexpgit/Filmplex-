@@ -5,7 +5,7 @@ import { useMovieStore } from '@/store/movieStore';
 import MovieCard from './movie-card';
 import { Button } from './ui/button';
 import { Flame, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
-import { useMemo, useState, useTransition, useCallback } from 'react';
+import { useMemo, useState, useTransition, useCallback, useEffect } from 'react';
 import type { Movie } from '@/lib/data';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Fuse from 'fuse.js';
@@ -61,27 +61,23 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [filteredMovies, setFilteredMovies] = useState<Movie[]>(movies);
 
-  const fuse = useMemo(() => {
-    const options = {
-      keys: [
-        { name: 'title', weight: 0.6 },
-        { name: 'tags', weight: 0.3 },
-        { name: 'genre', weight: 0.1 }
-      ],
-      includeScore: true,
-      threshold: 0.4, // Adjust for more/less fuzzy matching
-      minMatchCharLength: 2,
-      ignoreLocation: true,
-    };
-    return new Fuse(movies, options);
-  }, [movies]);
-
-
-  const filteredMovies = useMemo(() => {
+  useEffect(() => {
     let currentMovies = [...movies];
-    
+
     if (searchQuery) {
+        const fuse = new Fuse(movies, {
+            keys: [
+                { name: 'title', weight: 0.6 },
+                { name: 'tags', weight: 0.3 },
+                { name: 'genre', weight: 0.1 }
+            ],
+            includeScore: true,
+            threshold: 0.4,
+            minMatchCharLength: 2,
+            ignoreLocation: true,
+        });
         currentMovies = fuse.search(searchQuery).map(result => result.item);
     } else if (selectedGenre && selectedGenre !== 'All Genres') {
         if (selectedGenre === 'Web Series') {
@@ -114,7 +110,6 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         });
     }
 
-    // If no search query, sort by creation date
     if (!searchQuery) {
         currentMovies.sort((a, b) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -123,8 +118,8 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         });
     }
 
-    return currentMovies;
-  }, [movies, searchQuery, selectedGenre, selectedQuality, fuse]);
+    setFilteredMovies(currentMovies);
+  }, [movies, searchQuery, selectedGenre, selectedQuality]);
   
   const totalPages = Math.ceil(filteredMovies.length / MOVIES_PER_PAGE);
 
