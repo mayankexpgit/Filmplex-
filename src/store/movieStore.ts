@@ -1,4 +1,5 @@
 
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem } from '@/lib/data';
@@ -26,7 +27,7 @@ import {
   addManagementMember as dbAddManagementMember,
   deleteManagementMember as dbDeleteManagementMember,
   updateManagementMember as dbUpdateManagementMember,
-  calculateAllWallets,
+  calculateAllWallets as dbCalculateAllWallets,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
 import { getAdminName } from '@/hooks/use-auth';
@@ -165,7 +166,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
     isFetchingData = true;
     
     try {
-      const [
+      let [
         allMovies,
         notifications,
         contactInfo,
@@ -176,6 +177,9 @@ const useMovieStore = create<MovieState>((set, get) => ({
         dbFetchContactInfo(),
         dbFetchManagementTeam(),
       ]);
+
+      // This is the crucial step: Recalculate and update wallets every time.
+      managementTeam = await calculateAllWallets(managementTeam, allMovies);
 
       const adminName = getAdminName();
       const adminProfile = managementTeam.find(m => m.name === adminName) || null;
@@ -558,6 +562,20 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
         }
     }
     return anyTaskUpdated;
+};
+
+// This is the new wrapper function that ensures wallets are calculated and updated in the DB
+const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
+    const updatedTeamWithWallets = await dbCalculateAllWallets(team, movies);
+    useMovieStore.setState({ managementTeam: updatedTeamWithWallets });
+    const adminName = getAdminName();
+    if (adminName) {
+        const updatedAdminProfile = updatedTeamWithWallets.find(m => m.name === adminName);
+        if (updatedAdminProfile) {
+            useMovieStore.setState({ adminProfile: updatedAdminProfile });
+        }
+    }
+    return updatedTeamWithWallets;
 };
 
 export { 

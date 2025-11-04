@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -327,7 +328,7 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                         </AccordionTrigger>
                         <AccordionContent className="space-y-4 pt-2">
                              <div>
-                                <h4 className="font-semibold text-base mb-2">New Uploads (After Nov 4, 2025)</h4>
+                                <h4 className="font-semibold text-base mb-2">New Uploads (On or After Nov 4, 2025)</h4>
                                 <ul className="space-y-2 text-sm text-muted-foreground pl-4">
                                     <li className="flex items-start gap-2">
                                         <Film className="h-4 w-4 mt-1 text-primary"/>
@@ -530,25 +531,24 @@ export default function AdminProfile() {
 
     useEffect(() => {
         const triggerWalletCalculation = async () => {
-            setIsCalculating(true);
-            try {
-                const updatedTeam = await calculateAllWallets(managementTeam, allMovies);
-                setState({ managementTeam: updatedTeam });
-            } catch (error) {
-                console.error("Wallet calculation failed:", error);
-            } finally {
-                setIsCalculating(false);
+            if (managementTeam.length > 0 && allMovies.length > 0) {
+                const adminData = managementTeam.find(m => m.name === (selectedAdminName || adminProfile?.name));
+                // Force re-calculation if wallet is undefined for the selected admin
+                if (adminData && adminData.wallet === undefined) {
+                    setIsCalculating(true);
+                    try {
+                        await calculateAllWallets(managementTeam, allMovies);
+                    } catch (error) {
+                        console.error("Wallet calculation failed:", error);
+                    } finally {
+                        setIsCalculating(false);
+                    }
+                }
             }
         };
+        triggerWalletCalculation();
+    }, [managementTeam, allMovies, selectedAdminName, adminProfile?.name]);
 
-        if (managementTeam.length > 0 && allMovies.length > 0) {
-            const adminData = managementTeam.find(m => m.name === (selectedAdminName || adminProfile?.name));
-            // Force re-calculation if wallet is undefined for the selected admin
-            if (adminData && adminData.wallet === undefined) {
-                triggerWalletCalculation();
-            }
-        }
-    }, [managementTeam, allMovies, setState, selectedAdminName, adminProfile?.name]);
 
     const handleAdminChange = (name: string) => {
         setSelectedAdminName(name);
