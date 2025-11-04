@@ -143,8 +143,8 @@ export default function MovieList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMovies.map((movie) => (
-                  <TableRow key={movie.id}>
+                {filteredMovies.map((movie, index) => (
+                  <TableRow key={`${movie.id}-${index}`}>
                     <TableCell className="font-medium">{movie.title}</TableCell>
                     <TableCell>{movie.year}</TableCell>
                     <TableCell className="text-right space-x-2">
