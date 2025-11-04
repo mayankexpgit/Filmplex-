@@ -53,12 +53,19 @@ export interface AdminTask {
   completedCount?: number; // To store the count at the time of completion/incompletion
 }
 
+export interface Wallet {
+    total: number;
+    monthly: number;
+    weekly: number;
+}
+
 export interface ManagementMember {
     id:string;
     name: string;
     info: string;
     timestamp: string; 
     tasks?: AdminTask[];
+    wallet?: Wallet;
 }
 
 export interface Movie {

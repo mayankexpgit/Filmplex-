@@ -26,6 +26,7 @@ import {
   addManagementMember as dbAddManagementMember,
   deleteManagementMember as dbDeleteManagementMember,
   updateManagementMember as dbUpdateManagementMember,
+  calculateAllWallets,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
 import { getAdminName } from '@/hooks/use-auth';
@@ -580,4 +581,5 @@ export {
     updateAdminTask,
     removeManagementMemberTask,
     checkAndUpdateOverdueTasks,
+    calculateAllWallets,
 };

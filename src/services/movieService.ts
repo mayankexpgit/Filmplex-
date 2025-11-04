@@ -17,8 +17,9 @@ import {
   limit,
   deleteField,
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
+import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 
 
 // --- Admin Credentials ---
@@ -257,3 +258,96 @@ export const fetchDownloadAnalytics = async (): Promise<DownloadRecord[]> => {
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DownloadRecord));
 }
+
+
+// --- Wallet Calculation Service ---
+
+const hasValidLinks = (movie: Movie): boolean => {
+    if (movie.contentType === 'movie' && movie.downloadLinks) {
+        return movie.downloadLinks.some(l => l.url.trim() !== '');
+    }
+    if (movie.contentType === 'series') {
+        const hasEpisodeLinks = movie.episodes?.some(ep => ep.downloadLinks.some(l => l.url.trim() !== ''));
+        const hasSeasonLinks = movie.seasonDownloadLinks?.some(l => l.url.trim() !== '');
+        return !!(hasEpisodeLinks || hasSeasonLinks);
+    }
+    return false;
+}
+
+const getLinkCount = (movie: Movie): number => {
+    if (movie.contentType === 'movie') {
+        return movie.downloadLinks?.filter(l => l.url.trim() !== '').length || 0;
+    }
+    if (movie.contentType === 'series') {
+        const episodeLinks = movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l.url.trim() !== '').length || 0), 0) || 0;
+        const seasonLinks = movie.seasonDownloadLinks?.filter(l => l.url.trim() !== '').length || 0;
+        return episodeLinks + seasonLinks;
+    }
+    return 0;
+}
+
+const calculateEarnings = (movie: Movie, isLegacy: boolean): number => {
+    if (!hasValidLinks(movie)) {
+        return 0;
+    }
+
+    if (isLegacy) {
+        return 0.20;
+    }
+
+    const linkCount = getLinkCount(movie);
+    if (movie.contentType === 'movie') {
+        const earnings = Math.floor(linkCount / 2) * 0.15;
+        return Math.min(earnings, 0.40);
+    } else { // series
+        return Math.floor(linkCount / 2) * 0.30;
+    }
+};
+
+export const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
+    const walletCalculationDate = new Date('2025-10-12T00:00:00Z');
+    const now = new Date();
+
+    const updatedTeam = team.map(member => {
+        const memberMovies = movies.filter(m => m.uploadedBy === member.name && m.createdAt);
+        
+        let total = 0;
+        let monthly = 0;
+        let weekly = 0;
+
+        memberMovies.forEach(movie => {
+            const movieDate = parseISO(movie.createdAt!);
+            const isLegacy = movieDate < walletCalculationDate;
+            const earnings = calculateEarnings(movie, isLegacy);
+            
+            total += earnings;
+            if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
+                monthly += earnings;
+            }
+            if (isWithinInterval(movieDate, { start: startOfWeek(now), end: endOfWeek(now) })) {
+                weekly += earnings;
+            }
+        });
+
+        const wallet: Wallet = {
+            total: parseFloat(total.toFixed(2)),
+            monthly: parseFloat(monthly.toFixed(2)),
+            weekly: parseFloat(weekly.toFixed(2)),
+        };
+
+        return { ...member, wallet };
+    });
+
+    // Batch update Firestore
+    const batch = writeBatch(db);
+    updatedTeam.forEach(member => {
+        if (member.wallet) {
+            const memberRef = doc(db, 'management', member.id);
+            batch.update(memberRef, { wallet: member.wallet });
+        }
+    });
+    await batch.commit();
+    console.log("Admin wallets updated in Firestore.");
+    
+    return updatedTeam;
+};

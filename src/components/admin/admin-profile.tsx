@@ -1,16 +1,17 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, calculateAllWallets } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
-import type { ManagementMember, Movie, AdminTask, TodoItem } from '@/lib/data';
+import type { ManagementMember, Movie, AdminTask, TodoItem, Wallet } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
 import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
@@ -275,6 +276,45 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
     };
 };
 
+function WalletCard({ wallet }: { wallet?: Wallet }) {
+    if (!wallet) return null;
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+    }
+    
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <WalletIcon className="h-7 w-7 text-primary" />
+                    Virtual Admin Wallet
+                </CardTitle>
+                <CardDescription>Earnings from your content uploads.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="p-4 bg-secondary rounded-lg">
+                    <p className="text-sm text-muted-foreground">This Week</p>
+                    <p className="text-2xl font-bold flex items-center justify-center gap-1">
+                        <IndianRupee className="h-5 w-5" />{wallet.weekly.toFixed(2)}
+                    </p>
+                </div>
+                <div className="p-4 bg-secondary rounded-lg">
+                    <p className="text-sm text-muted-foreground">This Month</p>
+                    <p className="text-2xl font-bold flex items-center justify-center gap-1">
+                        <IndianRupee className="h-5 w-5" />{wallet.monthly.toFixed(2)}
+                    </p>
+                </div>
+                <div className="p-4 bg-primary/20 border border-primary/50 rounded-lg">
+                    <p className="text-sm text-primary/80">Total Earnings</p>
+                    <p className="text-3xl font-bold text-primary flex items-center justify-center gap-1">
+                        <IndianRupee className="h-6 w-6" />{wallet.total.toFixed(2)}
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
 
 function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
     
@@ -308,9 +348,10 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
 
     return (
         <div className="space-y-6">
+            <WalletCard wallet={admin.wallet} />
              <Card>
                 <CardHeader>
-                    <CardTitle>Overview</CardTitle>
+                    <CardTitle>Upload Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {stats.map(stat => (
@@ -435,18 +476,34 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
 
 export default function AdminProfile() {
     const { adminProfile, isLoading } = useAuth();
-    const { managementTeam, allMovies } = useMovieStore();
+    const { managementTeam, allMovies, setState } = useMovieStore();
     const [selectedAdminName, setSelectedAdminName] = useState<string | undefined>(undefined);
+    const [isCalculating, setIsCalculating] = useState(false);
 
     const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
 
     useEffect(() => {
-      // When the component loads, if there's an admin profile,
-      // set the selected admin to the currently logged-in admin.
       if (adminProfile && !selectedAdminName) {
         setSelectedAdminName(adminProfile.name);
       }
     }, [adminProfile, selectedAdminName]);
+
+    useEffect(() => {
+        // Trigger wallet calculation once when data is ready
+        if (managementTeam.length > 0 && allMovies.length > 0 && !isCalculating) {
+            // Check if wallets are already calculated to prevent re-calculation
+            const firstMember = managementTeam[0];
+            if (firstMember.wallet === undefined) {
+                setIsCalculating(true);
+                calculateAllWallets(managementTeam, allMovies)
+                    .then(updatedTeam => {
+                        setState({ managementTeam: updatedTeam });
+                    })
+                    .catch(console.error)
+                    .finally(() => setIsCalculating(false));
+            }
+        }
+    }, [managementTeam, allMovies, isCalculating, setState]);
 
     const handleAdminChange = (name: string) => {
         setSelectedAdminName(name);
@@ -457,10 +514,11 @@ export default function AdminProfile() {
     }, [selectedAdminName, managementTeam]);
 
 
-    if (isLoading || !adminProfile) {
+    if (isLoading || !adminProfile || isCalculating) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <FilmpilexLoader />
+                {isCalculating && <p className="mt-4 text-muted-foreground">Calculating wallet balances...</p>}
             </div>
         );
     }
@@ -510,7 +568,7 @@ export default function AdminProfile() {
             </CardContent>
         </Card>
 
-        <DownloadAnalytics allMovies={allMovies} />
+        {isTopLevelAdmin && <DownloadAnalytics allMovies={allMovies} />}
       </div>
     )
 }
