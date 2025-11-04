@@ -236,12 +236,12 @@ export default function UploadMovie() {
   };
 
   useEffect(() => {
-    if (formData.contentType === 'series' && formData.title) {
+    if (formData.contentType === 'series') {
       setFormData(prev => {
         const { title, seasonNumber, partNumber, cardInfoText } = prev;
         
         // Construct the new first line
-        let newTitleLine = title;
+        let newTitleLine = title || '';
         if (seasonNumber) {
           newTitleLine += ` - Season ${String(seasonNumber).padStart(2, '0')}`;
         }
@@ -904,3 +904,5 @@ export default function UploadMovie() {
     </>
   );
 }
+
+    
