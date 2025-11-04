@@ -298,6 +298,7 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
         return 0.50;
     }
 
+    // New upload logic
     const linkCount = getLinkCount(movie);
     if (movie.contentType === 'movie') {
         const earnings = Math.floor(linkCount / 2) * 0.15;
@@ -308,7 +309,7 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
 };
 
 export const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
-    const walletCalculationDate = new Date('2025-11-04T00:00:00Z');
+    const walletCalculationDate = new Date('2025-11-04T00:00:00.000Z');
     const now = new Date();
     const currentMonthStr = formatDate(now, 'yyyy-MM');
 
