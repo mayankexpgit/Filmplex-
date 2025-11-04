@@ -310,7 +310,7 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
 };
 
 export const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
-    const walletCalculationDate = new Date('2025-10-12T00:00:00Z');
+    const walletCalculationDate = new Date('2025-11-04T00:00:00Z');
     const now = new Date();
 
     const updatedTeam = team.map(member => {
