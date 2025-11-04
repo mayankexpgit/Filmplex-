@@ -6,7 +6,7 @@ import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
 import { useMovieStore, fetchInitialData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo, CheckCircle, Rocket, Flame } from 'lucide-react';
+import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo, CheckCircle, Rocket, Flame, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import MovieCardSmall from '@/components/movie-card-small';
@@ -157,12 +157,64 @@ function getYouTubeEmbedUrl(url: string | undefined): string | null {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
+const FacebookIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+);
+
+
+function SocialShare({ title, url }: { title: string, url: string }) {
+    const text = `Check out "${title}" on FILMPLEX!`;
+    const encodedText = encodeURIComponent(text);
+    const encodedUrl = encodeURIComponent(url);
+
+    const shareLinks = {
+        whatsapp: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`,
+        telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    };
+
+    return (
+        <section className="w-full mb-8">
+            <h2 className="text-2xl font-bold mb-4 text-center text-foreground flex items-center justify-center gap-2">
+                <Share2 className="h-6 w-6" />
+                Share with Friends
+            </h2>
+            <div className="flex justify-center flex-wrap gap-4">
+                <Button asChild variant="outline" className="gap-2">
+                    <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer">
+                        <Send className="h-5 w-5 text-green-500" /> WhatsApp
+                    </a>
+                </Button>
+                <Button asChild variant="outline" className="gap-2">
+                    <a href={shareLinks.telegram} target="_blank" rel="noopener noreferrer">
+                        <Send className="h-5 w-5 text-blue-500" /> Telegram
+                    </a>
+                </Button>
+                 <Button asChild variant="outline" className="gap-2">
+                    <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer">
+                        <FacebookIcon /> Facebook
+                    </a>
+                </Button>
+            </div>
+        </section>
+    );
+}
+
 export default function MovieDetailPage() {
   const { isInitialized, allMovies, featuredMovies } = useMovieStore();
   const [movie, setMovie] = useState<Movie | undefined>();
   const [hasReacted, setHasReacted] = useState(false);
+  const [pageUrl, setPageUrl] = useState('');
   const params = useParams();
   const slug = params.slug as string;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        setPageUrl(window.location.href);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -409,6 +461,10 @@ export default function MovieDetailPage() {
             </section>
           )}
 
+          {pageUrl && <SocialShare title={movie.title} url={pageUrl} />}
+
+          <Separator className="my-8 w-full" />
+
           {movie.description && (
             <section className="mb-8 w-full">
               <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Description</h2>
@@ -494,5 +550,7 @@ export default function MovieDetailPage() {
     </div>
   );
 }
+
+    
 
     
