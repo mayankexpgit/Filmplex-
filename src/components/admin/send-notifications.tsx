@@ -80,29 +80,11 @@ export default function NotificationSender() {
     const { allMovies } = useMovieStore();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    const [subscribedCount, setSubscribedCount] = useState<number | null>(null);
-    const [isLoadingCount, setIsLoadingCount] = useState(true);
 
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [notificationTitle, setNotificationTitle] = useState('');
     const [notificationBody, setNotificationBody] = useState('');
     
-     useEffect(() => {
-        const fetchCount = async () => {
-            setIsLoadingCount(true);
-            try {
-                const response = await axios.get('/api/get-subscriber-count');
-                setSubscribedCount(response.data.count);
-            } catch (error) {
-                console.error("Failed to fetch subscriber count:", error);
-                setSubscribedCount(0); // Set to 0 on error
-            } finally {
-                setIsLoadingCount(false);
-            }
-        };
-        fetchCount();
-    }, []);
-
     const recentMovies = useMemo(() => {
         const threshold = subHours(new Date(), 48);
         return allMovies
@@ -130,11 +112,9 @@ export default function NotificationSender() {
                 const response = await axios.post('/api/send-notification', payload);
                 const result = response.data;
                 
-                setSubscribedCount(result.totalSubscribers);
-
                 toast({
                     title: 'Notification Sent!',
-                    description: `Sent to ${result.successCount} devices. ${result.failureCount} failed. ${result.tokensRemoved} removed. Total subs: ${result.totalSubscribers}.`,
+                    description: `Sent to ${result.successCount} devices. ${result.failureCount} failed. ${result.tokensRemoved} invalid tokens removed.`,
                     variant: 'success',
                     duration: 9000,
                 });
@@ -157,19 +137,9 @@ export default function NotificationSender() {
             <Card>
                 <CardHeader>
                     <CardTitle>Send Push Notifications</CardTitle>
-                    <div className="text-sm text-muted-foreground flex items-center gap-4">
-                        <span>Manually send a push notification to all subscribed users.</span>
-                         {(isLoadingCount || subscribedCount !== null) && (
-                            <div className="flex items-center gap-2 text-sm font-semibold p-2 rounded-md bg-secondary">
-                                <Users className="h-5 w-5 text-primary"/>
-                                {isLoadingCount ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <span>Total Subscribed Devices: {subscribedCount}</span>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                    <CardDescription>
+                        Manually send a push notification to all subscribed users for recently uploaded content.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <h3 className="text-lg font-semibold mb-2">Movies Uploaded in Last 48 Hours</h3>
