@@ -173,12 +173,14 @@ const useMovieStore = create<MovieState>((set, get) => ({
         allMovies,
         notifications,
         contactInfo,
-        managementTeam
+        managementTeam,
+        requests,
       ] = await Promise.all([
         dbFetchMovies(),
         dbFetchNotifications(),
         dbFetchContactInfo(),
         dbFetchManagementTeam(),
+        dbFetchRequests(),
       ]);
       
       const stateUpdate: Partial<MovieState> = {
@@ -188,17 +190,16 @@ const useMovieStore = create<MovieState>((set, get) => ({
         notifications,
         contactInfo,
         managementTeam,
+        requests,
       };
       
       if (isAdmin) {
-        const [securityLogs, allComments, requests] = await Promise.all([
+        const [securityLogs, allComments] = await Promise.all([
           dbFetchSecurityLogs(),
           dbFetchAllComments(allMovies),
-          dbFetchRequests(),
         ]);
         stateUpdate.securityLogs = securityLogs;
         stateUpdate.allComments = allComments;
-        stateUpdate.requests = requests;
         // This is a critical step that must be done for admins
         const teamWithUpdatedTasks = await checkAndUpdateOverdueTasks(managementTeam, allMovies);
         stateUpdate.managementTeam = teamWithUpdatedTasks; // Use the team with updated tasks
@@ -389,8 +390,10 @@ const submitRequest = async (movieName: string, comment: string): Promise<UserRe
   const id = await dbAddRequest(newRequestData);
   const newRequest = { ...newRequestData, id };
   
-  // No need to add to global state as only admins need the full list
-  // which is fetched on admin login.
+  // Also update the local state for the admin panel immediately
+  useMovieStore.setState(state => ({
+    requests: [newRequest, ...state.requests]
+  }));
   return newRequest;
 };
 
