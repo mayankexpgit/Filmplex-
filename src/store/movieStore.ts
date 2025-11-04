@@ -276,8 +276,7 @@ const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
 
 const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
   const updateData = { ...updatedMovieData };
-  delete updateData.uploadedBy;
-  delete updateData.createdAt;
+  
 
   await dbUpdateMovie(id, updateData);
 
