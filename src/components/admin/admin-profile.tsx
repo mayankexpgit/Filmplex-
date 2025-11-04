@@ -288,7 +288,7 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                 <CardDescription>Earnings from your content uploads.</CardDescription>
             </CardHeader>
             <CardContent>
-            {isCalculating || !wallet ? (
+            {isCalculating ? (
                 <div className="flex flex-col items-center justify-center h-24 gap-2">
                     <FilmpilexLoader />
                     <p className="text-muted-foreground">Calculating balances...</p>
@@ -298,19 +298,19 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">This Week</p>
                         <p className="text-2xl font-bold flex items-center justify-center gap-1">
-                            <IndianRupee className="h-5 w-5" />{wallet.weekly.toFixed(2)}
+                            <IndianRupee className="h-5 w-5" />{wallet?.weekly.toFixed(2) || '0.00'}
                         </p>
                     </div>
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">This Month</p>
                         <p className="text-2xl font-bold flex items-center justify-center gap-1">
-                            <IndianRupee className="h-5 w-5" />{wallet.monthly.toFixed(2)}
+                            <IndianRupee className="h-5 w-5" />{wallet?.monthly.toFixed(2) || '0.00'}
                         </p>
                     </div>
                     <div className="p-4 bg-primary/20 border border-primary/50 rounded-lg">
                         <p className="text-sm text-primary/80">Total Earnings</p>
                         <p className="text-3xl font-bold text-primary flex items-center justify-center gap-1">
-                            <IndianRupee className="h-6 w-6" />{wallet.total.toFixed(2)}
+                            <IndianRupee className="h-6 w-6" />{wallet?.total.toFixed(2) || '0.00'}
                         </p>
                     </div>
                 </div>
@@ -529,21 +529,26 @@ export default function AdminProfile() {
     }, [adminProfile, selectedAdminName]);
 
     useEffect(() => {
-        // Trigger wallet calculation once when data is ready
+        const triggerWalletCalculation = async () => {
+            setIsCalculating(true);
+            try {
+                const updatedTeam = await calculateAllWallets(managementTeam, allMovies);
+                setState({ managementTeam: updatedTeam });
+            } catch (error) {
+                console.error("Wallet calculation failed:", error);
+            } finally {
+                setIsCalculating(false);
+            }
+        };
+
         if (managementTeam.length > 0 && allMovies.length > 0) {
-            // Check if wallets are already calculated for the selected admin
-            const selectedAdminData = managementTeam.find(m => m.name === selectedAdminName);
-            if (selectedAdminData && selectedAdminData.wallet === undefined) {
-                setIsCalculating(true);
-                calculateAllWallets(managementTeam, allMovies)
-                    .then(updatedTeam => {
-                        setState({ managementTeam: updatedTeam });
-                    })
-                    .catch(console.error)
-                    .finally(() => setIsCalculating(false));
+            const adminData = managementTeam.find(m => m.name === (selectedAdminName || adminProfile?.name));
+            // Force re-calculation if wallet is undefined
+            if (adminData && adminData.wallet === undefined) {
+                triggerWalletCalculation();
             }
         }
-    }, [managementTeam, allMovies, setState, selectedAdminName]);
+    }, [managementTeam, allMovies, setState, selectedAdminName, adminProfile?.name]);
 
     const handleAdminChange = (name: string) => {
         setSelectedAdminName(name);
