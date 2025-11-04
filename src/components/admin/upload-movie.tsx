@@ -43,7 +43,7 @@ import {
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
-
+import { useAuth } from '@/hooks/use-auth';
 
 type FormData = Partial<Movie> & {
     tagsString?: string;
@@ -85,6 +85,7 @@ const initialFormState: FormData = {
   partNumber: 0,
 };
 
+const topLevelRoles = ['Regulator', 'Co-Founder'];
 
 function DownloadLinkEditor({
     index,
@@ -182,6 +183,7 @@ export default function UploadMovie() {
     movies: state.allMovies,
     startCoinAnimation: state.startCoinAnimation,
   }));
+  const { adminProfile } = useAuth();
   const [isPending, startTransition] = useTransition();
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
@@ -205,6 +207,20 @@ export default function UploadMovie() {
     if (movieId) {
       const movieToEdit = movies.find(m => m.id === movieId);
       if (movieToEdit) {
+        // Permission check
+        const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
+        const isOwner = movieToEdit.uploadedBy === adminProfile?.name;
+
+        if (!isTopLevelAdmin && !isOwner) {
+            toast({
+                variant: 'destructive',
+                title: 'Permission Denied',
+                description: "You don't have permission to edit this movie.",
+            });
+            router.replace('/admin/movie-list');
+            return;
+        }
+
         setFormData({
             ...initialFormState, // Ensure all fields are present
             ...movieToEdit,
@@ -218,7 +234,7 @@ export default function UploadMovie() {
     } else {
       resetForm();
     }
-  }, [searchParams, movies]);
+  }, [searchParams, movies, adminProfile, router, toast]);
 
   const resetForm = () => {
     setFormData(initialFormState);

@@ -25,6 +25,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
+import { useAuth } from '@/hooks/use-auth';
+
+const topLevelRoles = ['Regulator', 'Co-Founder'];
 
 export default function MovieList() {
   const { toast } = useToast();
@@ -34,12 +37,15 @@ export default function MovieList() {
   }));
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { adminProfile } = useAuth();
 
   const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
+
   const handleDelete = () => {
-    if (!movieToDelete) return;
+    if (!movieToDelete || !isTopLevelAdmin) return;
     
     startTransition(async () => {
       try {
@@ -61,7 +67,15 @@ export default function MovieList() {
   }
 
   const handleEdit = (movie: Movie) => {
-    router.push(`/admin/upload-movie?id=${movie.id}`);
+    if (isTopLevelAdmin || movie.uploadedBy === adminProfile?.name) {
+      router.push(`/admin/upload-movie?id=${movie.id}`);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Permission Denied',
+        description: 'You can only edit movies you have uploaded.',
+      });
+    }
   };
 
   const handleToggleFeatured = (movie: Movie) => {
@@ -143,25 +157,36 @@ export default function MovieList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMovies.map((movie, index) => (
-                  <TableRow key={`${movie.id}-${index}`}>
-                    <TableCell className="font-medium">{movie.title}</TableCell>
-                    <TableCell>{movie.year}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
-                        {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredMovies.map((movie, index) => {
+                  const canEdit = isTopLevelAdmin || movie.uploadedBy === adminProfile?.name;
+                  const canDelete = isTopLevelAdmin;
+                  
+                  return (
+                    <TableRow key={`${movie.id}-${index}`}>
+                      <TableCell className="font-medium">{movie.title}</TableCell>
+                      <TableCell>{movie.year}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                        {isTopLevelAdmin && (
+                           <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
+                            {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
+                          </Button>
+                        )}
+                        {canEdit && (
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </ScrollArea>
