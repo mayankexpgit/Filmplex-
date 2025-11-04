@@ -20,7 +20,7 @@ import {
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
-import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore } from 'date-fns';
 
 
 // --- Admin Credentials ---
@@ -265,11 +265,11 @@ export const fetchDownloadAnalytics = async (): Promise<DownloadRecord[]> => {
 
 const hasValidLinks = (movie: Movie): boolean => {
     if (movie.contentType === 'movie' && movie.downloadLinks) {
-        return movie.downloadLinks.some(l => l.url.trim() !== '');
+        return movie.downloadLinks.some(l => l && l.url && l.url.trim() !== '');
     }
     if (movie.contentType === 'series') {
-        const hasEpisodeLinks = movie.episodes?.some(ep => ep.downloadLinks.some(l => l.url.trim() !== ''));
-        const hasSeasonLinks = movie.seasonDownloadLinks?.some(l => l.url.trim() !== '');
+        const hasEpisodeLinks = movie.episodes?.some(ep => ep.downloadLinks.some(l => l && l.url && l.url.trim() !== ''));
+        const hasSeasonLinks = movie.seasonDownloadLinks?.some(l => l && l.url && l.url.trim() !== '');
         return !!(hasEpisodeLinks || hasSeasonLinks);
     }
     return false;
@@ -277,27 +277,29 @@ const hasValidLinks = (movie: Movie): boolean => {
 
 const getLinkCount = (movie: Movie): number => {
     if (movie.contentType === 'movie') {
-        return movie.downloadLinks?.filter(l => l.url.trim() !== '').length || 0;
+        return movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
     }
     if (movie.contentType === 'series') {
-        const episodeLinks = movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l.url.trim() !== '').length || 0), 0) || 0;
-        const seasonLinks = movie.seasonDownloadLinks?.filter(l => l.url.trim() !== '').length || 0;
+        const episodeLinks = movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
+        const seasonLinks = movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
         return episodeLinks + seasonLinks;
     }
     return 0;
 }
 
-const calculateEarnings = (movie: Movie, isLegacy: boolean): number => {
-    if (!hasValidLinks(movie)) {
+const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number => {
+    if (!hasValidLinks(movie) || !movie.createdAt) {
         return 0;
     }
+    
+    const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
 
     if (isLegacy) {
         // Flat rate of ₹0.20 for any legacy upload with at least one valid link.
         return 0.20;
     }
 
-    // New rule calculation for uploads after the wallet feature date.
+    // New rule calculation for uploads on or after the wallet feature date.
     const linkCount = getLinkCount(movie);
     if (movie.contentType === 'movie') {
         const earnings = Math.floor(linkCount / 2) * 0.15;
@@ -320,8 +322,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
 
         memberMovies.forEach(movie => {
             const movieDate = parseISO(movie.createdAt!);
-            const isLegacy = movieDate < walletCalculationDate;
-            const earnings = calculateEarnings(movie, isLegacy);
+            const earnings = calculateEarnings(movie, walletCalculationDate);
             
             total += earnings;
             if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
