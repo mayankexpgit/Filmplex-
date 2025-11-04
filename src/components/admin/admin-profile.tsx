@@ -603,23 +603,19 @@ export default function AdminProfile() {
 
     useEffect(() => {
         const triggerWalletCalculation = async () => {
-            if (isTopLevelAdmin && managementTeam.length > 0 && allMovies.length > 0) {
-                 // Check if wallets are already calculated for the current state to avoid re-triggering
-                const currentAdminInState = managementTeam.find(m => m.name === adminProfile.name);
-                if (!currentAdminInState?.wallet) {
-                    setIsCalculating(true);
-                    try {
-                        await calculateAllWallets(managementTeam, allMovies);
-                    } catch (error) {
-                        console.error("Wallet calculation failed:", error);
-                    } finally {
-                        setIsCalculating(false);
-                    }
+            if (managementTeam.length > 0 && allMovies.length > 0) {
+                setIsCalculating(true);
+                try {
+                    await calculateAllWallets(managementTeam, allMovies);
+                } catch (error) {
+                    console.error("Wallet calculation failed:", error);
+                } finally {
+                    setIsCalculating(false);
                 }
             }
         };
         triggerWalletCalculation();
-    }, [isTopLevelAdmin, managementTeam, allMovies, adminProfile]);
+    }, [managementTeam, allMovies]);
 
 
     const handleAdminChange = (name: string) => {
