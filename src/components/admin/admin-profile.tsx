@@ -344,7 +344,7 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                                 <ul className="space-y-2 text-sm text-muted-foreground pl-4">
                                      <li className="flex items-start gap-2">
                                         <Archive className="h-4 w-4 mt-1 text-primary"/>
-                                        <span>A flat rate of ₹0.20 for every movie or series with at least one valid download link.</span>
+                                        <span>A flat rate of ₹0.50 for every movie or series with at least one valid download link.</span>
                                     </li>
                                 </ul>
                             </div>

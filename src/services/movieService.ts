@@ -295,8 +295,8 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
     const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
 
     if (isLegacy) {
-        // Flat rate of ₹0.20 for any legacy upload with at least one valid link.
-        return 0.20;
+        // Flat rate of ₹0.50 for any legacy upload with at least one valid link.
+        return 0.50;
     }
 
     // New rule calculation for uploads on or after the wallet feature date.
