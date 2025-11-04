@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,11 @@ export default function GetAnythingManager() {
   const { requests } = useMovieStore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+
+  // Sort requests by timestamp so newest appear first
+  const sortedRequests = useMemo(() => {
+    return [...requests].sort((a, b) => parseISO(b.timestamp).getTime() - parseISO(a.timestamp).getTime());
+  }, [requests]);
 
   const handleStatusChange = (id: string, status: UserRequest['status']) => {
     startTransition(async () => {
@@ -80,9 +85,9 @@ export default function GetAnythingManager() {
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[60vh] pr-4">
-          {requests.length > 0 ? (
+          {sortedRequests.length > 0 ? (
             <div className="space-y-4">
-              {requests.map((item) => (
+              {sortedRequests.map((item) => (
                 <div key={item.id} className="p-4 bg-secondary rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-4">

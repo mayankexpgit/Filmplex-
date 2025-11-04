@@ -160,8 +160,10 @@ export const fetchRequests = async (): Promise<UserRequest[]> => {
     const requestsCollection = collection(db, 'requests');
     const q = query(requestsCollection, orderBy('timestamp', 'desc'));
     const snapshot = await getDocs(q);
+    // Correctly map over snapshot.docs
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserRequest));
 }
+
 
 export const addRequest = async (request: Omit<UserRequest, 'id'>): Promise<string> => {
     const requestsCollection = collection(db, 'requests');
