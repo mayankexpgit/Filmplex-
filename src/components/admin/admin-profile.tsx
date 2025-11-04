@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter, isBefore } from 'date-fns';
 import { Badge } from '../ui/badge';
 import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee, HelpCircle, Film, Tv, TrendingDown, BookCheck, TimerOff, CircleDollarSign } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
@@ -29,6 +29,53 @@ const getDisplayName = (fullName: string) => {
     }
     return fullName;
 }
+
+const hasValidLinks = (movie: Movie): boolean => {
+    if (movie.contentType === 'movie' && movie.downloadLinks) {
+        return movie.downloadLinks.some(l => l && l.url && l.url.trim() !== '');
+    }
+    if (movie.contentType === 'series') {
+        const hasEpisodeLinks = movie.episodes?.some(ep => ep.downloadLinks.some(l => l && l.url && l.url.trim() !== ''));
+        const hasSeasonLinks = movie.seasonDownloadLinks?.some(l => l && l.url && l.url.trim() !== '');
+        return !!(hasEpisodeLinks || hasSeasonLinks);
+    }
+    return false;
+};
+
+const getLinkCount = (movie: Movie): number => {
+    if (movie.contentType === 'movie') {
+        return movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
+    }
+    if (movie.contentType === 'series') {
+        const episodeLinks = movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
+        const seasonLinks = movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
+        return episodeLinks + seasonLinks;
+    }
+    return 0;
+};
+
+
+const calculateMovieEarning = (movie: Movie): number => {
+    if (!hasValidLinks(movie) || !movie.createdAt) {
+        return 0;
+    }
+    
+    const walletCalculationDate = new Date('2025-11-04T00:00:00.000Z');
+    const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
+
+    if (isLegacy) {
+        return 0.50;
+    }
+
+    // New upload logic
+    const linkCount = getLinkCount(movie);
+    if (movie.contentType === 'movie') {
+        const earnings = Math.floor(linkCount / 2) * 0.15;
+        return Math.min(earnings, 0.40);
+    } else { // series
+        return Math.floor(linkCount / 2) * 0.30;
+    }
+};
 
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
@@ -553,11 +600,24 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
                     <CardContent>
                         <ScrollArea className="h-[300px]">
                             <Table>
-                                <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Title</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead className="text-right">Earn</TableHead>
+                                    </TableRow>
+                                </TableHeader>
                                 <TableBody>
                                     {completedMovies.length > 0 ? completedMovies.map((movie, index) => (
-                                        <TableRow key={`${movie.id}-${index}`}><TableCell>{movie.title}</TableCell><TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PPP') : 'N/A'}</TableCell></TableRow>
-                                    )) : <TableRow key="no-completed-uploads"><TableCell colSpan={2} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
+                                        <TableRow key={`${movie.id}-${index}`}>
+                                            <TableCell>{movie.title}</TableCell>
+                                            <TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PP') : 'N/A'}</TableCell>
+                                            <TableCell className="text-right flex items-center justify-end gap-1">
+                                                <IndianRupee className="h-4 w-4" />
+                                                {calculateMovieEarning(movie).toFixed(2)}
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : <TableRow key="no-completed-uploads"><TableCell colSpan={3} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
                                 </TableBody>
                             </Table>
                         </ScrollArea>
@@ -614,6 +674,7 @@ export default function AdminProfile() {
                 }
             }
         };
+        // Always trigger calculation when movies or team data changes.
         triggerWalletCalculation();
     }, [managementTeam, allMovies]);
 

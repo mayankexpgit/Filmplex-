@@ -63,6 +63,7 @@ export interface Settlement {
   month: string; // e.g., "2025-11"
   status: 'pending' | 'credited' | 'penalty';
   amount: number;
+  settledAt?: string; // ISO string, marks when the settlement occurred.
 }
 
 export interface ManagementMember {

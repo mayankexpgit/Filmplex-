@@ -287,11 +287,12 @@ const getLinkCount = (movie: Movie): number => {
     return 0;
 }
 
-const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number => {
+const calculateEarning = (movie: Movie): number => {
     if (!hasValidLinks(movie) || !movie.createdAt) {
         return 0;
     }
     
+    const walletCalculationDate = new Date('2025-11-04T00:00:00.000Z');
     const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
 
     if (isLegacy) {
@@ -309,7 +310,6 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
 };
 
 export const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
-    const walletCalculationDate = new Date('2025-11-04T00:00:00.000Z');
     const now = new Date();
     const currentMonthStr = formatDate(now, 'yyyy-MM');
 
@@ -321,15 +321,15 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
         let weekly = 0;
 
         memberMovies.forEach(movie => {
-            const movieDate = parseISO(movie.createdAt!);
-            const earnings = calculateEarnings(movie, walletCalculationDate);
-            
+            const earnings = calculateEarning(movie);
             totalEarnings += earnings;
-            if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
-                currentMonthlyEarnings += earnings;
-            }
+            
+            const movieDate = parseISO(movie.createdAt!);
             if (isWithinInterval(movieDate, { start: startOfWeek(now), end: endOfWeek(now) })) {
                 weekly += earnings;
+            }
+            if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
+                currentMonthlyEarnings += earnings;
             }
         });
 
@@ -354,7 +354,15 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
 
         let finalMonthlyDisplay = currentMonthlyEarnings;
         if (currentMonthSettlement.status === 'credited' || currentMonthSettlement.status === 'penalty') {
-            finalMonthlyDisplay = 0;
+            // Find all uploads after the settlement was marked.
+            const settlementDate = currentMonthSettlement.settledAt ? parseISO(currentMonthSettlement.settledAt) : new Date(0);
+            const earningsAfterSettlement = memberMovies
+                .filter(movie => {
+                    const movieDate = parseISO(movie.createdAt!);
+                    return isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) }) && isAfter(movieDate, settlementDate);
+                })
+                .reduce((sum, movie) => sum + calculateEarning(movie), 0);
+            finalMonthlyDisplay = earningsAfterSettlement;
         }
 
         const wallet: Wallet = {
@@ -378,4 +386,36 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
     console.log("Admin wallets and settlements updated in Firestore.");
     
     return updatedTeam;
+};
+
+// This function needs to be exported to be used in the store
+export const updateSettlementStatus = async (memberId: string, month: string, status: 'pending' | 'credited' | 'penalty'): Promise<void> => {
+    const memberDoc = doc(db, 'management', memberId);
+    const memberSnap = await getDoc(memberDoc);
+    if (!memberSnap.exists()) return;
+
+    const member = memberSnap.data() as ManagementMember;
+    const settlements = [...(member.settlements || [])];
+    const settlementIndex = settlements.findIndex(s => s.month === month);
+
+    if (settlementIndex > -1) {
+        settlements[settlementIndex].status = status;
+        // Mark the time of settlement to calculate future earnings correctly
+        if (status === 'credited' || status === 'penalty') {
+            settlements[settlementIndex].settledAt = new Date().toISOString();
+        } else {
+            // If reverting to pending, remove the settledAt timestamp
+            delete settlements[settlementIndex].settledAt;
+        }
+    } else if (status !== 'pending') {
+        // This case is unlikely but handles creating a settlement if it doesn't exist.
+        settlements.push({
+            month,
+            status,
+            amount: 0, // Amount should be recalculated, but we set it to 0 for now.
+            settledAt: new Date().toISOString()
+        });
+    }
+
+    await updateDoc(memberDoc, { settlements });
 };

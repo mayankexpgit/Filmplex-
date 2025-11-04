@@ -28,6 +28,7 @@ import {
   deleteManagementMember as dbDeleteManagementMember,
   updateManagementMember as dbUpdateManagementMember,
   calculateAllWallets as dbCalculateAllWallets,
+  updateSettlementStatus as dbUpdateSettlementStatus,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
 import { getAdminName } from '@/hooks/use-auth';
@@ -587,20 +588,21 @@ const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): P
 };
 
 const updateSettlementStatus = async (memberId: string, month: string, status: Settlement['status']): Promise<void> => {
-    const { managementTeam } = useMovieStore.getState();
-    const member = managementTeam.find(m => m.id === memberId);
-    if (!member) return;
-
-    const settlements = (member.settlements || []).map(s => 
-        s.month === month ? { ...s, status } : s
-    );
-
-    await dbUpdateManagementMember(memberId, { settlements });
-    useMovieStore.setState(state => ({
-        managementTeam: state.managementTeam.map(m => m.id === memberId ? { ...m, settlements } : m),
-    }));
-    await addSecurityLogEntry(`Updated ${member.name}'s settlement for ${month} to ${status}.`);
+    await dbUpdateSettlementStatus(memberId, month, status);
+    
+    // After updating in DB, refetch the single member and then recalculate all wallets to update the state
+    const { managementTeam, allMovies } = useMovieStore.getState();
+    const memberDoc = await dbFetchManagementTeam().then(team => team.find(m => m.id === memberId));
+    
+    if (memberDoc) {
+        const updatedTeam = managementTeam.map(m => m.id === memberId ? memberDoc : m);
+        await calculateAllWallets(updatedTeam, allMovies); // This will update the store
+    }
+    
+    const memberName = memberDoc?.name || 'Unknown Admin';
+    await addSecurityLogEntry(`Updated ${memberName}'s settlement for ${month} to ${status}.`);
 }
+
 
 export { 
     useMovieStore, 
