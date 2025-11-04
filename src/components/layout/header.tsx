@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -9,7 +10,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles, AlertCircle, History, GitPullRequest } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles, AlertCircle, History, Gift } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -467,7 +468,7 @@ function RequestZonePanel() {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <GitPullRequest className="mr-2 h-4 w-4" />
+          <Gift className="mr-2 h-4 w-4" />
           Request Zone
         </DropdownMenuItem>
       </SheetTrigger>

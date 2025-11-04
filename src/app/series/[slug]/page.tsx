@@ -163,6 +163,26 @@ const FacebookIcon = () => (
   </svg>
 );
 
+const InstagramIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
+)
+
+const WhatsAppIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+        <path d="M16.75 13.96c.25.13.43.2.5.28.08.08.14.18.18.28.04.1.06.2.04.3s-.04.2-.08.28c-.04.1-.1.18-.18.25a.87.87 0 0 1-.43.18H16.3c-.1 0-.2 0-.3-.03s-.2-.04-.3-.08a5.53 5.53 0 0 1-1.3-1c-.33-.3-.6-.58-.8-.85s-.38-.5-.5-.7c-.14-.2-.2-.4-.2-.58 0-.1.03-.2.08-.3a.5.5 0 0 1 .13-.1.44.44 0 0 1 .15-.05.42.42 0 0 1 .18.03c.05.03.1.05.13.08s.05.05.08.08c.03.03.04.04.05.05s.03.03.03.03a.2.2 0 0 1 .03.05c.03.08.05.15.08.23s.05.15.05.23c0 .1-.03.2-.08.3s-.1.18-.18.25a.4.4 0 0 1-.2.08c-.08.03-.18.03-.28.03a.75.75 0 0 1-.2-.03c-.08-.03-.15-.05-.23-.08s-.15-.08-.23-.13a2.7 2.7 0 0 1-.4-.3 4.9 4.9 0 0 1-.8-.8 5.6 5.6 0 0 1-.8-1.3c-.03-.08-.05-.15-.05-.23s0-.15.03-.23a.8.8 0 0 1 .1-.25.56.56 0 0 1 .18-.18.7.7 0 0 1 .2-.1.9.9 0 0 1 .3-.03h.2a1 1 0 0 1 .3.05c.1.03.2.1.3.15s.15.1.2.15l.08.05.05.03c.03.03.04.04.05.05s.03.03.03.03a.2.2 0 0 0 .03.05c.03.08.05.15.08.23s.05.15.05.23c0 .1-.03.2-.08.3s-.1.18-.18.25a.4.4 0 0 1-.2.08c-.08.03-.18.03-.28.03s-.2-.03-.28-.05a.84.84 0 0 1-.2-.1l-.1-.08-1-1.3-1.6-2.2c-.2-.2-.3-.4-.4-.58s-.1-.3-.1-.4V10c0-.1.03-.2.08-.3a.5.5 0 0 1 .13-.1c.05-.03.1-.05.15-.05h.1c.05 0 .1 0 .15.03s.1.05.13.08l.08.08.05.05a.6.6 0 0 1 .08.15c.03.08.05.15.05.23v.1a.5.5 0 0 1-.03.15.4.4 0 0 1-.05.1.4.4 0 0 1-.1.1c-.03.03-.05.04-.08.05s-.05.03-.08.03a.2.2 0 0 1-.08.03.4.4 0 0 1-.1 0h-.1a.3.3 0 0 1-.15-.03.4.4 0 0 1-.1-.08.4.4 0 0 1-.05-.1.5.5 0 0 1-.03-.15c0-.05 0-.1.03-.15s.03-.1.05-.13a.3.3 0 0 1 .08-.1.3.3 0 0 1 .1-.05.3.3 0 0 1 .13-.03h.2c.1 0 .2 0 .3.03s.2.04.3.08a2.3 2.3 0 0 1 .8.8c.2.2.4.5.5.7a4.6 4.6 0 0 1 .5 1.2c.03.1.05.2.08.3s.03.2.03.3a.45.45 0 0 1 0 .3c0 .1-.03.2-.08.3s-.1.18-.18.25a.7.7 0 0 1-.25.18.9.9 0 0 1-.3.05h-.2c-.1 0-.2 0-.3-.03s-.2-.04-.3-.08l-1.3-1-2.2-1.6a1 1 0 0 1-.5-.8c0-.2.04-.3.13-.5.08-.1.2-.2.3-.3a2 2 0 0 1 .5-.3 2.8 2.8 0 0 1 1.2-.3h1.2c.5 0 .9.1 1.3.4a2.2 2.2 0 0 1 .8.8c.2.3.4.6.5.9.1.3.2.7.2 1v.3c-.1.4-.2.8-.4 1a2.8 2.8 0 0 1-.8 1.3 3.5 3.5 0 0 1-1.3.8 4.2 4.2 0 0 1-1.7.3h-.2c-.2 0-.3 0-.5-.03s-.3-.04-.5-.08a5.5 5.5 0 0 1-1.3-1c-.3-.3-.6-.6-.8-.9a6.3 6.3 0 0 1-.8-1.3 6.6 6.6 0 0 1-.4-1.6V10c0-.5.1-.9.4-1.3.3-.4.6-.8 1-1.1a3.8 3.8 0 0 1 1.6-1 4.7 4.7 0 0 1 2-.4h.2c.8 0 1.5.1 2.2.4.7.3 1.3.7 1.8 1.2.5.5.9 1.1 1.2 1.8.3.7.4 1.4.4 2.2v.2c0 .8-.1 1.5-.4 2.2a4.7 4.7 0 0 1-1.2 1.8 4.7 4.7 0 0 1-1.8 1.2c-.7.3-1.4.4-2.2.4h-1.2c-.8 0-1.5-.1-2.2-.4a4.7 4.7 0 0 1-1.8-1.2 4.7 4.7 0 0 1-1.2-1.8A5 5 0 0 1 8 12.2v-.2c0-.8.1-1.5.4-2.2.3-.7.7-1.3 1.2-1.8s1.1-.9 1.8-1.2c.7-.3 1.4-.4 2.2-.4h.2c.2 0 .5.03.7.08.2.05.5.13.7.25.2.1.4.2.7.4a4.3 4.3 0 0 1 1.1.9c.3.3.6.7.8 1.1.2.4.3.8.3 1.3v.3c0 .5-.1.9-.3 1.3a3.1 3.1 0 0 1-1.9 1.9c-.3.1-.6.2-.9.2h-.3c-.3 0-.6-.04-.9-.13a2.4 2.4 0 0 1-.8-.4 2.7 2.7 0 0 1-.7-.7 3.6 3.6 0 0 1-.4-1V10c0-.1 0-.2.03-.3s.03-.2.05-.3a.9.9 0 0 1 .1-.25c.05-.08.1-.15.18-.2a.6.6 0 0 1 .4-.15.8.8 0 0 1 .3.05c.1.03.2.1.3.15s.15.1.2.15l.08.05.05.03c.03.03.04.04.05.05s.03.03.03.03a.2.2 0 0 0 .03.05c.03.08.05.15.08.23s.05.15.05.23c0 .1-.03.2-.08.3s-.1.18-.18.25a.4.4 0 0 1-.2.08c-.08.03-.18.03-.28.03s-.2-.03-.28-.05a.84.84 0 0 1-.2-.1l-.1-.08z" />
+    </svg>
+)
+
+const TelegramIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+        <path d="M22 2 2 9.2l7.1 2.9 2.9 7.1L22 2zM9.3 22l.5-4.9-2.3-2.3L9.3 22z" />
+        <path d="m11.1 13.3 2.3 2.3 4.9-.5-7.2-1.8z" />
+    </svg>
+)
 
 function SocialShare({ title, url }: { title: string, url: string }) {
     const text = `Check out "${title}" on FILMPLEX!`;
@@ -173,6 +193,7 @@ function SocialShare({ title, url }: { title: string, url: string }) {
         whatsapp: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`,
         telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+        instagram: `https://www.instagram.com/?url=${encodedUrl}`, // Instagram sharing is more limited
     };
 
     return (
@@ -182,19 +203,24 @@ function SocialShare({ title, url }: { title: string, url: string }) {
                 Share with Friends
             </h2>
             <div className="flex justify-center flex-wrap gap-4">
-                <Button asChild variant="outline" className="gap-2">
+                <Button asChild variant="outline" className="gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white">
                     <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer">
-                        <Send className="h-5 w-5 text-green-500" /> WhatsApp
+                        <WhatsAppIcon /> WhatsApp
                     </a>
                 </Button>
-                <Button asChild variant="outline" className="gap-2">
+                <Button asChild variant="outline" className="gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white">
                     <a href={shareLinks.telegram} target="_blank" rel="noopener noreferrer">
-                        <Send className="h-5 w-5 text-blue-500" /> Telegram
+                        <TelegramIcon /> Telegram
                     </a>
                 </Button>
-                 <Button asChild variant="outline" className="gap-2">
+                <Button asChild variant="outline" className="gap-2 bg-[#1877F2] hover:bg-[#166fe5] text-white">
                     <a href={shareLinks.facebook} target="_blank" rel="noopener noreferrer">
                         <FacebookIcon /> Facebook
+                    </a>
+                </Button>
+                <Button asChild variant="outline" className="gap-2 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
+                    <a href={shareLinks.instagram} target="_blank" rel="noopener noreferrer">
+                        <InstagramIcon /> Instagram
                     </a>
                 </Button>
             </div>
@@ -441,33 +467,6 @@ export default function SeriesDetailPage() {
           {pageUrl && <SocialShare title={series.title} url={pageUrl} />}
 
           <Separator className="my-8 w-full" />
-
-          {series.description && (
-            <section className="mb-8 w-full">
-              <h2 className="text-2xl font-bold mb-4 text-center text-foreground">Description</h2>
-              <div
-                className="prose prose-lg prose-invert max-w-none leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: series.description.replace(/\n/g, '<br />') }}
-              />
-            </section>
-          )}
-          
-          <Separator className="my-8 w-full" />
-          
-          <section className="w-full mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-center text-foreground">What's your reaction?</h2>
-              <div className="flex justify-center flex-wrap gap-4">
-                  <ReactionButton Icon={ThumbsUp} count={series.reactions?.like ?? 0} onClick={() => handleReactionClick('like')} disabled={hasReacted} />
-                  <ReactionButton Icon={Heart} count={series.reactions?.love ?? 0} onClick={() => handleReactionClick('love')} disabled={hasReacted} />
-                  <ReactionButton Icon={Smile} count={series.reactions?.haha ?? 0} onClick={() => handleReactionClick('haha')} disabled={hasReacted} />
-                  <ReactionButton Icon={SmilePlus} count={series.reactions?.wow ?? 0} onClick={() => handleReactionClick('wow')} disabled={hasReacted} />
-                  <ReactionButton Icon={Frown} count={series.reactions?.sad ?? 0} onClick={() => handleReactionClick('sad')} disabled={hasReacted} />
-                  <ReactionButton Icon={Angry} count={series.reactions?.angry ?? 0} onClick={() => handleReactionClick('angry')} disabled={hasReacted} />
-              </div>
-              {hasReacted && <p className="text-center text-sm text-primary mt-4">Thanks for your reaction!</p>}
-          </section>
-
-          <Separator className="my-8 w-full" />
           
           <section className="w-full max-w-3xl mx-auto text-foreground p-6 bg-card rounded-xl">
             <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
@@ -502,6 +501,21 @@ export default function SeriesDetailPage() {
                     </p>
                 </div>
             </div>
+          </section>
+
+          <Separator className="my-8 w-full" />
+          
+          <section className="w-full mb-8">
+              <h2 className="text-2xl font-bold mb-4 text-center text-foreground">What's your reaction?</h2>
+              <div className="flex justify-center flex-wrap gap-4">
+                  <ReactionButton Icon={ThumbsUp} count={series.reactions?.like ?? 0} onClick={() => handleReactionClick('like')} disabled={hasReacted} />
+                  <ReactionButton Icon={Heart} count={series.reactions?.love ?? 0} onClick={() => handleReactionClick('love')} disabled={hasReacted} />
+                  <ReactionButton Icon={Smile} count={series.reactions?.haha ?? 0} onClick={() => handleReactionClick('haha')} disabled={hasReacted} />
+                  <ReactionButton Icon={SmilePlus} count={series.reactions?.wow ?? 0} onClick={() => handleReactionClick('wow')} disabled={hasReacted} />
+                  <ReactionButton Icon={Frown} count={series.reactions?.sad ?? 0} onClick={() => handleReactionClick('sad')} disabled={hasReacted} />
+                  <ReactionButton Icon={Angry} count={series.reactions?.angry ?? 0} onClick={() => handleReactionClick('angry')} disabled={hasReacted} />
+              </div>
+              {hasReacted && <p className="text-center text-sm text-primary mt-4">Thanks for your reaction!</p>}
           </section>
 
           <Separator className="my-8 w-full" />
