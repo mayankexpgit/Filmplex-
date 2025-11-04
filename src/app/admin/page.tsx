@@ -120,13 +120,6 @@ const adminSections = [
     id: 'manage-comments',
   },
   {
-    title: 'Suggestions Box',
-    description: 'View user suggestions and requests.',
-    href: '/admin/suggestions-box',
-    icon: MessageCircle,
-    id: 'suggestions-box',
-  },
-  {
     title: 'Security Log',
     description: 'Track all admin activities.',
     href: '/admin/security-log',
@@ -150,9 +143,8 @@ const adminSections = [
 ];
 
 export default function AdminDashboardPage() {
-  const { suggestions, notifications } = useMovieStore();
+  const { notifications } = useMovieStore();
   const { adminProfile } = useAuth();
-  const suggestionCount = suggestions.length;
   const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && (t.status === 'active' || t.status === 'incompleted')).length || 0;
 
   return (
@@ -171,11 +163,6 @@ export default function AdminDashboardPage() {
                        {section.id === 'my-tasks' && activeTodoTasksCount > 0 && (
                         <Badge variant="destructive" className="animate-pulse">
                           {activeTodoTasksCount}
-                        </Badge>
-                      )}
-                      {section.id === 'suggestions-box' && suggestionCount > 0 && (
-                        <Badge variant="destructive" className="animate-pulse">
-                          {suggestionCount}
                         </Badge>
                       )}
                       {section.id === 'upcoming-releases' && notifications.length > 0 && (

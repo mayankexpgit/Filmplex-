@@ -24,12 +24,6 @@ service cloud.firestore {
       }
     }
     
-    // Suggestions can be created by anyone, but only read/deleted by an admin
-    match /suggestions/{suggestionId} {
-      allow create: if true;
-      allow read, delete: if isAdmin();
-    }
-    
     // All other collections are admin-only for all operations
     match /notifications/{docId} {
       allow read: if true;

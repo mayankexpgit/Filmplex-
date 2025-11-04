@@ -10,9 +10,6 @@ import {
   fetchMovies as dbFetchMovies,
   fetchContactInfo as dbFetchContactInfo,
   updateContactInfo as dbUpdateContactInfo,
-  fetchSuggestions as dbFetchSuggestions,
-  addSuggestion as dbAddSuggestion,
-  deleteSuggestion as dbDeleteSuggestion,
   fetchSecurityLogs as dbFetchSecurityLogs,
   addSecurityLog as dbAddSecurityLog,
   fetchNotifications as dbFetchNotifications,
@@ -43,13 +40,6 @@ export interface ContactInfo {
   whatsappNumber: string;
 }
 
-export interface Suggestion {
-  id: string;
-  movieName: string;
-  comment: string;
-  timestamp: string;
-}
-
 export interface SecurityLog {
   id: string;
   admin: string;
@@ -77,7 +67,6 @@ interface MovieState {
   
   // Admin Data
   contactInfo: ContactInfo;
-  suggestions: Suggestion[];
   securityLogs: SecurityLog[];
   notifications: Notification[];
   allComments: Comment[];
@@ -123,7 +112,6 @@ const useMovieStore = create<MovieState>((set, get) => ({
   selectedQuality: 'all',
   currentPage: 1,
   contactInfo: { telegramUrl: '', whatsappUrl: '', instagramUrl: '', email: '', whatsappNumber: '' },
-  suggestions: [],
   securityLogs: [],
   notifications: [],
   allComments: [],
@@ -197,12 +185,10 @@ const useMovieStore = create<MovieState>((set, get) => ({
       };
       
       if (isAdmin) {
-        const [suggestions, securityLogs, allComments] = await Promise.all([
-          dbFetchSuggestions(),
+        const [securityLogs, allComments] = await Promise.all([
           dbFetchSecurityLogs(),
           dbFetchAllComments(allMovies),
         ]);
-        stateUpdate.suggestions = suggestions;
         stateUpdate.securityLogs = securityLogs;
         stateUpdate.allComments = allComments;
         // This is a critical step that must be done for admins
@@ -321,27 +307,6 @@ const updateContactInfo = async (info: ContactInfo): Promise<void> => {
   await dbUpdateContactInfo(info);
   useMovieStore.setState({ contactInfo: info });
   await addSecurityLogEntry('Updated Help Center Info');
-};
-
-const submitSuggestion = async (movieName: string, comment: string): Promise<void> => {
-  const newSuggestionData = {
-    movieName,
-    comment,
-    timestamp: new Date().toISOString(),
-  };
-  const id = await dbAddSuggestion(newSuggestionData);
-  useMovieStore.setState(state => ({
-    suggestions: [{ id, ...newSuggestionData }, ...state.suggestions],
-  }));
-  await addSecurityLogEntry(`New suggestion received for: "${movieName}"`);
-};
-
-const deleteSuggestion = async (id: string): Promise<void> => {
-  await dbDeleteSuggestion(id);
-  useMovieStore.setState((state) => ({
-    suggestions: state.suggestions.filter((s) => s.id !== id)
-  }));
-  await addSecurityLogEntry(`Deleted Suggestion ID: ${id}`);
 };
 
 const addNotification = async (notificationData: Omit<Notification, 'id'>): Promise<void> => {
@@ -611,8 +576,6 @@ export {
     updateMovie,
     deleteMovie,
     updateContactInfo,
-    submitSuggestion,
-    deleteSuggestion,
     addNotification,
     deleteNotification,
     fetchCommentsForMovie,

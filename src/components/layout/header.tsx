@@ -24,7 +24,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
-import SuggestionForm from '../suggestion-form';
 import type { ManagementMember } from '@/lib/data';
 import Changelog from '../changelog';
 import NotificationInitializer from '../notification-initializer';
@@ -222,9 +221,6 @@ function ManagementPanel() {
                                                 <h3 className="font-semibold">{getDisplayName(member.name)}</h3>
                                                 <p className="text-sm text-muted-foreground">{member.info}</p>
                                             </div>
-                                            <Button onClick={() => setMessagingMember(member)}>
-                                                <Send className="mr-2 h-4 w-4" /> Message
-                                            </Button>
                                         </div>
                                     </div>
                                 ))
@@ -233,20 +229,6 @@ function ManagementPanel() {
                             )}
                         </div>
                     </ScrollArea>
-                </SheetContent>
-            </Sheet>
-             <Sheet open={!!messagingMember} onOpenChange={(isOpen) => !isOpen && setMessagingMember(null)}>
-                <SheetContent className="w-[400px]">
-                    <SheetHeader>
-                    <SheetTitle>Contact {messagingMember ? getDisplayName(messagingMember.name) : ''}</SheetTitle>
-                    <SheetDescription>
-                        Your message will be sent directly to {messagingMember ? getDisplayName(messagingMember.name) : 'the admin'}.
-                    </SheetDescription>
-                    </SheetHeader>
-                    <SuggestionForm 
-                        onSubmitted={() => setMessagingMember(null)}
-                        recipient={messagingMember} 
-                    />
                 </SheetContent>
             </Sheet>
         </>
@@ -292,29 +274,6 @@ function HelpCenterPanel() {
   )
 }
 
-function SuggestionPanel() {
-  const [open, setOpen] = useState(false);
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <MessageCircle className="mr-2 h-4 w-4" />
-          Suggestion
-        </DropdownMenuItem>
-      </SheetTrigger>
-      <SheetContent className="w-[400px]">
-        <SheetHeader>
-          <SheetTitle>Make a Suggestion</SheetTitle>
-          <SheetDescription>
-            Want to see a specific movie or series? Let us know!
-          </SheetDescription>
-        </SheetHeader>
-        <SuggestionForm onSubmitted={() => setOpen(false)} />
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 function ChangelogPanel() {
   return (
     <Sheet>
@@ -354,7 +313,6 @@ export function Header() {
             <DropdownMenuSeparator />
             <ChangelogPanel />
             <HelpCenterPanel />
-            <SuggestionPanel />
           </DropdownMenuContent>
         </DropdownMenu>
 

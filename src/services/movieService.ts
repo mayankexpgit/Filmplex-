@@ -19,7 +19,7 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet, Settlement } from '@/lib/data';
-import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
+import type { ContactInfo, SecurityLog, AdminCredentials } from '@/store/movieStore';
 import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore, format as formatDate, isAfter } from 'date-fns';
 
 
@@ -188,27 +188,6 @@ export const deleteManagementMember = async (id: string): Promise<void> => {
     const memberDoc = doc(db, 'management', id);
     await deleteDoc(memberDoc);
 };
-
-
-// --- Suggestions Functions ---
-
-export const fetchSuggestions = async (): Promise<Suggestion[]> => {
-    const suggestionsCollection = collection(db, 'suggestions');
-    const q = query(suggestionsCollection, orderBy('timestamp', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Suggestion));
-}
-
-export const addSuggestion = async (suggestion: Omit<Suggestion, 'id'>): Promise<string> => {
-    const suggestionsCollection = collection(db, 'suggestions');
-    const docRef = await addDoc(suggestionsCollection, suggestion);
-    return docRef.id;
-};
-
-export const deleteSuggestion = async (id: string): Promise<void> => {
-    const suggestionDoc = doc(db, 'suggestions', id);
-    await deleteDoc(suggestionDoc);
-}
 
 // --- Security Log Functions ---
 
@@ -399,19 +378,17 @@ export const updateSettlementStatus = async (memberId: string, month: string, st
 
     if (settlementIndex > -1) {
         settlements[settlementIndex].status = status;
-        if (status === 'credited' || status === 'penalty') {
-            // Only set the settledAt timestamp if it doesn't already exist for this settlement action
-            if (!settlements[settlementIndex].settledAt) {
-                 settlements[settlementIndex].settledAt = new Date().toISOString();
-            }
-        } else { // Reverting to 'pending'
+        // Only set the settledAt timestamp if it doesn't already exist for this settlement action
+        if ((status === 'credited' || status === 'penalty') && !settlements[settlementIndex].settledAt) {
+             settlements[settlementIndex].settledAt = new Date().toISOString();
+        } else if (status === 'pending') { // Reverting to 'pending'
             delete settlements[settlementIndex].settledAt;
         }
     } else if (status !== 'pending') {
         settlements.push({
             month,
             status,
-            amount: 0,
+            amount: 0, // This is a new entry, so amount is 0 until next calculation
             settledAt: new Date().toISOString()
         });
     }
