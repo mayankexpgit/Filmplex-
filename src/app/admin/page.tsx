@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell, GitPullRequest } from 'lucide-react';
+import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell, Gift } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -95,7 +95,7 @@ const adminSections = [
     title: 'Get Anything',
     description: 'Manage user content requests.',
     href: '/admin/get-anything',
-    icon: GitPullRequest,
+    icon: Gift,
     id: 'get-anything',
   },
   {
