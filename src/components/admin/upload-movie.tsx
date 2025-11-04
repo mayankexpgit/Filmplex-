@@ -48,6 +48,8 @@ import { cn } from '@/lib/utils';
 type FormData = Partial<Movie> & {
     tagsString?: string;
     contentType: 'movie' | 'series';
+    seasonNumber?: number;
+    partNumber?: number;
 };
 
 const qualityOptions = ['4K', '2160p', '1080p', '720p', '480p'];
@@ -79,6 +81,8 @@ const initialFormState: FormData = {
   downloadLinks: [{ quality: '1080p', url: '', size: '' }],
   episodes: [],
   seasonDownloadLinks: [],
+  seasonNumber: 1,
+  partNumber: 0,
 };
 
 
@@ -221,6 +225,22 @@ export default function UploadMovie() {
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  useEffect(() => {
+    if (formData.contentType === 'series') {
+        const { title, seasonNumber, partNumber } = formData;
+        if (title) {
+            let newCardInfo = `${title}`;
+            if (seasonNumber) {
+                newCardInfo += ` - Season ${String(seasonNumber).padStart(2, '0')}`;
+            }
+            if (partNumber) {
+                newCardInfo += ` (Part ${String(partNumber).padStart(2, '0')})`;
+            }
+            setFormData(prev => ({...prev, cardInfoText: newCardInfo}));
+        }
+    }
+  }, [formData.title, formData.seasonNumber, formData.partNumber, formData.contentType]);
 
   // Generic link changer
   const handleLinkChange = (links: DownloadLink[], index: number, field: keyof DownloadLink, value: string): DownloadLink[] => {
@@ -508,6 +528,47 @@ export default function UploadMovie() {
                       </Button>
                   </div>
                 </div>
+                
+                 {formData.contentType === 'series' && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="season-number">Season Number</Label>
+                            <Select 
+                                value={String(formData.seasonNumber || 1)} 
+                                onValueChange={(val) => handleInputChange('seasonNumber', Number(val))}
+                                disabled={isFormDisabled}
+                            >
+                                <SelectTrigger id="season-number">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                                        <SelectItem key={num} value={String(num)}>Season {num}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="part-number">Part Number (Optional)</Label>
+                            <Select 
+                                value={String(formData.partNumber || 0)}
+                                onValueChange={(val) => handleInputChange('partNumber', Number(val))}
+                                disabled={isFormDisabled}
+                            >
+                                <SelectTrigger id="part-number">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="0">None</SelectItem>
+                                    {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                                        <SelectItem key={num} value={String(num)}>Part {num}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                 )}
+
                 <div className="space-y-2">
                   <Label htmlFor="card-info-text">Card Info Text</Label>
                   <Input id="card-info-text" value={formData.cardInfoText || ''} onChange={(e) => handleInputChange('cardInfoText', e.target.value)} disabled={isFormDisabled} placeholder="e.g. 2024 • Hindi • IMDb 8.5" />
