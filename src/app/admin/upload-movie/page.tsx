@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -13,11 +14,11 @@ import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
 import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '../ui/textarea';
-import MovieDetailPreview from '../admin/movie-detail-preview';
-import { ScrollArea } from '../ui/scroll-area';
-import { Separator } from '../ui/separator';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import MovieDetailPreview from '@/components/admin/movie-detail-preview';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { searchMoviesOnTMDb, type TMDbSearchResult } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
@@ -40,12 +41,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from '../ui/badge';
-import { Switch } from '../ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
-type FormData = Omit<Partial<Movie>, 'id' | 'tags'> & {
+type FormData = Omit<Partial<Movie>, 'tags'> & {
     id?: string; // ID is optional, only present when editing
     tagsString?: string;
     contentType: 'movie' | 'series';
