@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target, ListChecks, Wallet } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target, ListChecks } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -61,10 +62,10 @@ export default function AdminLayout({
             <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
           <div className="flex items-center gap-4">
-             <Button variant="outline" asChild id="admin-wallet-button">
+             <Button variant="outline" asChild id="admin-wallet-button" className="gap-2">
               <Link href="/admin/profile">
-                <Wallet className="mr-2 h-4 w-4" />
-                My Wallet
+                <Image src="/rupee-coin.png" alt="Wallet" width={24} height={24} />
+                <span className="font-bold">{adminProfile?.wallet?.total?.toFixed(2) || '0.00'}</span>
               </Link>
             </Button>
             <Button variant="outline" asChild>
