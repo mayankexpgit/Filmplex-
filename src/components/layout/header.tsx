@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -21,7 +20,7 @@ import {
   SheetFooter,
   SheetClose
 } from '@/components/ui/sheet';
-import { useMovieStore, submitRequest } from '@/store/movieStore';
+import { useMovieStore, submitRequest, fetchRequests } from '@/store/movieStore';
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
@@ -375,9 +374,39 @@ function RequestForm({ onSubmitted }: { onSubmitted: () => void }) {
 
 function RequestHistory() {
   const [history, setHistory] = useState<UserRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const syncHistory = async () => {
+      setIsLoading(true);
+      const localHistory: UserRequest[] = JSON.parse(localStorage.getItem('request_history') || '[]');
+      if (localHistory.length === 0) {
+          setHistory([]);
+          setIsLoading(false);
+          return;
+      }
+      
+      try {
+          const allServerRequests = await fetchRequests();
+          const serverRequestsMap = new Map(allServerRequests.map(req => [req.id, req]));
+          
+          const updatedHistory = localHistory.map(localReq => {
+              const serverReq = serverRequestsMap.get(localReq.id);
+              return serverReq ? { ...localReq, status: serverReq.status } : localReq;
+          });
+
+          localStorage.setItem('request_history', JSON.stringify(updatedHistory));
+          setHistory(updatedHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+
+      } catch (error) {
+          console.error("Failed to sync request history:", error);
+          setHistory(localHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
 
   useEffect(() => {
-    // This effect runs on the client and can access localStorage
     const savedHistory = JSON.parse(localStorage.getItem('request_history') || '[]');
     setHistory(savedHistory.sort((a: UserRequest, b: UserRequest) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
   }, []);
@@ -398,10 +427,11 @@ function RequestHistory() {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => open && syncHistory()}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="w-full">
-          <History className="mr-2 h-4 w-4" /> Request History
+           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <History className="mr-2 h-4 w-4" />}
+           Request History
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80">
