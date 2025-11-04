@@ -178,7 +178,10 @@ function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddL
 
 export default function UploadMovie() {
   const { toast } = useToast();
-  const movies = useMovieStore((state) => state.allMovies);
+  const { movies, startCoinAnimation } = useMovieStore(state => ({
+    movies: state.allMovies,
+    startCoinAnimation: state.startCoinAnimation,
+  }));
   const [isPending, startTransition] = useTransition();
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
@@ -426,11 +429,8 @@ export default function UploadMovie() {
 
 
   const handleSave = async () => {
-    // This function will now be simpler, as shortening happens onBlur
-    // The final data preparation logic remains
     let movieData: Partial<Movie> = { ...formData };
       
-    // Final data preparation
     movieData = {
       ...movieData,
       tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
@@ -448,6 +448,13 @@ export default function UploadMovie() {
       delete movieData.downloadLinks;
     }
     delete (movieData as any).tagsString;
+
+    const linksPresent =
+      (movieData.contentType === 'movie' && (movieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
+      (movieData.contentType === 'series' &&
+        ((movieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
+         (movieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
+    setHasDownloadLinks(linksPresent);
       
     try {
       if (formData.id) {
@@ -461,6 +468,11 @@ export default function UploadMovie() {
           description: `"${formData.title}" has been successfully saved.`,
           variant: 'success'
       });
+
+      if (linksPresent) {
+        startCoinAnimation();
+      }
+
       resetForm();
 
     } catch (error) {
@@ -476,18 +488,10 @@ export default function UploadMovie() {
       return;
     }
 
-    const linksPresent =
-      (formData.contentType === 'movie' && (formData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
-      (formData.contentType === 'series' &&
-        ((formData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
-         (formData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
-    setHasDownloadLinks(linksPresent);
     startTransition(handleSave);
   };
 
   const confirmAndSave = (e: React.MouseEvent) => {
-    // This wrapper is for the AlertDialog trigger to prevent default form submission
-    // and to run checks before showing the dialog.
     if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
       e.preventDefault();
@@ -798,7 +802,7 @@ export default function UploadMovie() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button onClick={confirmAndSave} disabled={isFormDisabled}>
+                      <Button onClick={confirmAndSave} disabled={isFormDisabled} id="upload-confirm-button">
                           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {formData.id ? 'Update Content' : 'Confirm & Upload'}
                       </Button>

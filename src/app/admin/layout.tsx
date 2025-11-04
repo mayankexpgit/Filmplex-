@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target, ListChecks } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Target, ListChecks, Wallet } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -11,6 +11,7 @@ import FilmpilexLoader from '@/components/ui/filmplex-loader';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import FloatingTaskButton from '@/components/admin/floating-task-button';
+import CoinAnimation from '@/components/admin/coin-animation';
 
 export default function AdminLayout({
   children,
@@ -52,6 +53,7 @@ export default function AdminLayout({
 
   return (
     <div className="bg-background min-h-screen text-foreground">
+      <CoinAnimation />
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
@@ -59,10 +61,10 @@ export default function AdminLayout({
             <h1 className="text-3xl font-bold uppercase text-primary">ADMIN DASHBOARD</h1>
           </div>
           <div className="flex items-center gap-4">
-             <Button variant="outline" asChild>
-              <Link href="/admin/my-tasks">
-                <ListChecks className="mr-2 h-4 w-4" />
-                My Tasks
+             <Button variant="outline" asChild id="admin-wallet-button">
+              <Link href="/admin/profile">
+                <Wallet className="mr-2 h-4 w-4" />
+                My Wallet
               </Link>
             </Button>
             <Button variant="outline" asChild>

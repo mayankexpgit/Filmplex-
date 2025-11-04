@@ -85,6 +85,9 @@ interface MovieState {
   // Per-movie state
   comments: Comment[];
 
+  // Animation State
+  isCoinAnimationActive: boolean;
+
   // Initialization
   isInitialized: boolean;
 
@@ -98,6 +101,8 @@ interface MovieState {
   setAllComments: (comments: Comment[]) => void;
   addCommentToState: (comment: Comment) => void;
   incrementReaction: (movieId: string, reaction: keyof Reactions) => void;
+  startCoinAnimation: () => void;
+  stopCoinAnimation: () => void;
   fetchInitialData: (isAdmin: boolean) => Promise<void>;
 }
 
@@ -124,6 +129,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
   managementTeam: [],
   adminProfile: null,
   comments: [],
+  isCoinAnimationActive: false,
   isInitialized: false,
 
   // --- Actions ---
@@ -159,6 +165,8 @@ const useMovieStore = create<MovieState>((set, get) => ({
       featuredMovies: updateMovieInList(state.featuredMovies)
     };
   }),
+  startCoinAnimation: () => set({ isCoinAnimationActive: true }),
+  stopCoinAnimation: () => set({ isCoinAnimationActive: false }),
   fetchInitialData: async (isAdmin: boolean) => {
     if (get().isInitialized || isFetchingData) {
       return;
@@ -508,7 +516,6 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
         const updatedTasks = member.tasks.map(task => {
             if (task.status === 'completed' || task.status === 'cancelled') return task;
 
-            // CORRECT LOGIC: Filter movies created by the admin AFTER the task started
             const taskStartDate = parseISO(task.startDate);
             const completedMoviesForTask = allMovies
                 .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
