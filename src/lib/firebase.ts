@@ -13,8 +13,8 @@ const firebaseConfig: FirebaseOptions = {
     measurementId: "G-8GKE6RR8J2"
 };
 
-// VAPID key for web push notifications
-const VAPID_KEY = 'BKanWzFG6j_3mLa-j9mQJmGr3S6M9Z6mZ-Y_4d2b2z-M1X8sQ4g6c3C5j2r1R3oF4A2Z7r7W0A0J8K9l4c1R9jA';
+// VAPID key for web push notifications, loaded from environment variables
+const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
 
 // Initialize Firebase
@@ -39,6 +39,10 @@ const getMessagingToken = async () => {
     let messaging;
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         messaging = getMessaging(app);
+        if (!VAPID_KEY) {
+            console.error('Firebase VAPID key is not defined. Please set NEXT_PUBLIC_FIREBASE_VAPID_KEY in your environment.');
+            return;
+        }
         try {
             const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
             if (currentToken) {
