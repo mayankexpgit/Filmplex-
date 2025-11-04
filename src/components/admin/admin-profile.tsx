@@ -5,18 +5,19 @@ import { useState, useMemo, useEffect } from 'react';
 import { useMovieStore, calculateAllWallets } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import type { ManagementMember, Movie, AdminTask, TodoItem, Wallet } from '@/lib/data';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
 import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee, HelpCircle, Film, Tv } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
 import { fetchDownloadAnalytics } from '@/services/movieService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
 
@@ -277,11 +278,6 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
 };
 
 function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating: boolean }) {
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-    }
-    
     return (
         <Card>
             <CardHeader>
@@ -294,7 +290,7 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
             <CardContent>
             {isCalculating || !wallet ? (
                 <div className="flex flex-col items-center justify-center h-24 gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+                    <FilmpilexLoader />
                     <p className="text-muted-foreground">Calculating balances...</p>
                 </div>
             ) : (
@@ -320,6 +316,42 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                 </div>
             )}
             </CardContent>
+            <CardFooter className="pt-4 border-t">
+                <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="item-1" className="border-b-0">
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2 text-sm">
+                                <HelpCircle className="h-4 w-4" />
+                                How is this calculated?
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                             <div>
+                                <h4 className="font-semibold text-base mb-2">New Uploads (After Oct 12, 2025)</h4>
+                                <ul className="space-y-2 text-sm text-muted-foreground pl-4">
+                                    <li className="flex items-start gap-2">
+                                        <Film className="h-4 w-4 mt-1 text-primary"/>
+                                        <span><b>Movies:</b> ₹0.15 for every 2 valid links (max ₹0.40 per movie).</span>
+                                    </li>
+                                     <li className="flex items-start gap-2">
+                                        <Tv className="h-4 w-4 mt-1 text-primary"/>
+                                        <span><b>Web Series:</b> ₹0.30 for every 2 valid links (no maximum limit).</span>
+                                    </li>
+                                </ul>
+                            </div>
+                             <div>
+                                <h4 className="font-semibold text-base mb-2">Legacy Uploads (Before Oct 12, 2025)</h4>
+                                <ul className="space-y-2 text-sm text-muted-foreground pl-4">
+                                     <li className="flex items-start gap-2">
+                                        <Archive className="h-4 w-4 mt-1 text-primary"/>
+                                        <span>A flat rate of ₹0.20 for every movie or series with at least one valid download link.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </CardFooter>
         </Card>
     )
 }
