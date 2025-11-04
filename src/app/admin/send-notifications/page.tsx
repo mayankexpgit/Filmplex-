@@ -1,5 +1,5 @@
 
-import NotificationSender from '@/components/admin/send-notifications';
+import NotificationSender from '@/components/admin/notification-sender';
 
 export default function SendNotificationsPage() {
   return (
