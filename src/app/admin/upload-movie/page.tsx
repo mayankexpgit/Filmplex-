@@ -208,22 +208,8 @@ export default function UploadMovie() {
     if (movieId) {
       const movieToEdit = movies.find(m => m.id === movieId);
       if (movieToEdit) {
-        // Permission check
-        const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
-        const isOwner = movieToEdit.uploadedBy === adminProfile?.name;
-        // Legacy movies have no owner, so only top level admins can edit them.
-        const canEditLegacy = !movieToEdit.uploadedBy && isTopLevelAdmin;
-
-        if (!isTopLevelAdmin && !isOwner && !canEditLegacy) {
-            toast({
-                variant: 'destructive',
-                title: 'Permission Denied',
-                description: "You don't have permission to edit this movie.",
-            });
-            router.replace('/admin/movie-list');
-            return;
-        }
-
+        // Simplified permission check: Any admin can edit.
+        // No need for a complex check here. If the user can access this page, they can edit.
         setFormData({
             ...initialFormState, // Ensure all fields are present
             ...movieToEdit,

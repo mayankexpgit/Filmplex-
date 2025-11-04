@@ -67,18 +67,8 @@ export default function MovieList() {
   }
 
   const handleEdit = (movie: Movie) => {
-    const isOwner = movie.uploadedBy === adminProfile?.name;
-    const canEdit = isTopLevelAdmin || (isOwner && movie.uploadedBy);
-
-    if (canEdit) {
-      router.push(`/admin/upload-movie?id=${movie.id}`);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Permission Denied',
-        description: 'You can only edit movies that you have uploaded.',
-      });
-    }
+    // Simplified rule: Any admin can edit.
+    router.push(`/admin/upload-movie?id=${movie.id}`);
   };
 
   const handleToggleFeatured = (movie: Movie) => {
@@ -161,8 +151,6 @@ export default function MovieList() {
               </TableHeader>
               <TableBody>
                 {filteredMovies.map((movie, index) => {
-                  const isOwner = movie.uploadedBy === adminProfile?.name;
-                  const canEdit = isTopLevelAdmin || (isOwner && movie.uploadedBy);
                   const canDelete = isTopLevelAdmin;
                   
                   return (
@@ -175,11 +163,9 @@ export default function MovieList() {
                             {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
                           </Button>
                         )}
-                        {canEdit && (
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
                             <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
+                        </Button>
                         {canDelete && (
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
