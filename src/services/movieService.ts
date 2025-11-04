@@ -295,11 +295,9 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
     const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
 
     if (isLegacy) {
-        // Flat rate of ₹0.50 for any legacy upload with at least one valid link.
         return 0.50;
     }
 
-    // New rule calculation for uploads on or after the wallet feature date.
     const linkCount = getLinkCount(movie);
     if (movie.contentType === 'movie') {
         const earnings = Math.floor(linkCount / 2) * 0.15;
@@ -318,7 +316,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
         const memberMovies = movies.filter(m => m.uploadedBy === member.name && m.createdAt);
         
         let totalEarnings = 0;
-        let monthly = 0;
+        let currentMonthlyEarnings = 0;
         let weekly = 0;
 
         memberMovies.forEach(movie => {
@@ -327,43 +325,46 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             
             totalEarnings += earnings;
             if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
-                monthly += earnings;
+                currentMonthlyEarnings += earnings;
             }
             if (isWithinInterval(movieDate, { start: startOfWeek(now), end: endOfWeek(now) })) {
                 weekly += earnings;
             }
         });
 
-        // Penalty for incompleted tasks
         const incompletedTasksCount = member.tasks?.filter(t => t.status === 'incompleted').length || 0;
         const penalty = incompletedTasksCount * 0.50;
 
         const totalAfterPenalty = totalEarnings - penalty;
 
+        const settlements = [...(member.settlements || [])];
+        let currentMonthSettlement = settlements.find(s => s.month === currentMonthStr);
+        
+        if (!currentMonthSettlement) {
+            currentMonthSettlement = {
+                month: currentMonthStr,
+                status: 'pending',
+                amount: parseFloat(currentMonthlyEarnings.toFixed(2))
+            };
+            settlements.push(currentMonthSettlement);
+        } else {
+             currentMonthSettlement.amount = parseFloat(currentMonthlyEarnings.toFixed(2));
+        }
+
+        let finalMonthlyDisplay = currentMonthlyEarnings;
+        if (currentMonthSettlement.status === 'credited' || currentMonthSettlement.status === 'penalty') {
+            finalMonthlyDisplay = 0;
+        }
+
         const wallet: Wallet = {
             total: parseFloat(totalAfterPenalty.toFixed(2)),
-            monthly: parseFloat(monthly.toFixed(2)),
+            monthly: parseFloat(finalMonthlyDisplay.toFixed(2)),
             weekly: parseFloat(weekly.toFixed(2)),
         };
         
-        // --- Settlement Logic ---
-        const settlements = [...(member.settlements || [])];
-        const currentMonthSettlement = settlements.find(s => s.month === currentMonthStr);
-        if (!currentMonthSettlement) {
-            settlements.push({
-                month: currentMonthStr,
-                status: 'pending',
-                amount: parseFloat(monthly.toFixed(2))
-            });
-        } else {
-             // Update the amount for the current month if it has changed
-            currentMonthSettlement.amount = parseFloat(monthly.toFixed(2));
-        }
-
         return { ...member, wallet, settlements };
     });
 
-    // Batch update Firestore
     const batch = writeBatch(db);
     updatedTeam.forEach(member => {
         const memberRef = doc(db, 'management', member.id);
