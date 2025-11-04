@@ -8,6 +8,7 @@ import { Flame, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useMemo, useState, useTransition, useCallback } from 'react';
 import type { Movie } from '@/lib/data';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Fuse from 'fuse.js';
 
 const MOVIES_PER_PAGE = 12;
 
@@ -61,26 +62,34 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const sortedMovies = useMemo(() => {
-    return [...movies].sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
-    });
+  const fuse = useMemo(() => {
+    const options = {
+      keys: [
+        { name: 'title', weight: 0.6 },
+        { name: 'tags', weight: 0.3 },
+        { name: 'genre', weight: 0.1 }
+      ],
+      includeScore: true,
+      threshold: 0.4, // Adjust for more/less fuzzy matching
+      minMatchCharLength: 2,
+      ignoreLocation: true,
+    };
+    return new Fuse(movies, options);
   }, [movies]);
 
 
   const filteredMovies = useMemo(() => {
-    let currentMovies = sortedMovies;
+    let currentMovies = [...movies];
     
-    if (selectedGenre && selectedGenre !== 'All Genres') {
+    if (searchQuery) {
+        currentMovies = fuse.search(searchQuery).map(result => result.item);
+    } else if (selectedGenre && selectedGenre !== 'All Genres') {
         if (selectedGenre === 'Web Series') {
             currentMovies = currentMovies.filter(movie => movie.contentType === 'series');
         } else {
             const tagsToMatch = smartFilterTags[selectedGenre] || [selectedGenre.toLowerCase()];
             
             currentMovies = currentMovies.filter((movie) => {
-                // Also check the specific genre field for a direct match.
                 const genreString = (movie.genre || '').toLowerCase();
                 const hasGenreMatch = tagsToMatch.some(tag => genreString.includes(tag));
                 if (hasGenreMatch) return true;
@@ -96,12 +105,6 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         }
     }
     
-    if (searchQuery) {
-      currentMovies = currentMovies.filter((movie) =>
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
     if (selectedQuality !== 'all') {
         currentMovies = currentMovies.filter((movie) => {
             const quality = getQualityBadge(movie);
@@ -111,8 +114,17 @@ export default function MovieCardLarge({ movies }: MovieCardLargeProps) {
         });
     }
 
+    // If no search query, sort by creation date
+    if (!searchQuery) {
+        currentMovies.sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+        });
+    }
+
     return currentMovies;
-  }, [sortedMovies, searchQuery, selectedGenre, selectedQuality]);
+  }, [movies, searchQuery, selectedGenre, selectedQuality, fuse]);
   
   const totalPages = Math.ceil(filteredMovies.length / MOVIES_PER_PAGE);
 
