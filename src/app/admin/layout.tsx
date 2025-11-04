@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -24,8 +24,6 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
-  const [isIconLoading, setIsIconLoading] = useState(true);
-
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
@@ -66,14 +64,11 @@ export default function AdminLayout({
           <div className="flex items-center gap-4">
              <Button variant="outline" asChild id="admin-wallet-button" className="gap-2">
               <Link href="/admin/profile">
-                 {isIconLoading && <Loader2 className="h-6 w-6 animate-spin" />}
                  <Image 
-                    src="https://i.ibb.co/fYspK9Nf/1000496834-removebg-preview.png" 
+                    src="https://i.ibb.co/fYspK9N/1000496834-removebg-preview.png" 
                     alt="Wallet" 
                     width={24} 
                     height={24} 
-                    onLoadingComplete={() => setIsIconLoading(false)}
-                    className={isIconLoading ? 'hidden' : 'inline'}
                   />
                 <span className="font-bold">{adminProfile?.wallet?.total?.toFixed(2) || '0.00'}</span>
               </Link>
