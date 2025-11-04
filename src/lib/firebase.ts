@@ -9,7 +9,8 @@ const firebaseConfig: FirebaseOptions = {
     storageBucket: "vexel-cinema.appspot.com",
     apiKey: "AIzaSyDBgesKMmtY5qmzV83LswRIcgGkZ5eGuPM",
     authDomain: "vexel-cinema.firebaseapp.com",
-    messagingSenderId: "936879818073"
+    messagingSenderId: "936879818073",
+    measurementId: "G-8GKE6RR8J2"
 };
 
 // VAPID key for web push notifications
