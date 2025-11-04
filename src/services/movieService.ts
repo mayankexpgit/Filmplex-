@@ -1,5 +1,6 @@
 
 
+
 'use server';
 import { db } from '@/lib/firebase';
 import {
@@ -18,7 +19,7 @@ import {
   limit,
   deleteField,
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet, Settlement } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet, Settlement, UserRequest } from '@/lib/data';
 import type { ContactInfo, SecurityLog, AdminCredentials } from '@/store/movieStore';
 import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore, format as formatDate, isAfter } from 'date-fns';
 
@@ -154,6 +155,31 @@ export const updateContactInfo = async (info: ContactInfo): Promise<void> => {
     const docRef = doc(db, 'singletons', 'contactInfo');
     await setDoc(docRef, info, { merge: true });
 }
+
+// --- "Get Anything" User Requests ---
+export const fetchRequests = async (): Promise<UserRequest[]> => {
+    const requestsCollection = collection(db, 'requests');
+    const q = query(requestsCollection, orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserRequest));
+}
+
+export const addRequest = async (request: Omit<UserRequest, 'id'>): Promise<string> => {
+    const requestsCollection = collection(db, 'requests');
+    const docRef = await addDoc(requestsCollection, request);
+    return docRef.id;
+}
+
+export const updateRequestStatus = async (requestId: string, status: UserRequest['status']): Promise<void> => {
+    const requestDoc = doc(db, 'requests', requestId);
+    await updateDoc(requestDoc, { status });
+}
+
+export const deleteRequest = async (requestId: string): Promise<void> => {
+    const requestDoc = doc(db, 'requests', requestId);
+    await deleteDoc(requestDoc);
+}
+
 
 // --- Management Team Functions ---
 
@@ -378,17 +404,16 @@ export const updateSettlementStatus = async (memberId: string, month: string, st
 
     if (settlementIndex > -1) {
         settlements[settlementIndex].status = status;
-        // Only set the settledAt timestamp if it doesn't already exist for this settlement action
-        if ((status === 'credited' || status === 'penalty') && !settlements[settlementIndex].settledAt) {
+        if (status === 'credited' || status === 'penalty') {
              settlements[settlementIndex].settledAt = new Date().toISOString();
-        } else if (status === 'pending') { // Reverting to 'pending'
+        } else if (status === 'pending') {
             delete settlements[settlementIndex].settledAt;
         }
     } else if (status !== 'pending') {
         settlements.push({
             month,
             status,
-            amount: 0, // This is a new entry, so amount is 0 until next calculation
+            amount: 0, 
             settledAt: new Date().toISOString()
         });
     }

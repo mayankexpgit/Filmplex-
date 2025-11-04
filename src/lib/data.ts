@@ -115,6 +115,14 @@ export interface Movie {
   reactions?: Reactions;
 }
 
+export interface UserRequest {
+  id: string;
+  movieName: string;
+  comment: string;
+  status: 'pending' | 'uploaded' | 'unavailable' | 'soon';
+  timestamp: string; // ISO string
+}
+
 export interface DownloadRecord {
     id: string;
     movieId: string;

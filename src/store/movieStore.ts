@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem, Settlement } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem, Settlement, UserRequest } from '@/lib/data';
 import {
   addMovie as dbAddMovie,
   updateMovie as dbUpdateMovie,
@@ -26,6 +26,10 @@ import {
   updateManagementMember as dbUpdateManagementMember,
   calculateAllWallets as dbCalculateAllWallets,
   updateSettlementStatus as dbUpdateSettlementStatus,
+  fetchRequests as dbFetchRequests,
+  addRequest as dbAddRequest,
+  updateRequestStatus as dbUpdateRequestStatus,
+  deleteRequest as dbDeleteRequest,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
 import { getAdminName } from '@/hooks/use-auth';
@@ -69,6 +73,7 @@ interface MovieState {
   contactInfo: ContactInfo;
   securityLogs: SecurityLog[];
   notifications: Notification[];
+  requests: UserRequest[];
   allComments: Comment[];
   managementTeam: ManagementMember[];
   
@@ -114,6 +119,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
   contactInfo: { telegramUrl: '', whatsappUrl: '', instagramUrl: '', email: '', whatsappNumber: '' },
   securityLogs: [],
   notifications: [],
+  requests: [],
   allComments: [],
   managementTeam: [],
   adminProfile: null,
@@ -185,12 +191,14 @@ const useMovieStore = create<MovieState>((set, get) => ({
       };
       
       if (isAdmin) {
-        const [securityLogs, allComments] = await Promise.all([
+        const [securityLogs, allComments, requests] = await Promise.all([
           dbFetchSecurityLogs(),
           dbFetchAllComments(allMovies),
+          dbFetchRequests(),
         ]);
         stateUpdate.securityLogs = securityLogs;
         stateUpdate.allComments = allComments;
+        stateUpdate.requests = requests;
         // This is a critical step that must be done for admins
         const teamWithUpdatedTasks = await checkAndUpdateOverdueTasks(managementTeam, allMovies);
         stateUpdate.managementTeam = teamWithUpdatedTasks; // Use the team with updated tasks
@@ -370,6 +378,41 @@ const submitReaction = async (movieId: string, reaction: keyof Reactions): Promi
         console.error("Could not update reaction in database", e);
     }
 };
+
+// --- "Get Anything" Requests ---
+const submitRequest = async (movieName: string, comment: string): Promise<UserRequest> => {
+  const newRequestData: Omit<UserRequest, 'id'> = {
+    movieName,
+    comment,
+    status: 'pending',
+    timestamp: new Date().toISOString(),
+  };
+  const id = await dbAddRequest(newRequestData);
+  const newRequest = { ...newRequestData, id };
+  
+  // No need to add to global state as only admins need the full list
+  // which is fetched on admin login.
+  return newRequest;
+};
+
+const updateRequestStatus = async (requestId: string, status: UserRequest['status']): Promise<void> => {
+  await dbUpdateRequestStatus(requestId, status);
+  useMovieStore.setState(state => ({
+    requests: state.requests.map(req => 
+      req.id === requestId ? { ...req, status } : req
+    ),
+  }));
+  await addSecurityLogEntry(`Updated request status to "${status}" for ID: ${requestId}`);
+};
+
+const deleteRequest = async (requestId: string): Promise<void> => {
+  await dbDeleteRequest(requestId);
+  useMovieStore.setState(state => ({
+    requests: state.requests.filter(req => req.id !== requestId),
+  }));
+  await addSecurityLogEntry(`Deleted request ID: ${requestId}`);
+};
+
 
 // --- Management Team & Tasks ---
 
@@ -582,6 +625,9 @@ export {
     submitComment,
     deleteComment,
     submitReaction,
+    submitRequest,
+    updateRequestStatus,
+    deleteRequest,
     addManagementMember,
     deleteManagementMember,
     updateManagementMemberTask,

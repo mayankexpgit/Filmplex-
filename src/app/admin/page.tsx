@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell } from 'lucide-react';
+import { Upload, MessageCircle, User, Shield, Flame, List, LifeBuoy, MessagesSquare, Users, UserCircle as ProfileIcon, Target, Hourglass, ListChecks, AlertTriangle, Sparkles, Bell, GitPullRequest } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -92,6 +92,13 @@ const adminSections = [
     id: 'upcoming-releases',
   },
   {
+    title: 'Get Anything',
+    description: 'Manage user content requests.',
+    href: '/admin/get-anything',
+    icon: GitPullRequest,
+    id: 'get-anything',
+  },
+  {
     title: 'Update Featured Movies',
     description: 'Update posters for the featured carousel.',
     href: '/admin/update-featured',
@@ -143,9 +150,10 @@ const adminSections = [
 ];
 
 export default function AdminDashboardPage() {
-  const { notifications } = useMovieStore();
+  const { notifications, requests } = useMovieStore();
   const { adminProfile } = useAuth();
   const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && (t.status === 'active' || t.status === 'incompleted')).length || 0;
+  const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
 
   return (
     <div className="container mx-auto py-8 md:py-12">
@@ -168,6 +176,11 @@ export default function AdminDashboardPage() {
                       {section.id === 'upcoming-releases' && notifications.length > 0 && (
                         <Badge variant="secondary">
                           {notifications.length}
+                        </Badge>
+                      )}
+                       {section.id === 'get-anything' && pendingRequestsCount > 0 && (
+                        <Badge variant="destructive">
+                          {pendingRequestsCount}
                         </Badge>
                       )}
                     </CardTitle>

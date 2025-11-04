@@ -1,0 +1,54 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check for admin credentials
+    function isAdmin() {
+      // In a real production app, this would check for a custom claim set via a backend.
+      // For this project, we simply check if the user is authenticated at all.
+      // The app's logic ensures only admins can log in.
+      return request.auth != null;
+    }
+    
+    // Movies can be read by anyone, but only written/deleted by an admin
+    match /movies/{movieId} {
+      allow read: if true;
+      allow write, delete: if isAdmin();
+      
+      // Comments can be read by anyone, created by anyone, but only deleted by an admin
+      match /comments/{commentId} {
+        allow read, create: if true;
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // All other collections are admin-only for all operations
+    match /notifications/{docId} {
+      allow read: if true;
+      allow write, delete: if isAdmin();
+    }
+    
+    match /management/{docId} {
+       allow read: if true;
+       allow write, delete: if isAdmin();
+    }
+
+    // User requests can be created by anyone, but only managed by admins.
+    match /requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /securityLogs/{docId} {
+      allow read, write, delete: if isAdmin();
+    }
+
+    // Singleton documents can be read by anyone, but only written by an admin
+    match /singletons/{singletonId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

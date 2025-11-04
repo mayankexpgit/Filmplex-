@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles, AlertCircle } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles, AlertCircle, History, GitPullRequest } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -18,13 +18,15 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetDescription,
+  SheetFooter,
+  SheetClose
 } from '@/components/ui/sheet';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, submitRequest } from '@/store/movieStore';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
-import type { ManagementMember } from '@/lib/data';
+import type { ManagementMember, UserRequest } from '@/lib/data';
 import Changelog from '../changelog';
 import NotificationInitializer from '../notification-initializer';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +39,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Loader2 } from 'lucide-react';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 function NotificationRePrompt() {
   const { triggerPermissionPrompt, notificationPermission } = useToast();
@@ -186,7 +195,6 @@ const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: strin
 
 function ManagementPanel() {
     const managementTeam = useMovieStore((state) => state.managementTeam);
-    const [messagingMember, setMessagingMember] = useState<ManagementMember | null>(null);
 
     const getDisplayName = (fullName: string) => {
         if (fullName.includes('.')) {
@@ -290,6 +298,164 @@ function ChangelogPanel() {
   );
 }
 
+function RequestForm({ onSubmitted }: { onSubmitted: () => void }) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = React.useTransition();
+  const [movieName, setMovieName] = useState('');
+  const [comment, setComment] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!movieName.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Movie Name Required',
+        description: 'Please enter the name of the movie or series.',
+      });
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const newRequest = await submitRequest(movieName, comment);
+        
+        // Save to local storage
+        const history = JSON.parse(localStorage.getItem('request_history') || '[]');
+        history.push(newRequest);
+        localStorage.setItem('request_history', JSON.stringify(history));
+
+        toast({
+          title: 'Request Sent!',
+          description: "Thanks for your feedback. You can check its status in the 'Request History'.",
+          variant: 'success'
+        });
+        setMovieName('');
+        setComment('');
+        onSubmitted();
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not send your request. Please try again.',
+        });
+      }
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+      <div className="space-y-2">
+        <Label htmlFor="request-movie-name">Movie / Series Name</Label>
+        <Input
+          id="request-movie-name"
+          value={movieName}
+          onChange={(e) => setMovieName(e.target.value)}
+          placeholder="e.g. The Matrix"
+          disabled={isPending}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="request-comment">Comment (Optional)</Label>
+        <Textarea
+          id="request-comment"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Any specific details? e.g. 'Please upload in 4K quality'"
+          rows={3}
+          disabled={isPending}
+        />
+      </div>
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+        {isPending ? 'Sending...' : 'Submit Request'}
+      </Button>
+    </form>
+  );
+}
+
+function RequestHistory() {
+  const [history, setHistory] = useState<UserRequest[]>([]);
+
+  useEffect(() => {
+    // This effect runs on the client and can access localStorage
+    const savedHistory = JSON.parse(localStorage.getItem('request_history') || '[]');
+    setHistory(savedHistory.sort((a: UserRequest, b: UserRequest) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+  }, []);
+
+  const getStatusBadge = (status: UserRequest['status']) => {
+    switch(status) {
+      case 'pending':
+        return <Badge variant="outline">Pending</Badge>;
+      case 'uploaded':
+        return <Badge variant="success">Uploaded</Badge>;
+      case 'unavailable':
+        return <Badge variant="destructive">Unavailable</Badge>;
+      case 'soon':
+        return <Badge variant="default" className="bg-blue-500">Coming Soon</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="w-full">
+          <History className="mr-2 h-4 w-4" /> Request History
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-80">
+        <div className="p-2 font-semibold">Your Past Requests</div>
+        <DropdownMenuSeparator />
+        <ScrollArea className="h-64">
+          {history.length > 0 ? (
+            history.map(req => (
+              <DropdownMenuItem key={req.id} onSelect={(e) => e.preventDefault()} className="flex justify-between items-start">
+                <div className="flex flex-col">
+                  <span className="font-medium">{req.movieName}</span>
+                  <span className="text-xs text-muted-foreground">{formatDistanceToNow(parseISO(req.timestamp), { addSuffix: true })}</span>
+                </div>
+                {getStatusBadge(req.status)}
+              </DropdownMenuItem>
+            ))
+          ) : (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              You haven't made any requests yet.
+            </div>
+          )}
+        </ScrollArea>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+
+function RequestZonePanel() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          <GitPullRequest className="mr-2 h-4 w-4" />
+          Request Zone
+        </DropdownMenuItem>
+      </SheetTrigger>
+      <SheetContent className="w-[400px]">
+        <SheetHeader>
+          <SheetTitle>Request Zone</SheetTitle>
+          <SheetDescription>
+            Can't find what you're looking for? Let us know!
+          </SheetDescription>
+        </SheetHeader>
+        <RequestForm onSubmitted={() => { /* Potentially refresh history or give a slight delay before closing */ }} />
+        <Separator className="my-6" />
+        <RequestHistory />
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -312,6 +478,7 @@ export function Header() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <ChangelogPanel />
+            <RequestZonePanel />
             <HelpCenterPanel />
           </DropdownMenuContent>
         </DropdownMenu>
