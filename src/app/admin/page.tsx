@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -62,7 +63,7 @@ function AdminTaskDialog() {
     );
 }
 
-const adminSections = [
+const allAdminSections = [
   {
     title: 'Upload Movie',
     description: 'Add new movies to the catalog.',
@@ -118,6 +119,7 @@ const adminSections = [
     href: '/admin/management',
     icon: Users,
     id: 'management',
+    roles: ['Regulator', 'Co-Founder'],
   },
   {
     title: 'Manage Comments',
@@ -154,6 +156,15 @@ export default function AdminDashboardPage() {
   const { adminProfile } = useAuth();
   const activeTodoTasksCount = adminProfile?.tasks?.filter(t => t.type === 'todo' && (t.status === 'active' || t.status === 'incompleted')).length || 0;
   const pendingRequestsCount = requests.filter(r => r.status === 'pending').length;
+
+  const adminSections = useMemo(() => {
+    if (!adminProfile) return [];
+    return allAdminSections.filter(section => {
+      if (!section.roles) return true;
+      return section.roles.includes(adminProfile.info);
+    });
+  }, [adminProfile]);
+
 
   return (
     <div className="container mx-auto py-8 md:py-12">
