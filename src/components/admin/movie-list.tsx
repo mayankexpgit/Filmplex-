@@ -67,13 +67,20 @@ export default function MovieList() {
   }
 
   const handleEdit = (movie: Movie) => {
-    if (isTopLevelAdmin || movie.uploadedBy === adminProfile?.name) {
+    // Top-level admins can edit any movie.
+    if (isTopLevelAdmin) {
+      router.push(`/admin/upload-movie?id=${movie.id}`);
+      return;
+    }
+    // Regular admins can only edit movies they uploaded.
+    // Legacy movies (without uploadedBy) are not editable by regular admins.
+    if (movie.uploadedBy && movie.uploadedBy === adminProfile?.name) {
       router.push(`/admin/upload-movie?id=${movie.id}`);
     } else {
       toast({
         variant: 'destructive',
         title: 'Permission Denied',
-        description: 'You can only edit movies you have uploaded.',
+        description: 'You can only edit movies that you have uploaded.',
       });
     }
   };
@@ -158,7 +165,10 @@ export default function MovieList() {
               </TableHeader>
               <TableBody>
                 {filteredMovies.map((movie, index) => {
-                  const canEdit = isTopLevelAdmin || movie.uploadedBy === adminProfile?.name;
+                  const isOwner = movie.uploadedBy === adminProfile?.name;
+                  // A legacy movie is one without an owner.
+                  const isLegacy = !movie.uploadedBy; 
+                  const canEdit = isTopLevelAdmin || (isOwner && !isLegacy);
                   const canDelete = isTopLevelAdmin;
                   
                   return (

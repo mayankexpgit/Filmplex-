@@ -45,7 +45,8 @@ import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
-type FormData = Partial<Movie> & {
+type FormData = Omit<Partial<Movie>, 'id'> & {
+    id?: string; // ID is optional, only present when editing
     tagsString?: string;
     contentType: 'movie' | 'series';
     seasonNumber?: number;
@@ -210,8 +211,10 @@ export default function UploadMovie() {
         // Permission check
         const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
         const isOwner = movieToEdit.uploadedBy === adminProfile?.name;
+        // Legacy movies have no owner, so only top level admins can edit them.
+        const canEditLegacy = !movieToEdit.uploadedBy && isTopLevelAdmin;
 
-        if (!isTopLevelAdmin && !isOwner) {
+        if (!isTopLevelAdmin && !isOwner && !canEditLegacy) {
             toast({
                 variant: 'destructive',
                 title: 'Permission Denied',
@@ -445,38 +448,42 @@ export default function UploadMovie() {
 
 
   const handleSave = async () => {
-    let movieData: Partial<Movie> = { ...formData };
+    // Create a mutable copy and remove the 'id' for the data to be saved.
+    // The 'id' in formData is only for tracking if we are in 'edit' mode.
+    const { id: editId, ...movieDataToSave } = formData;
       
-    movieData = {
-      ...movieData,
+    const finalMovieData: Partial<Movie> = {
+      ...movieDataToSave,
       tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
       screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
     };
 
     if (formData.contentType === 'movie') {
-      movieData.downloadLinks = (movieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
-      delete movieData.episodes;
-      delete movieData.seasonDownloadLinks;
-      delete movieData.numberOfEpisodes;
+      finalMovieData.downloadLinks = (finalMovieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
+      delete finalMovieData.episodes;
+      delete finalMovieData.seasonDownloadLinks;
+      delete finalMovieData.numberOfEpisodes;
     } else {
-      movieData.episodes = (movieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
-      movieData.seasonDownloadLinks = (movieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
-      delete movieData.downloadLinks;
+      finalMovieData.episodes = (finalMovieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
+      finalMovieData.seasonDownloadLinks = (finalMovieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
+      delete finalMovieData.downloadLinks;
     }
-    delete (movieData as any).tagsString;
+    delete (finalMovieData as any).tagsString;
 
     const linksPresent =
-      (movieData.contentType === 'movie' && (movieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
-      (movieData.contentType === 'series' &&
-        ((movieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
-         (movieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
+      (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
+      (finalMovieData.contentType === 'series' &&
+        ((finalMovieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
+         (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
     setHasDownloadLinks(linksPresent);
       
     try {
-      if (formData.id) {
-        await updateMovie(formData.id, movieData);
+      if (editId) {
+        // We are in edit mode
+        await updateMovie(editId, finalMovieData);
       } else {
-        await addMovie(movieData as Omit<Movie, 'id'>);
+        // We are in create mode
+        await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
       
       toast({ 
