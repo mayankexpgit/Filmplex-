@@ -354,7 +354,6 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
 
         let finalMonthlyDisplay = currentMonthlyEarnings;
         if (currentMonthSettlement.status === 'credited' || currentMonthSettlement.status === 'penalty') {
-            // Find all uploads after the settlement was marked.
             const settlementDate = currentMonthSettlement.settledAt ? parseISO(currentMonthSettlement.settledAt) : new Date(0);
             const earningsAfterSettlement = memberMovies
                 .filter(movie => {
@@ -400,19 +399,19 @@ export const updateSettlementStatus = async (memberId: string, month: string, st
 
     if (settlementIndex > -1) {
         settlements[settlementIndex].status = status;
-        // Mark the time of settlement to calculate future earnings correctly
         if (status === 'credited' || status === 'penalty') {
-            settlements[settlementIndex].settledAt = new Date().toISOString();
-        } else {
-            // If reverting to pending, remove the settledAt timestamp
+            // Only set the settledAt timestamp if it doesn't already exist for this settlement action
+            if (!settlements[settlementIndex].settledAt) {
+                 settlements[settlementIndex].settledAt = new Date().toISOString();
+            }
+        } else { // Reverting to 'pending'
             delete settlements[settlementIndex].settledAt;
         }
     } else if (status !== 'pending') {
-        // This case is unlikely but handles creating a settlement if it doesn't exist.
         settlements.push({
             month,
             status,
-            amount: 0, // Amount should be recalculated, but we set it to 0 for now.
+            amount: 0,
             settledAt: new Date().toISOString()
         });
     }
