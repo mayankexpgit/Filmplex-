@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition, useMemo, useEffect, useCallback } from 'react';
@@ -6,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive, ListChecks, Target, X, Eye } from 'lucide-react';
-import type { ManagementMember, AdminTask, Movie, TodoItem } from '@/lib/data';
+import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks, updateSettlementStatus as storeUpdateSettlementStatus } from '@/store/movieStore';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive, ListChecks, Target, X, Eye, IndianRupee, Hourglass, TimerOff, BookCheck, CircleDollarSign } from 'lucide-react';
+import type { ManagementMember, AdminTask, Movie, TodoItem, Settlement } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '../ui/dialog';
@@ -319,6 +320,83 @@ function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove, onClose
     );
 }
 
+const SettlementStatusBadge = ({ status }: { status: Settlement['status'] }) => {
+    switch (status) {
+        case 'pending':
+            return <Badge variant="outline" className="text-amber-500 border-amber-500"><Hourglass className="mr-1 h-3 w-3"/>Pending</Badge>;
+        case 'credited':
+            return <Badge variant="success"><CheckCircle className="mr-1 h-3 w-3"/>Credited</Badge>;
+        case 'penalty':
+            return <Badge variant="destructive"><TimerOff className="mr-1 h-3 w-3"/>Penalty</Badge>;
+    }
+}
+
+function SettlementDialog({ member, onClose, onUpdateStatus }: { member: ManagementMember; onClose: () => void; onUpdateStatus: (memberId: string, month: string, status: Settlement['status']) => void; }) {
+    const sortedSettlements = [...(member.settlements || [])].sort((a, b) => b.month.localeCompare(a.month));
+    const [isUpdating, startUpdateTransition] = useTransition();
+
+    const handleUpdate = (month: string, status: Settlement['status']) => {
+        startUpdateTransition(() => {
+            onUpdateStatus(member.id, month, status);
+        });
+    }
+
+    return (
+        <DialogContent className="max-w-xl">
+            <DialogHeader>
+                <DialogTitle>Monthly Settlement for {member.name.split('.').pop()}</DialogTitle>
+                <DialogDescription>Manage the payment status for each month's earnings.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 max-h-[60vh] overflow-y-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Month</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {sortedSettlements.length > 0 ? sortedSettlements.map((s, i) => (
+                            <TableRow key={i}>
+                                <TableCell>{format(parseISO(`${s.month}-02`), 'MMMM yyyy')}</TableCell>
+                                <TableCell>
+                                    <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4" />{s.amount.toFixed(2)}</span>
+                                </TableCell>
+                                <TableCell><SettlementStatusBadge status={s.status} /></TableCell>
+                                <TableCell className="text-right">
+                                    <Select 
+                                        onValueChange={(status: Settlement['status']) => handleUpdate(s.month, status)} 
+                                        defaultValue={s.status}
+                                        disabled={isUpdating}
+                                    >
+                                        <SelectTrigger className="w-[120px] h-8">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="credited">Credited</SelectItem>
+                                            <SelectItem value="penalty">Penalty</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No settlement history found.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={onClose}>Close</Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+}
+
 export default function ManagementManager() {
   const { toast } = useToast();
   const [addPending, startAddTransition] = useTransition();
@@ -329,6 +407,7 @@ export default function ManagementManager() {
   }));
   const { adminProfile } = useAuth();
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [isSettlementDialogOpen, setIsSettlementDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ManagementMember | null>(null);
 
   const [name, setName] = useState('');
@@ -474,14 +553,43 @@ export default function ManagementManager() {
         });
     }
   }, [toast]);
+  
+  const handleUpdateSettlement = useCallback(async (memberId: string, month: string, status: Settlement['status']) => {
+    try {
+        await storeUpdateSettlementStatus(memberId, month, status);
+        toast({
+            title: 'Settlement Updated',
+            description: 'The monthly settlement status has been changed.',
+            variant: 'success'
+        });
+        // Refresh the selected member to show updated data in the dialog
+        const updatedMember = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
+        if (updatedMember) {
+            setSelectedMember(updatedMember);
+        }
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Update Failed',
+            description: 'Could not update the settlement status.',
+        });
+    }
+}, [toast]);
+
 
   const handleOpenTaskDialog = (member: ManagementMember) => {
     setSelectedMember(member);
     setIsTaskDialogOpen(true);
   }
+  
+  const handleOpenSettlementDialog = (member: ManagementMember) => {
+    setSelectedMember(member);
+    setIsSettlementDialogOpen(true);
+  }
 
-  const handleCloseTaskDialog = () => {
+  const handleCloseDialogs = () => {
     setIsTaskDialogOpen(false);
+    setIsSettlementDialogOpen(false);
     setSelectedMember(null);
   }
 
@@ -573,13 +681,10 @@ export default function ManagementManager() {
                                     <span>{activeTasks.length} Active Task(s)</span>
                                 </Badge>
                                 {canManageTeam && (
-                                    <Button 
-                                    variant="outline" 
-                                    size="icon" 
-                                    onClick={() => handleOpenTaskDialog(member)}
-                                    >
-                                        <Briefcase className="h-4 w-4" />
-                                    </Button>
+                                    <>
+                                        <Button variant="outline" size="icon" onClick={() => handleOpenSettlementDialog(member)}><CircleDollarSign className="h-4 w-4" /></Button>
+                                        <Button variant="outline" size="icon" onClick={() => handleOpenTaskDialog(member)}><Briefcase className="h-4 w-4" /></Button>
+                                    </>
                                 )}
                                 {isUnlocked && canManageTeam && (
                                 <Button 
@@ -626,8 +731,11 @@ export default function ManagementManager() {
         </Card>
 
       </div>
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        {selectedMember && <TaskHistoryDialog member={selectedMember} allMovies={allMovies} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} onClose={handleCloseTaskDialog} />}
+      <Dialog open={isTaskDialogOpen} onOpenChange={(open) => !open && handleCloseDialogs()}>
+        {selectedMember && <TaskHistoryDialog member={selectedMember} allMovies={allMovies} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} onClose={handleCloseDialogs} />}
+      </Dialog>
+      <Dialog open={isSettlementDialogOpen} onOpenChange={(open) => !open && handleCloseDialogs()}>
+          {selectedMember && <SettlementDialog member={selectedMember} onClose={handleCloseDialogs} onUpdateStatus={handleUpdateSettlement} />}
       </Dialog>
     </>
   );

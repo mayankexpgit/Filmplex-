@@ -18,9 +18,9 @@ import {
   limit,
   deleteField,
 } from 'firebase/firestore';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet, Settlement } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
-import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore } from 'date-fns';
+import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore, format as formatDate } from 'date-fns';
 
 
 // --- Admin Credentials ---
@@ -261,7 +261,7 @@ export const fetchDownloadAnalytics = async (): Promise<DownloadRecord[]> => {
 }
 
 
-// --- Wallet Calculation Service ---
+// --- Wallet & Settlement Calculation Service ---
 
 const hasValidLinks = (movie: Movie): boolean => {
     if (movie.contentType === 'movie' && movie.downloadLinks) {
@@ -312,6 +312,7 @@ const calculateEarnings = (movie: Movie, walletCalculationDate: Date): number =>
 export const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
     const walletCalculationDate = new Date('2025-11-04T00:00:00Z');
     const now = new Date();
+    const currentMonthStr = formatDate(now, 'yyyy-MM');
 
     const updatedTeam = team.map(member => {
         const memberMovies = movies.filter(m => m.uploadedBy === member.name && m.createdAt);
@@ -344,20 +345,35 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             monthly: parseFloat(monthly.toFixed(2)),
             weekly: parseFloat(weekly.toFixed(2)),
         };
+        
+        // --- Settlement Logic ---
+        const settlements = [...(member.settlements || [])];
+        const currentMonthSettlement = settlements.find(s => s.month === currentMonthStr);
+        if (!currentMonthSettlement) {
+            settlements.push({
+                month: currentMonthStr,
+                status: 'pending',
+                amount: parseFloat(monthly.toFixed(2))
+            });
+        } else {
+             // Update the amount for the current month if it has changed
+            currentMonthSettlement.amount = parseFloat(monthly.toFixed(2));
+        }
 
-        return { ...member, wallet };
+        return { ...member, wallet, settlements };
     });
 
     // Batch update Firestore
     const batch = writeBatch(db);
     updatedTeam.forEach(member => {
-        if (member.wallet) {
-            const memberRef = doc(db, 'management', member.id);
-            batch.update(memberRef, { wallet: member.wallet });
-        }
+        const memberRef = doc(db, 'management', member.id);
+        const updates: Partial<ManagementMember> = {};
+        if (member.wallet) updates.wallet = member.wallet;
+        if (member.settlements) updates.settlements = member.settlements;
+        batch.update(memberRef, updates);
     });
     await batch.commit();
-    console.log("Admin wallets updated in Firestore.");
+    console.log("Admin wallets and settlements updated in Firestore.");
     
     return updatedTeam;
 };

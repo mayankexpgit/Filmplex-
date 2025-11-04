@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem } from '@/lib/data';
+import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, TodoItem, Settlement } from '@/lib/data';
 import {
   addMovie as dbAddMovie,
   updateMovie as dbUpdateMovie,
@@ -177,13 +177,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
         dbFetchContactInfo(),
         dbFetchManagementTeam(),
       ]);
-
-      // This is the crucial step: Recalculate and update wallets every time.
-      managementTeam = await calculateAllWallets(managementTeam, allMovies);
-
-      const adminName = getAdminName();
-      const adminProfile = managementTeam.find(m => m.name === adminName) || null;
-
+      
       const stateUpdate: Partial<MovieState> = {
         allMovies: allMovies,
         latestReleases: allMovies,
@@ -191,7 +185,6 @@ const useMovieStore = create<MovieState>((set, get) => ({
         notifications,
         contactInfo,
         managementTeam,
-        adminProfile,
       };
       
       if (isAdmin) {
@@ -203,6 +196,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
         stateUpdate.suggestions = suggestions;
         stateUpdate.securityLogs = securityLogs;
         stateUpdate.allComments = allComments;
+        // This is a critical step that must be done for admins
         await checkAndUpdateOverdueTasks(managementTeam, allMovies);
       }
 
@@ -501,8 +495,11 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
     }
     
     let anyTaskUpdated = false;
+    
+    // This is now the main entry point to ensure wallets are always fresh for admins.
+    const updatedTeam = await calculateAllWallets(team, allMovies);
 
-    for (const member of team) {
+    for (const member of updatedTeam) {
         if (!member.tasks || member.tasks.length === 0) continue;
 
         const now = new Date();
@@ -554,19 +551,19 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
 
         if (tasksNeedUpdate) {
             await dbUpdateManagementMember(member.id, { tasks: updatedTasks });
-            useMovieStore.setState(state => ({
-                managementTeam: state.managementTeam.map(m => m.id === member.id ? { ...m, tasks: updatedTasks } : m)
-            }));
-            console.log(`Task status automatically updated for ${member.name}.`);
             await addSecurityLogEntry(`Task status automatically updated for ${member.name}.`);
         }
     }
+    
+    // The team is already updated with fresh wallets, now we update the state with fresh tasks.
+    useMovieStore.setState({ managementTeam: updatedTeam });
     return anyTaskUpdated;
 };
 
 // This is the new wrapper function that ensures wallets are calculated and updated in the DB
 const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
     const updatedTeamWithWallets = await dbCalculateAllWallets(team, movies);
+    // Update the store with the latest calculated wallets.
     useMovieStore.setState({ managementTeam: updatedTeamWithWallets });
     const adminName = getAdminName();
     if (adminName) {
@@ -577,6 +574,22 @@ const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): P
     }
     return updatedTeamWithWallets;
 };
+
+const updateSettlementStatus = async (memberId: string, month: string, status: Settlement['status']): Promise<void> => {
+    const { managementTeam } = useMovieStore.getState();
+    const member = managementTeam.find(m => m.id === memberId);
+    if (!member) return;
+
+    const settlements = (member.settlements || []).map(s => 
+        s.month === month ? { ...s, status } : s
+    );
+
+    await dbUpdateManagementMember(memberId, { settlements });
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.map(m => m.id === memberId ? { ...m, settlements } : m),
+    }));
+    await addSecurityLogEntry(`Updated ${member.name}'s settlement for ${month} to ${status}.`);
+}
 
 export { 
     useMovieStore, 
@@ -600,4 +613,5 @@ export {
     removeManagementMemberTask,
     checkAndUpdateOverdueTasks,
     calculateAllWallets,
+    updateSettlementStatus
 };

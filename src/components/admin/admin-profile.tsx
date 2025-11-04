@@ -5,14 +5,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useMovieStore, calculateAllWallets } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
-import type { ManagementMember, Movie, AdminTask, TodoItem, Wallet } from '@/lib/data';
+import type { ManagementMember, Movie, AdminTask, TodoItem, Wallet, Settlement } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
 import { format, parseISO, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, startOfToday, endOfToday, getDaysInMonth, isAfter } from 'date-fns';
 import { Badge } from '../ui/badge';
-import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee, HelpCircle, Film, Tv, TrendingDown } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, History, AlertCircle, XCircle, Archive, ListChecks, Wallet as WalletIcon, IndianRupee, HelpCircle, Film, Tv, TrendingDown, BookCheck, TimerOff, CircleDollarSign } from 'lucide-react';
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
@@ -366,6 +366,63 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
     )
 }
 
+const SettlementStatusBadge = ({ status }: { status: Settlement['status'] }) => {
+    switch (status) {
+        case 'pending':
+            return <Badge variant="outline" className="text-amber-500 border-amber-500"><Hourglass className="mr-1 h-3 w-3"/>Pending</Badge>;
+        case 'credited':
+            return <Badge variant="success"><CheckCircle className="mr-1 h-3 w-3"/>Credited</Badge>;
+        case 'penalty':
+            return <Badge variant="destructive"><TimerOff className="mr-1 h-3 w-3"/>Penalty</Badge>;
+    }
+}
+
+function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
+    const sortedSettlements = [...settlements].sort((a, b) => b.month.localeCompare(a.month));
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <BookCheck className="h-7 w-7 text-primary" />
+                    Monthly Statement
+                </CardTitle>
+                <CardDescription>History of your monthly earnings and their settlement status.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea className="h-[200px] pr-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Month</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead className="text-right">Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {sortedSettlements.length > 0 ? sortedSettlements.map((s, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>{format(parseISO(`${s.month}-02`), 'MMMM yyyy')}</TableCell>
+                                    <TableCell>
+                                        <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4" />{s.amount.toFixed(2)}</span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <SettlementStatusBadge status={s.status} />
+                                    </TableCell>
+                                </TableRow>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="h-24 text-center">No settlement history found.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </ScrollArea>
+            </CardContent>
+        </Card>
+    );
+}
+
 function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: ManagementMember, movies: Movie[], isCalculatingWallet: boolean }) {
     
     const { completedMovies, pendingMovies } = useMemo(() => {
@@ -399,6 +456,9 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
     return (
         <div className="space-y-6">
             <WalletCard wallet={admin.wallet} isCalculating={isCalculatingWallet} />
+
+            <MonthlyStatement settlements={admin.settlements || []} />
+
              <Card>
                 <CardHeader>
                     <CardTitle>Upload Overview</CardTitle>
@@ -526,7 +586,7 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
 
 export default function AdminProfile() {
     const { adminProfile, isLoading } = useAuth();
-    const { managementTeam, allMovies, setState } = useMovieStore();
+    const { managementTeam, allMovies } = useMovieStore();
     const [selectedAdminName, setSelectedAdminName] = useState<string | undefined>(undefined);
     const [isCalculating, setIsCalculating] = useState(false);
 
@@ -540,24 +600,19 @@ export default function AdminProfile() {
 
     useEffect(() => {
         const triggerWalletCalculation = async () => {
-            if (managementTeam.length > 0 && allMovies.length > 0) {
-                const adminData = managementTeam.find(m => m.name === (selectedAdminName || adminProfile?.name));
-                // Force re-calculation if wallet is undefined for the selected admin, or if it hasn't been calculated recently
-                if (adminData && adminData.wallet === undefined) {
-                    setIsCalculating(true);
-                    try {
-                        // This function now calculates wallets for everyone and updates the store
-                        await calculateAllWallets(managementTeam, allMovies);
-                    } catch (error) {
-                        console.error("Wallet calculation failed:", error);
-                    } finally {
-                        setIsCalculating(false);
-                    }
+            if (isTopLevelAdmin && managementTeam.length > 0 && allMovies.length > 0) {
+                setIsCalculating(true);
+                try {
+                    await calculateAllWallets(managementTeam, allMovies);
+                } catch (error) {
+                    console.error("Wallet calculation failed:", error);
+                } finally {
+                    setIsCalculating(false);
                 }
             }
         };
         triggerWalletCalculation();
-    }, [managementTeam, allMovies, selectedAdminName, adminProfile?.name]);
+    }, [isTopLevelAdmin, managementTeam, allMovies]);
 
 
     const handleAdminChange = (name: string) => {

@@ -59,6 +59,12 @@ export interface Wallet {
     weekly: number;
 }
 
+export interface Settlement {
+  month: string; // e.g., "2025-11"
+  status: 'pending' | 'credited' | 'penalty';
+  amount: number;
+}
+
 export interface ManagementMember {
     id:string;
     name: string;
@@ -66,6 +72,7 @@ export interface ManagementMember {
     timestamp: string; 
     tasks?: AdminTask[];
     wallet?: Wallet;
+    settlements?: Settlement[];
 }
 
 export interface Movie {
