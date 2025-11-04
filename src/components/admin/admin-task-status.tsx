@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -34,9 +35,13 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
         target = task.items?.length || 0;
     }
 
+    const completed = completedMoviesForTask.length;
+    const progress = target > 0 ? Math.min(100, (completed / target) * 100) : 0;
+
     return {
-        completed: completedMoviesForTask.length,
-        target: target,
+        completed,
+        target,
+        progress,
     };
 };
 
@@ -103,12 +108,11 @@ interface AdminTaskStatusProps {
 }
 
 export default function AdminTaskStatus({ task, allMovies, adminName }: AdminTaskStatusProps) {
-    const { completed, target } = useMemo(
+    const { completed, target, progress } = useMemo(
         () => getTaskProgress(task, allMovies, adminName),
         [task, allMovies, adminName]
     );
 
-    const progress = target > 0 ? (completed / target) * 100 : 0;
     const Icon = task.type === 'target' ? Target : ListChecks;
     const isOverdue = task.status === 'incompleted';
 

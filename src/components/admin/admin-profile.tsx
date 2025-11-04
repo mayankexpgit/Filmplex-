@@ -271,10 +271,13 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
         target = task.items?.length || 0;
     }
 
+    const completed = completedMoviesForTask.length;
+    const progress = target > 0 ? Math.min(100, (completed / target) * 100) : 0;
+
     return {
-        completed: completedMoviesForTask.length,
-        target: target,
-        progress: target > 0 ? (completedMoviesForTask.length / target) * 100 : 0
+        completed,
+        target,
+        progress,
     };
 };
 
@@ -601,18 +604,22 @@ export default function AdminProfile() {
     useEffect(() => {
         const triggerWalletCalculation = async () => {
             if (isTopLevelAdmin && managementTeam.length > 0 && allMovies.length > 0) {
-                setIsCalculating(true);
-                try {
-                    await calculateAllWallets(managementTeam, allMovies);
-                } catch (error) {
-                    console.error("Wallet calculation failed:", error);
-                } finally {
-                    setIsCalculating(false);
+                 // Check if wallets are already calculated for the current state to avoid re-triggering
+                const currentAdminInState = managementTeam.find(m => m.name === adminProfile.name);
+                if (!currentAdminInState?.wallet) {
+                    setIsCalculating(true);
+                    try {
+                        await calculateAllWallets(managementTeam, allMovies);
+                    } catch (error) {
+                        console.error("Wallet calculation failed:", error);
+                    } finally {
+                        setIsCalculating(false);
+                    }
                 }
             }
         };
         triggerWalletCalculation();
-    }, [isTopLevelAdmin, managementTeam, allMovies]);
+    }, [isTopLevelAdmin, managementTeam, allMovies, adminProfile]);
 
 
     const handleAdminChange = (name: string) => {

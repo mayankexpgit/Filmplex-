@@ -197,7 +197,8 @@ const useMovieStore = create<MovieState>((set, get) => ({
         stateUpdate.securityLogs = securityLogs;
         stateUpdate.allComments = allComments;
         // This is a critical step that must be done for admins
-        await checkAndUpdateOverdueTasks(managementTeam, allMovies);
+        const teamWithUpdatedTasks = await checkAndUpdateOverdueTasks(managementTeam, allMovies);
+        stateUpdate.managementTeam = teamWithUpdatedTasks; // Use the team with updated tasks
       }
 
       set({ ...stateUpdate, isInitialized: true });
@@ -488,19 +489,18 @@ const removeManagementMemberTask = async (memberId: string, taskId: string): Pro
     await addSecurityLogEntry(`Cancelled task "${taskTitle}" for ${member.name}.`);
 };
 
-const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<boolean> => {
+const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: Movie[]): Promise<ManagementMember[]> => {
     if (!team || !Array.isArray(team)) {
         console.error("checkAndUpdateOverdueTasks was called with invalid 'team' argument.");
-        return false;
+        return [];
     }
     
     let anyTaskUpdated = false;
     
-    // This is now the main entry point to ensure wallets are always fresh for admins.
-    const updatedTeam = await calculateAllWallets(team, allMovies);
+    const teamWithCalculatedWallets = await calculateAllWallets(team, allMovies);
 
-    for (const member of updatedTeam) {
-        if (!member.tasks || member.tasks.length === 0) continue;
+    const finalUpdatedTeam = await Promise.all(teamWithCalculatedWallets.map(async (member) => {
+        if (!member.tasks || member.tasks.length === 0) return member;
 
         const now = new Date();
         let tasksNeedUpdate = false;
@@ -508,6 +508,7 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
         const updatedTasks = member.tasks.map(task => {
             if (task.status === 'completed' || task.status === 'cancelled') return task;
 
+            // CORRECT LOGIC: Filter movies created by the admin AFTER the task started
             const taskStartDate = parseISO(task.startDate);
             const completedMoviesForTask = allMovies
                 .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
@@ -552,18 +553,21 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
         if (tasksNeedUpdate) {
             await dbUpdateManagementMember(member.id, { tasks: updatedTasks });
             await addSecurityLogEntry(`Task status automatically updated for ${member.name}.`);
+            return { ...member, tasks: updatedTasks };
         }
+        return member;
+    }));
+    
+    if (anyTaskUpdated) {
+        useMovieStore.setState({ managementTeam: finalUpdatedTeam });
     }
     
-    // The team is already updated with fresh wallets, now we update the state with fresh tasks.
-    useMovieStore.setState({ managementTeam: updatedTeam });
-    return anyTaskUpdated;
+    return finalUpdatedTeam;
 };
 
-// This is the new wrapper function that ensures wallets are calculated and updated in the DB
+
 const calculateAllWallets = async (team: ManagementMember[], movies: Movie[]): Promise<ManagementMember[]> => {
     const updatedTeamWithWallets = await dbCalculateAllWallets(team, movies);
-    // Update the store with the latest calculated wallets.
     useMovieStore.setState({ managementTeam: updatedTeamWithWallets });
     const adminName = getAdminName();
     if (adminName) {
