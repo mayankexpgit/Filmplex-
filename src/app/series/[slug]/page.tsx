@@ -6,7 +6,7 @@ import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
 import { useMovieStore, fetchInitialData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo, CheckCircle, Rocket } from 'lucide-react';
+import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo, CheckCircle, Rocket, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import MovieCardSmall from '@/components/movie-card-small';
@@ -210,6 +210,44 @@ export default function SeriesDetailPage() {
   
   const formattedReleaseDate = series.releaseDate ? format(parseISO(series.releaseDate), 'MMMM d, yyyy') : null;
 
+    const whyChooseItems = [
+      {
+          icon: CheckCircle,
+          title: "Instant Access",
+          description: "Direct, lightning-fast links. No ads, no wait, sirf content."
+      },
+      {
+          icon: CheckCircle,
+          title: "100% Secure",
+          description: "Encrypted flows aur privacy-first system. Tumhara data hamesha safe."
+      },
+      {
+          icon: CheckCircle,
+          title: "One-Shot Simplicity",
+          description: "3 clicks aur tumhari movie ya webseries ready to play."
+      },
+      {
+          icon: CheckCircle,
+          title: "Premium Quality",
+          description: "Crystal-clear HD/4K experience, bina kisi compromise ke."
+      },
+      {
+          icon: CheckCircle,
+          title: "Always Updated",
+          description: "Latest blockbusters aur trending webseries hamesha sabse pehle."
+      },
+      {
+          icon: CheckCircle,
+          title: "Error-Proof Execution",
+          description: "Har link tested, har flow automated. Zero friction."
+      },
+       {
+          icon: CheckCircle,
+          title: "Sleek Design",
+          description: "Cyber-inspired, modern UI jo tumhe sirf entertainment par focus karne deta hai."
+      }
+  ]
+
   return (
     <div className="bg-background min-h-screen text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4">
@@ -375,6 +413,43 @@ export default function SeriesDetailPage() {
 
           <Separator className="my-8 w-full" />
           
+          <section className="w-full max-w-3xl mx-auto text-foreground p-6 bg-card rounded-xl">
+            <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+                <Flame className="h-6 w-6 text-primary" />
+                Why Choose Filmplex.space?
+            </h2>
+            <ul className="space-y-3">
+                {whyChooseItems.map((item, index) => (
+                     <li key={index} className="flex items-center gap-4 p-3 bg-secondary/50 rounded-lg">
+                        <item.icon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                        <div>
+                            <span className="font-semibold">{item.title}:</span>
+                            <span className="text-muted-foreground ml-2">{item.description}</span>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+            <Separator className="my-6" />
+            <div className="text-center space-y-4">
+                <h3 className="text-xl font-bold flex items-center justify-center gap-2">
+                    <Rocket className="h-5 w-5 text-primary" />
+                    Ready to Stream & Download?
+                </h3>
+                <div className="p-3 bg-secondary/50 rounded-lg inline-block">
+                    <p className="text-muted-foreground">
+                       👉 Tumhare favorite movies aur webseries bas 3 clicks door hain.
+                    </p>
+                </div>
+                 <div className="p-3 bg-secondary/50 rounded-lg inline-block ml-2">
+                    <p className="text-muted-foreground">
+                        👉 No distractions. No delays. Sirf pure entertainment, on demand.
+                    </p>
+                </div>
+            </div>
+          </section>
+
+          <Separator className="my-8 w-full" />
+
           <CommentsSection seriesId={series.id} />
 
           <Separator className="my-8 w-full" />
@@ -390,75 +465,11 @@ export default function SeriesDetailPage() {
                   The platform is 100% free to use, and while currently focused on downloads, streaming options may be available in the near future.
               </p>
           </section>
-          
-          <Separator className="my-8 w-full" />
-
-          <section className="w-full max-w-3xl mx-auto text-foreground">
-            <h2 className="text-2xl font-bold mb-6 text-center">Why Choose Filmplex.space?</h2>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Instant Access</h3>
-                  <p className="text-muted-foreground">Direct, lightning-fast links. No ads, no wait, sirf content.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">100% Secure</h3>
-                  <p className="text-muted-foreground">Encrypted flows aur privacy-first system. Tumhara data hamesha safe.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">One-Shot Simplicity</h3>
-                  <p className="text-muted-foreground">3 clicks aur tumhari movie ya webseries ready to play.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Premium Quality</h3>
-                  <p className="text-muted-foreground">Crystal-clear HD/4K experience, bina kisi compromise ke.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Always Updated</h3>
-                  <p className="text-muted-foreground">Latest blockbusters aur trending webseries hamesha sabse pehle.</p>
-                </div>
-              </li>
-               <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Error-Proof Execution</h3>
-                  <p className="text-muted-foreground">Har link tested, har flow automated. Zero friction.</p>
-                </div>
-              </li>
-               <li className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold">Sleek Design</h3>
-                  <p className="text-muted-foreground">Cyber-inspired, modern UI jo tumhe sirf entertainment par focus karne deta hai.</p>
-                </div>
-              </li>
-            </ul>
-            <Separator className="my-6" />
-            <div className="text-center space-y-2">
-                <h3 className="text-xl font-bold flex items-center justify-center gap-2">
-                    <Rocket className="h-5 w-5 text-primary" />
-                    Ready to Stream & Download?
-                </h3>
-                <p className="text-muted-foreground">👉 Tumhare favorite movies aur webseries bas 3 clicks door hain.</p>
-                <p className="text-muted-foreground">👉 No distractions. No delays. Sirf pure entertainment, on demand.</p>
-            </div>
-          </section>
 
         </div>
       </main>
     </div>
   );
 }
+
+    
