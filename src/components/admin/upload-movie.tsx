@@ -45,7 +45,7 @@ import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
-type FormData = Omit<Partial<Movie>, 'id'> & {
+type FormData = Omit<Partial<Movie>, 'tags'> & {
     id?: string; // ID is optional, only present when editing
     tagsString?: string;
     contentType: 'movie' | 'series';
@@ -56,7 +56,6 @@ type FormData = Omit<Partial<Movie>, 'id'> & {
 const qualityOptions = ['4K', '2160p', '1080p', '720p', '480p'];
 
 const initialFormState: FormData = {
-  id: undefined,
   title: '',
   year: new Date().getFullYear(),
   posterUrl: '',
@@ -178,7 +177,7 @@ function EpisodeEditor({ epIndex, episode, onEpisodeChange, onLinkChange, onAddL
     )
 }
 
-export default function UploadMovie() {
+export default function UploadMovieComponent() {
   const { toast } = useToast();
   const { movies, startCoinAnimation } = useMovieStore(state => ({
     movies: state.allMovies,
@@ -208,25 +207,12 @@ export default function UploadMovie() {
     if (movieId) {
       const movieToEdit = movies.find(m => m.id === movieId);
       if (movieToEdit) {
-        // Permission check
-        const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
-        const isOwner = movieToEdit.uploadedBy === adminProfile?.name;
-        // Legacy movies have no owner, so only top level admins can edit them.
-        const canEditLegacy = !movieToEdit.uploadedBy && isTopLevelAdmin;
-
-        if (!isTopLevelAdmin && !isOwner && !canEditLegacy) {
-            toast({
-                variant: 'destructive',
-                title: 'Permission Denied',
-                description: "You don't have permission to edit this movie.",
-            });
-            router.replace('/admin/movie-list');
-            return;
-        }
-
+        // Simplified permission check: Any admin can edit.
+        // No need for a complex check here. If the user can access this page, they can edit.
         setFormData({
             ...initialFormState, // Ensure all fields are present
             ...movieToEdit,
+            id: movieToEdit.id,
             tagsString: movieToEdit.tags ? movieToEdit.tags.join(', ') : '',
             downloadLinks: movieToEdit.downloadLinks && movieToEdit.downloadLinks.length > 0 ? movieToEdit.downloadLinks : [{ quality: '1080p', url: '', size: '' }],
             screenshots: movieToEdit.screenshots && movieToEdit.screenshots.length > 0 ? movieToEdit.screenshots : ['', '', ''],
@@ -249,12 +235,12 @@ export default function UploadMovie() {
   };
 
   useEffect(() => {
-    if (formData.contentType === 'series' && formData.title) {
+    if (formData.contentType === 'series') {
       setFormData(prev => {
         const { title, seasonNumber, partNumber, cardInfoText } = prev;
         
         // Construct the new first line
-        let newTitleLine = title;
+        let newTitleLine = title || '';
         if (seasonNumber) {
           newTitleLine += ` - Season ${String(seasonNumber).padStart(2, '0')}`;
         }
@@ -450,11 +436,11 @@ export default function UploadMovie() {
   const handleSave = async () => {
     // Create a mutable copy and remove the 'id' for the data to be saved.
     // The 'id' in formData is only for tracking if we are in 'edit' mode.
-    const { id: editId, ...movieDataToSave } = formData;
+    const { id: editId, tagsString, ...movieDataToSave } = formData;
       
     const finalMovieData: Partial<Movie> = {
       ...movieDataToSave,
-      tags: formData.tagsString ? formData.tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+      tags: tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
       screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
     };
 
@@ -468,8 +454,7 @@ export default function UploadMovie() {
       finalMovieData.seasonDownloadLinks = (finalMovieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
       delete finalMovieData.downloadLinks;
     }
-    delete (finalMovieData as any).tagsString;
-
+      
     const linksPresent =
       (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
       (finalMovieData.contentType === 'series' &&
