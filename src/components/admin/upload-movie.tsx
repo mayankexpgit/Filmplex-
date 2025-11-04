@@ -230,7 +230,7 @@ export default function UploadMovie() {
     if (formData.contentType === 'series') {
         const { title, seasonNumber, partNumber } = formData;
         if (title) {
-            let newCardInfo = `${title}`;
+            let newCardInfo = title;
             if (seasonNumber) {
                 newCardInfo += ` - Season ${String(seasonNumber).padStart(2, '0')}`;
             }
@@ -874,3 +874,5 @@ export default function UploadMovie() {
     </>
   );
 }
+
+    
