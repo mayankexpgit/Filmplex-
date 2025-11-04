@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LayoutDashboard, LogOut, UserCircle } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, UserCircle, IndianRupee } from 'lucide-react';
 import { useMovieStore, fetchInitialData } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -64,12 +64,9 @@ export default function AdminLayout({
           <div className="flex items-center gap-4">
              <Button variant="outline" asChild id="admin-wallet-button" className="gap-2">
               <Link href="/admin/profile">
-                 <Image 
-                    src="https://i.ibb.co/fYspK9N/1000496834-removebg-preview.png" 
-                    alt="Wallet" 
-                    width={24} 
-                    height={24} 
-                  />
+                <div className="w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center border-2 border-amber-600">
+                  <IndianRupee className="w-4 h-4 text-amber-900" />
+                </div>
                 <span className="font-bold">{adminProfile?.wallet?.total?.toFixed(2) || '0.00'}</span>
               </Link>
             </Button>
