@@ -22,7 +22,7 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { useMovieStore, submitRequest } from '@/store/movieStore';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
@@ -300,7 +300,7 @@ function ChangelogPanel() {
 
 function RequestForm({ onSubmitted }: { onSubmitted: () => void }) {
   const { toast } = useToast();
-  const [isPending, startTransition] = React.useTransition();
+  const [isPending, startTransition] = useTransition();
   const [movieName, setMovieName] = useState('');
   const [comment, setComment] = useState('');
 
