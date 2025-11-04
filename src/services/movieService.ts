@@ -20,7 +20,7 @@ import {
 } from 'firebase/firestore';
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet, Settlement } from '@/lib/data';
 import type { ContactInfo, Suggestion, SecurityLog, AdminCredentials } from '@/store/movieStore';
-import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore, format as formatDate } from 'date-fns';
+import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore, format as formatDate, isAfter } from 'date-fns';
 
 
 // --- Admin Credentials ---
