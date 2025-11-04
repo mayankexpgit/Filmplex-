@@ -2,6 +2,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import FloatingTelegramButton from '@/components/floating-telegram-button';
 
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function RootLayout({
         <div className="flex-grow">
           {children}
         </div>
+        <FloatingTelegramButton />
         <Toaster />
         <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
           <div className="container mx-auto text-center text-sm text-muted-foreground">
