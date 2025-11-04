@@ -72,7 +72,7 @@ export default function AdminLayout({
                     alt="Wallet" 
                     width={24} 
                     height={24} 
-                    onLoad={() => setIsIconLoading(false)}
+                    onLoadingComplete={() => setIsIconLoading(false)}
                     className={isIconLoading ? 'hidden' : 'inline'}
                   />
                 <span className="font-bold">{adminProfile?.wallet?.total?.toFixed(2) || '0.00'}</span>
