@@ -200,10 +200,9 @@ export const updateManagementMember = async (id: string, updates: Partial<Omit<M
   const memberDoc = doc(db, 'management', id);
   const finalUpdates: { [key: string]: any } = { ...updates };
   
-  // If task is explicitly set to null or undefined in the update object,
-  // we interpret this as a request to delete the field in Firestore.
-  if ('task' in updates && (updates.task === null || updates.task === undefined)) {
-    finalUpdates.task = deleteField();
+  if (finalUpdates.tasks === undefined) {
+    // If tasks is explicitly set to undefined, delete the field.
+    finalUpdates.tasks = deleteField();
   }
 
   await updateDoc(memberDoc, finalUpdates);
