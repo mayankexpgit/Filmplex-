@@ -741,7 +741,7 @@ export default function AdminProfile() {
             </CardContent>
         </Card>
 
-        {isTopLevelAdmin && <DownloadAnalytics allMovies={allMovies} />}
+        <DownloadAnalytics allMovies={allMovies} />
       </div>
     )
 }
