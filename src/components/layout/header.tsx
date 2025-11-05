@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles, AlertCircle, History, Gift } from 'lucide-react';
+import { Settings, Bell, LifeBuoy, Mail, MessageCircle, Instagram, Send, LayoutGrid, Users, Sparkles, Gift, History } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -28,7 +28,6 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import type { ManagementMember, UserRequest } from '@/lib/data';
 import Changelog from '../changelog';
-import NotificationInitializer from '../notification-initializer';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -47,65 +46,6 @@ import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
-
-function NotificationRePrompt() {
-  const { triggerPermissionPrompt, notificationPermission } = useToast();
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [render, setRender] = useState(false);
-  
-  useEffect(() => {
-    // This ensures the component only renders on the client side after hydration.
-    setRender(true);
-  }, []);
-
-  const handleRePrompt = () => {
-    setShowPrompt(true);
-  };
-
-  const handleAllow = () => {
-    setShowPrompt(false);
-    triggerPermissionPrompt();
-  };
-
-  const handleDeny = () => {
-    setShowPrompt(false);
-  };
-  
-  if (!render || notificationPermission !== 'denied') {
-    return null;
-  }
-
-  return (
-    <>
-      <div 
-        className="bg-primary/10 text-primary-foreground p-2 text-center text-sm cursor-pointer hover:bg-primary/20"
-        onClick={handleRePrompt}
-      >
-        <AlertCircle className="inline h-4 w-4 mr-2"/>
-        Don't miss out on the latest movies. <span className="font-semibold underline">Click here to enable notifications.</span>
-      </div>
-       <AlertDialog open={showPrompt} onOpenChange={setShowPrompt}>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                  <Bell className="h-6 w-6 text-primary" />
-                  Enable Notifications
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                  You've previously chosen not to receive notifications. Would you like to enable them now to get updates on the latest movies and web series?
-              </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={handleDeny}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleAllow}>
-                    Enable
-                </AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
 
 
 function UpcomingReleasesPanel() {
@@ -490,8 +430,6 @@ function RequestZonePanel() {
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <NotificationInitializer />
-      <NotificationRePrompt />
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

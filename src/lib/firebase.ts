@@ -1,7 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig: FirebaseOptions = {
     projectId: "vexel-cinema",
@@ -13,63 +12,9 @@ const firebaseConfig: FirebaseOptions = {
     measurementId: "G-8GKE6RR8J2"
 };
 
-// VAPID key for web push notifications, loaded from environment variables
-const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-
-
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
-const saveFCMToken = async (token: string): Promise<void> => {
-    try {
-        // Use the token as the document ID to prevent duplicates
-        const tokenDocRef = doc(db, 'fcmTokens', token);
-        await setDoc(tokenDocRef, { 
-            token: token,
-            createdAt: new Date().toISOString() 
-        });
-        console.log('FCM token saved to Firestore.');
-    } catch (error) {
-        console.error('Error saving FCM token to Firestore:', error);
-    }
-}
 
-const getMessagingToken = async () => {
-    let messaging;
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-        messaging = getMessaging(app);
-        if (!VAPID_KEY) {
-            console.error('Firebase VAPID key is not defined. Please set NEXT_PUBLIC_FIREBASE_VAPID_KEY in your environment.');
-            return;
-        }
-        try {
-            const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
-            if (currentToken) {
-                console.log('FCM Token:', currentToken);
-                await saveFCMToken(currentToken);
-            } else {
-                console.log('No registration token available. Request permission to generate one.');
-            }
-        } catch (err) {
-            console.error('An error occurred while retrieving token. ', err);
-        }
-    }
-};
-
-const onMessageListener = () => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-        const messaging = getMessaging(app);
-        return new Promise((resolve) => {
-            onMessage(messaging, (payload) => {
-                console.log('Message received. ', payload);
-                resolve(payload);
-            });
-        });
-    }
-    // Return a promise that never resolves if not in a browser environment
-    return new Promise(()=>{});
-};
-
-
-export { db, getMessagingToken, onMessageListener };
+export { db };
