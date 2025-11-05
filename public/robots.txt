@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://filmplex.space
+
+# Sitemaps
+Sitemap: https://filmplex.space/sitemap.xml
