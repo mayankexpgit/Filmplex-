@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import FloatingTelegramButton from '@/components/floating-telegram-button';
+import { Analytics } from '@vercel/analytics/react';
 
 
 export const metadata: Metadata = {
@@ -55,6 +56,7 @@ export default function RootLayout({
             <p>&copy; {new Date().getFullYear()} FILMPLEX. All Rights Reserved. | Version 1.9</p>
           </div>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
