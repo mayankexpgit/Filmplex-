@@ -3,21 +3,27 @@
 'use server';
 
 import axios, { type AxiosRequestConfig } from 'axios';
+import getConfig from 'next/config';
 
 // --- API Key Management ---
 const getTMDbKeys = (): string[] => {
+    const { publicRuntimeConfig } = getConfig();
     const keys: string[] = [];
-    for (let i = 1; i <= 5; i++) {
-        const key = process.env[`TMDB_API_KEY_${i}`];
-        if (key) {
-            keys.push(key);
-        }
-    }
+    if (publicRuntimeConfig.TMDB_API_KEY_1) keys.push(publicRuntimeConfig.TMDB_API_KEY_1);
+    if (publicRuntimeConfig.TMDB_API_KEY_2) keys.push(publicRuntimeConfig.TMDB_API_KEY_2);
+    // You can add more keys here if needed
+    // if (publicRuntimeConfig.TMDB_API_KEY_3) keys.push(publicRuntimeConfig.TMDB_API_KEY_3);
     return keys;
 };
 
-const tmdbKeys = getTMDbKeys();
+let tmdbKeys: string[] = [];
 let currentKeyIndex = 0;
+
+// Initialize keys once
+if (typeof window === 'undefined') {
+    tmdbKeys = getTMDbKeys();
+}
+
 
 /**
  * Makes a request to the TMDb API with automatic key rotation.
@@ -27,15 +33,17 @@ let currentKeyIndex = 0;
  * @returns The response data from the TMDb API.
  */
 const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length): Promise<any> => {
-    if (tmdbKeys.length === 0) {
-        throw new Error('No TMDb API keys are configured. Please add at least one TMDB_API_KEY_ to your .env file.');
+    // Re-fetch keys on every request in case they were not available at startup
+    const currentKeys = getTMDbKeys();
+    if (currentKeys.length === 0) {
+        throw new Error('No TMDb API keys are configured. Please add TMDB_API_KEY_1 and TMDB_API_KEY_2 to your .env file and next.config.js.');
     }
     if (retries <= 0) {
         throw new Error('All TMDb API keys failed. Please check your keys and their usage limits.');
     }
 
     try {
-        const key = tmdbKeys[currentKeyIndex];
+        const key = currentKeys[currentKeyIndex];
         const response = await axios({
             ...config,
             params: {
@@ -48,7 +56,7 @@ const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length
         if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 429)) {
             // 401: Invalid API Key, 429: Rate Limit Exceeded. Rotate key and retry.
             console.warn(`TMDb key at index ${currentKeyIndex} failed. Rotating to the next key.`);
-            currentKeyIndex = (currentKeyIndex + 1) % tmdbKeys.length;
+            currentKeyIndex = (currentKeyIndex + 1) % currentKeys.length;
             return tmdbRequest(config, retries - 1);
         }
         // For other errors, re-throw them.
@@ -142,7 +150,8 @@ const fetchPages = async (title: string, type: 'movie' | 'tv', fetchAll: boolean
 
 
 export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = false): Promise<TMDbSearchResult[]> => {
-    if (tmdbKeys.length === 0) {
+    const currentKeys = getTMDbKeys();
+    if (currentKeys.length === 0) {
         throw new Error('TMDb API key is not configured.');
     }
     const lowerCaseTitle = title.toLowerCase();
@@ -217,7 +226,8 @@ const getTrailerUrl = (videos: any[]): string | undefined => {
 
 
 export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentType): Promise<FormattedTMDbData> => {
-    if (tmdbKeys.length === 0) {
+    const currentKeys = getTMDbKeys();
+    if (currentKeys.length === 0) {
         throw new Error('TMDb API key is not configured.');
     }
 
