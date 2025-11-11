@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff, ClipboardPaste } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -200,6 +200,7 @@ export default function UploadMovieComponent() {
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
+  const [bulkLinks, setBulkLinks] = useState('');
 
 
   useEffect(() => {
@@ -431,6 +432,53 @@ export default function UploadMovieComponent() {
         setIsFetchingAI(false);
     }
   };
+
+    const handleParseBulkLinks = () => {
+        if (!bulkLinks) return;
+
+        const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
+        const newLinks: DownloadLink[] = [];
+
+        const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
+        const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
+        const urlRegex = /https?:\/\/[^\s]+/g;
+
+        lines.forEach(line => {
+            const urls = line.match(urlRegex);
+            if (!urls) return;
+
+            const url = urls[0];
+            let quality = '1080p';
+            let size = '';
+            
+            const qualityMatch = line.match(qualityRegex);
+            if (qualityMatch) {
+                quality = qualityMatch[0];
+            }
+
+            const sizeMatch = line.match(sizeRegex);
+            if (sizeMatch) {
+                size = sizeMatch[0];
+            }
+
+            newLinks.push({ quality, url, size });
+        });
+
+        if (newLinks.length > 0) {
+            handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
+            setBulkLinks('');
+            toast({
+                title: 'Links Parsed',
+                description: `Successfully added ${newLinks.length} new download links.`,
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Parsing Failed',
+                description: 'Could not find any valid links in the text.',
+            });
+        }
+    };
 
 
   const handleSave = async () => {
@@ -698,70 +746,90 @@ export default function UploadMovieComponent() {
                 <Separator />
                 
                 {/* Download Links Section */}
-                {formData.contentType === 'movie' ? (
-                  <div className="space-y-4 pt-2">
+                <div className="space-y-4 pt-2">
                     <Label>Download Links</Label>
-                    {(formData.downloadLinks || []).map((link, index) => (
-                      <DownloadLinkEditor 
-                        key={index} 
-                        index={index} 
-                        link={link} 
-                        onLinkChange={handleMovieLinkChange} 
-                        onRemoveLink={removeMovieLink} 
-                        disabled={isFormDisabled} 
-                      />
-                    ))}
-                    <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Link
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-6 pt-2">
-                      <div>
-                          <div className="flex justify-between items-center mb-4">
-                              <Label className="text-lg">Episodes</Label>
-                              <Button variant="outline" size="sm" onClick={addEpisode} disabled={isFormDisabled}>
-                                  <PlusCircle className="mr-2 h-4 w-4" /> Add Episode
-                              </Button>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="bulk-links" className="text-xs">Bulk Add Links</Label>
+                        <div className="flex items-start gap-2">
+                             <Textarea 
+                                id="bulk-links" 
+                                value={bulkLinks} 
+                                onChange={(e) => setBulkLinks(e.target.value)} 
+                                placeholder="Paste a block of text with links here. The parser will try to extract URLs, quality, and size." 
+                                rows={4}
+                                disabled={isFormDisabled}
+                            />
+                            <Button type="button" variant="outline" onClick={handleParseBulkLinks} disabled={isFormDisabled}>
+                                <ClipboardPaste className="mr-2 h-4 w-4" /> Parse
+                            </Button>
+                        </div>
+                    </div>
+                    
+                    {formData.contentType === 'movie' ? (
+                      <div className="space-y-3">
+                        {(formData.downloadLinks || []).map((link, index) => (
+                          <DownloadLinkEditor 
+                            key={index} 
+                            index={index} 
+                            link={link} 
+                            onLinkChange={handleMovieLinkChange} 
+                            onRemoveLink={removeMovieLink} 
+                            disabled={isFormDisabled} 
+                          />
+                        ))}
+                        <Button variant="outline" size="sm" onClick={addMovieLink} disabled={isFormDisabled}>
+                          <PlusCircle className="mr-2 h-4 w-4" /> Add Manual Link
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                          <div>
+                              <div className="flex justify-between items-center mb-4">
+                                  <Label className="text-lg">Episodes</Label>
+                                  <Button variant="outline" size="sm" onClick={addEpisode} disabled={isFormDisabled}>
+                                      <PlusCircle className="mr-2 h-4 w-4" /> Add Episode
+                                  </Button>
+                              </div>
+                              <div className="space-y-4">
+                                  {(formData.episodes || []).map((episode, epIndex) => (
+                                      episode && <EpisodeEditor 
+                                          key={epIndex} 
+                                          epIndex={epIndex} 
+                                          episode={episode} 
+                                          onEpisodeChange={handleInputChange}
+                                          onLinkChange={handleEpisodeLinkChange} 
+                                          onAddLink={addEpisodeLink} 
+                                          onRemoveLink={removeEpisodeLink} 
+                                          onRemoveEpisode={removeEpisode} 
+                                          disabled={isFormDisabled} 
+                                          currentEpisodes={formData.episodes || []}
+                                      />
+                                  ))}
+                              </div>
                           </div>
-                          <div className="space-y-4">
-                              {(formData.episodes || []).map((episode, epIndex) => (
-                                  episode && <EpisodeEditor 
-                                      key={epIndex} 
-                                      epIndex={epIndex} 
-                                      episode={episode} 
-                                      onEpisodeChange={handleInputChange}
-                                      onLinkChange={handleEpisodeLinkChange} 
-                                      onAddLink={addEpisodeLink} 
-                                      onRemoveLink={removeEpisodeLink} 
-                                      onRemoveEpisode={removeEpisode} 
-                                      disabled={isFormDisabled} 
-                                      currentEpisodes={formData.episodes || []}
-                                  />
-                              ))}
+                          <Separator />
+                          <div>
+                              <Label className="text-lg mb-4 block">Full Season Download Links</Label>
+                              <div className="space-y-4">
+                                  {(formData.seasonDownloadLinks || []).map((link, index) => (
+                                      <DownloadLinkEditor 
+                                        key={index} 
+                                        index={index} 
+                                        link={link} 
+                                        onLinkChange={handleSeasonLinkChange} 
+                                        onRemoveLink={removeSeasonLink} 
+                                        disabled={isFormDisabled}
+                                      />
+                                  ))}
+                                  <Button variant="outline" size="sm" onClick={addSeasonLink} disabled={isFormDisabled}>
+                                      <PlusCircle className="mr-2 h-4 w-4" /> Add Season Link
+                                  </Button>
+                              </div>
                           </div>
                       </div>
-                      <Separator />
-                      <div>
-                          <Label className="text-lg mb-4 block">Full Season Download Links</Label>
-                          <div className="space-y-4">
-                              {(formData.seasonDownloadLinks || []).map((link, index) => (
-                                  <DownloadLinkEditor 
-                                    key={index} 
-                                    index={index} 
-                                    link={link} 
-                                    onLinkChange={handleSeasonLinkChange} 
-                                    onRemoveLink={removeSeasonLink} 
-                                    disabled={isFormDisabled}
-                                  />
-                              ))}
-                              <Button variant="outline" size="sm" onClick={addSeasonLink} disabled={isFormDisabled}>
-                                  <PlusCircle className="mr-2 h-4 w-4" /> Add Season Link
-                              </Button>
-                          </div>
-                      </div>
-                  </div>
-                )}
+                    )}
+                </div>
 
                 <Separator />
 
