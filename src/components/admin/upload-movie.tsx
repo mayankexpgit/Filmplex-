@@ -434,55 +434,104 @@ export default function UploadMovieComponent() {
   };
 
     const handleParseBulkLinks = () => {
-        if (!bulkLinks) return;
+      if (!bulkLinks) return;
+      const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
 
-        const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
-        const newLinks: DownloadLink[] = [];
+      if (formData.contentType === 'series') {
+          const newEpisodes: Episode[] = [];
+          const episodeRegex = /📁\s*E(\d+)/;
+          const shortLinkRegex = /✨\s*Short:\s*(https?:\/\/[^\s]+)/;
 
-        const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
-        const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
-        const urlRegex = /https?:\/\/[^\s]+/g;
+          let currentEpisodeNumber: number | null = null;
+          let foundEpisodes: { [key: number]: Episode } = {};
+          
+          for (const line of lines) {
+              const episodeMatch = line.match(episodeRegex);
+              if (episodeMatch) {
+                  currentEpisodeNumber = parseInt(episodeMatch[1], 10);
+                  if (!foundEpisodes[currentEpisodeNumber]) {
+                       foundEpisodes[currentEpisodeNumber] = {
+                          episodeNumber: currentEpisodeNumber,
+                          title: `Episode ${currentEpisodeNumber}`,
+                          downloadLinks: [],
+                       };
+                  }
+                  continue;
+              }
 
-        lines.forEach(line => {
-            const urls = line.match(urlRegex);
-            if (!urls) return;
+              if (currentEpisodeNumber !== null) {
+                  const shortLinkMatch = line.match(shortLinkRegex);
+                  if (shortLinkMatch) {
+                      const url = shortLinkMatch[1];
+                      if(foundEpisodes[currentEpisodeNumber]) {
+                          foundEpisodes[currentEpisodeNumber].downloadLinks.push({ quality: '1080p', url: url, size: '' });
+                      }
+                      // Reset for the next episode block
+                      currentEpisodeNumber = null;
+                  }
+              }
+          }
+          
+          const createdEpisodes = Object.values(foundEpisodes).filter(ep => ep.downloadLinks.length > 0);
+          
+          if (createdEpisodes.length > 0) {
+              handleInputChange('episodes', [...(formData.episodes || []).filter(ep => ep.downloadLinks.some(l => l.url)), ...createdEpisodes]);
+              setBulkLinks('');
+              toast({
+                  title: 'Episodes Parsed',
+                  description: `Successfully added ${createdEpisodes.length} new episodes.`,
+              });
+          } else {
+              toast({
+                  variant: 'destructive',
+                  title: 'Parsing Failed',
+                  description: 'Could not find any valid episode blocks in the specified format.',
+              });
+          }
 
-            const url = urls[0];
-            let quality = '1080p';
-            let size = '';
-            
-            const qualityMatch = line.match(qualityRegex);
-            if (qualityMatch) {
-                quality = qualityMatch[0];
-            }
 
-            const sizeMatch = line.match(sizeRegex);
-            if (sizeMatch) {
-                size = sizeMatch[0];
-            }
+      } else { // Movie logic
+          const newLinks: DownloadLink[] = [];
+          const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
+          const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
+          const urlRegex = /https?:\/\/[^\s]+/g;
 
-            newLinks.push({ quality, url, size });
-        });
+          lines.forEach(line => {
+              const urls = line.match(urlRegex);
+              if (!urls) return;
 
-        if (newLinks.length > 0) {
-            if (formData.contentType === 'movie') {
-                handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
-            } else {
-                 // For series, we assume bulk links are for the full season
-                handleInputChange('seasonDownloadLinks', [...(formData.seasonDownloadLinks || []).filter(l => l.url), ...newLinks]);
-            }
-            setBulkLinks('');
-            toast({
-                title: 'Links Parsed',
-                description: `Successfully added ${newLinks.length} new download links.`,
-            });
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Parsing Failed',
-                description: 'Could not find any valid links in the text.',
-            });
-        }
+              const url = urls[0];
+              let quality = '1080p';
+              let size = '';
+              
+              const qualityMatch = line.match(qualityRegex);
+              if (qualityMatch) {
+                  quality = qualityMatch[0];
+              }
+
+              const sizeMatch = line.match(sizeRegex);
+              if (sizeMatch) {
+                  size = sizeMatch[0];
+              }
+
+              newLinks.push({ quality, url, size });
+          });
+
+          if (newLinks.length > 0) {
+              handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
+              setBulkLinks('');
+              toast({
+                  title: 'Links Parsed',
+                  description: `Successfully added ${newLinks.length} new download links.`,
+              });
+          } else {
+              toast({
+                  variant: 'destructive',
+                  title: 'Parsing Failed',
+                  description: 'Could not find any valid links in the text.',
+              });
+          }
+      }
     };
 
 
