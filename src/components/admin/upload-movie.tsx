@@ -438,34 +438,24 @@ export default function UploadMovieComponent() {
         if (!bulkLinks) return;
 
         if (formData.contentType === 'series') {
-            const episodesMap: Map<number, Episode> = new Map();
-
-            // Regex to find all episode blocks
+            const episodesMap = new Map<number, Episode>();
+            
             const episodeBlockRegex = /📁\s*E(\d+)([\s\S]*?)(?=(?:📁\s*E\d+)|$)/g;
             
             let blockMatch;
             while ((blockMatch = episodeBlockRegex.exec(bulkLinks)) !== null) {
                 const episodeNumber = parseInt(blockMatch[1], 10);
                 const blockContent = blockMatch[2];
-
-                const headerLine = blockContent.split('\n')[0].trim();
-                const qualityMatch = headerLine.match(/(\d{3,4}P)?/i);
-                const sizeMatch = headerLine.match(/(\d+)/);
-                
-                const quality = qualityMatch?.[1] || '1080p';
-                const size = sizeMatch?.[1] ? `${sizeMatch[1]}MB` : (commonSize || '');
                 
                 const shortLinkMatch = blockContent.match(/✨\s*Short:\s*(https?:\/\/[^\s]+)/);
 
                 if (shortLinkMatch) {
                     const url = shortLinkMatch[1];
-                    const newLink: DownloadLink = { quality, url, size };
+                    const newLink: DownloadLink = { quality: '', url: url, size: commonSize || '' };
 
                     if (episodesMap.has(episodeNumber)) {
-                        // Add link to existing episode
                         episodesMap.get(episodeNumber)!.downloadLinks.push(newLink);
                     } else {
-                        // Create a new episode
                         episodesMap.set(episodeNumber, {
                             episodeNumber,
                             title: `Episode ${episodeNumber}`,
@@ -478,15 +468,14 @@ export default function UploadMovieComponent() {
             const parsedEpisodes = Array.from(episodesMap.values()).sort((a, b) => a.episodeNumber - b.episodeNumber);
 
             if (parsedEpisodes.length > 0) {
-                // Complete overwrite: replace all existing episodes with the newly parsed ones
                 handleInputChange('episodes', parsedEpisodes);
                 setBulkLinks('');
                 toast({
                     title: 'Episodes Parsed',
-                    description: `Successfully created/updated ${parsedEpisodes.length} episodes.`,
+                    description: `Successfully parsed ${parsedEpisodes.length} episodes.`,
                 });
             } else {
-                toast({
+                 toast({
                     variant: 'destructive',
                     title: 'Parsing Failed',
                     description: 'Could not find any valid episode blocks in the specified format.',
@@ -496,8 +485,6 @@ export default function UploadMovieComponent() {
         } else { // Movie logic
             const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
             const newLinks: DownloadLink[] = [];
-            const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
-            const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
             const urlRegex = /https?:\/\/[^\s]+/g;
 
             lines.forEach(line => {
@@ -505,20 +492,7 @@ export default function UploadMovieComponent() {
                 if (!urls) return;
 
                 const url = urls[0];
-                let quality = '1080p';
-                let size = commonSize || '';
-                
-                const qualityMatch = line.match(qualityRegex);
-                if (qualityMatch) {
-                    quality = qualityMatch[0];
-                }
-
-                const sizeMatch = line.match(sizeRegex);
-                if (sizeMatch && !commonSize) {
-                    size = sizeMatch[0];
-                }
-
-                newLinks.push({ quality, url, size });
+                newLinks.push({ quality: '', url, size: commonSize || '' });
             });
 
             if (newLinks.length > 0) {
