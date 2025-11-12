@@ -436,62 +436,54 @@ export default function UploadMovieComponent() {
 
     const handleParseBulkLinks = () => {
         if (!bulkLinks) return;
-        
+
         if (formData.contentType === 'series') {
-            const manuallyAddedEpisodes = (formData.episodes || []).filter(ep => ep.downloadLinks.length === 0);
-            
+            const episodesMap: Map<number, Episode> = new Map();
+
+            // Regex to find all episode blocks
             const episodeBlockRegex = /📁\s*E(\d+)([\s\S]*?)(?=(?:📁\s*E\d+)|$)/g;
-            const linkRegex = /✨\s*Short:\s*(https?:\/\/[^\s]+)/;
-            const qualityAndSizeRegex = /(\d{3,4}p)?\s*(\d+)?/i;
-
-
-            const newEpisodesMap = new Map<number, Episode>();
-
-            let match;
-            while ((match = episodeBlockRegex.exec(bulkLinks)) !== null) {
-                const episodeNumber = parseInt(match[1], 10);
-                const blockContent = match[2];
+            
+            let blockMatch;
+            while ((blockMatch = episodeBlockRegex.exec(bulkLinks)) !== null) {
+                const episodeNumber = parseInt(blockMatch[1], 10);
+                const blockContent = blockMatch[2];
 
                 const headerLine = blockContent.split('\n')[0].trim();
-                const qualityMatch = headerLine.match(qualityAndSizeRegex);
+                const qualityMatch = headerLine.match(/(\d{3,4}P)?/i);
+                const sizeMatch = headerLine.match(/(\d+)/);
                 
-                let quality = '1080p';
-                let size = commonSize || '';
-
-                if (qualityMatch) {
-                    if (qualityMatch[1]) quality = qualityMatch[1];
-                    if (qualityMatch[2]) size = `${qualityMatch[2]}MB`;
-                }
-
-                const shortLinkMatch = blockContent.match(linkRegex);
+                const quality = qualityMatch?.[1] || '1080p';
+                const size = sizeMatch?.[1] ? `${sizeMatch[1]}MB` : (commonSize || '');
                 
+                const shortLinkMatch = blockContent.match(/✨\s*Short:\s*(https?:\/\/[^\s]+)/);
+
                 if (shortLinkMatch) {
                     const url = shortLinkMatch[1];
-                    if (!newEpisodesMap.has(episodeNumber)) {
-                        newEpisodesMap.set(episodeNumber, {
-                            episodeNumber: episodeNumber,
+                    const newLink: DownloadLink = { quality, url, size };
+
+                    if (episodesMap.has(episodeNumber)) {
+                        // Add link to existing episode
+                        episodesMap.get(episodeNumber)!.downloadLinks.push(newLink);
+                    } else {
+                        // Create a new episode
+                        episodesMap.set(episodeNumber, {
+                            episodeNumber,
                             title: `Episode ${episodeNumber}`,
-                            downloadLinks: [],
+                            downloadLinks: [newLink],
                         });
                     }
-                    newEpisodesMap.get(episodeNumber)!.downloadLinks.push({
-                        quality,
-                        url,
-                        size: size || commonSize || '',
-                    });
                 }
             }
-
-            const createdEpisodes = Array.from(newEpisodesMap.values());
             
-            if (createdEpisodes.length > 0) {
-                const existingEpisodesWithLinks = (formData.episodes || []).filter(ep => ep.downloadLinks.some(l => l.url));
-                const finalEpisodes = [...manuallyAddedEpisodes, ...createdEpisodes].sort((a,b) => a.episodeNumber - b.episodeNumber);
-                handleInputChange('episodes', finalEpisodes);
+            const parsedEpisodes = Array.from(episodesMap.values()).sort((a, b) => a.episodeNumber - b.episodeNumber);
+
+            if (parsedEpisodes.length > 0) {
+                // Complete overwrite: replace all existing episodes with the newly parsed ones
+                handleInputChange('episodes', parsedEpisodes);
                 setBulkLinks('');
                 toast({
                     title: 'Episodes Parsed',
-                    description: `Successfully created/updated ${createdEpisodes.length} episodes.`,
+                    description: `Successfully created/updated ${parsedEpisodes.length} episodes.`,
                 });
             } else {
                 toast({
