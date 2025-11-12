@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -11,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
-import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff, ClipboardPaste } from 'lucide-react';
+import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff, ClipboardPaste, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '../ui/textarea';
 import MovieDetailPreview from '../admin/movie-detail-preview';
@@ -201,6 +200,7 @@ export default function UploadMovieComponent() {
   const [showPreview, setShowPreview] = useState(true);
   const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
   const [bulkLinks, setBulkLinks] = useState('');
+  const [commonSize, setCommonSize] = useState('');
 
 
   useEffect(() => {
@@ -311,14 +311,14 @@ export default function UploadMovieComponent() {
     const newEpisode: Episode = {
         episodeNumber: (formData.episodes?.length || 0) + 1,
         title: '',
-        downloadLinks: [{ quality: '1080p', url: '', size: '' }]
+        downloadLinks: [{ quality: '1080p', url: '', size: commonSize || '' }]
     };
     handleInputChange('episodes', addListItem(formData.episodes, newEpisode));
   };
   const addEpisodeLink = (epIndex: number) => {
      const newEpisodes = [...(formData.episodes || [])];
      if (newEpisodes[epIndex]) {
-        newEpisodes[epIndex].downloadLinks = addListItem(newEpisodes[epIndex].downloadLinks, { quality: '1080p', url: '', size: '' });
+        newEpisodes[epIndex].downloadLinks = addListItem(newEpisodes[epIndex].downloadLinks, { quality: '1080p', url: '', size: commonSize || '' });
         handleInputChange('episodes', newEpisodes);
      }
   }
@@ -335,6 +335,7 @@ export default function UploadMovieComponent() {
         .map((ep, i) => ({ ...ep, episodeNumber: i + 1 })); // Re-number subsequent episodes
     handleInputChange('episodes', newEpisodes);
   };
+  const removeAllEpisodes = () => handleInputChange('episodes', []);
   const removeScreenshot = (index: number) => handleInputChange('screenshots', removeListItem(formData.screenshots, index));
   const removeEpisodeLink = (epIndex: number, linkIndex: number) => {
       const newEpisodes = [...(formData.episodes || [])];
@@ -438,7 +439,7 @@ export default function UploadMovieComponent() {
       const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
 
       if (formData.contentType === 'series') {
-          const newEpisodes: Episode[] = [];
+          const manuallyAddedEpisodes = (formData.episodes || []).filter(ep => ep.downloadLinks.length === 0);
           const episodeRegex = /📁\s*E(\d+)/;
           const shortLinkRegex = /✨\s*Short:\s*(https?:\/\/[^\s]+)/;
 
@@ -464,9 +465,8 @@ export default function UploadMovieComponent() {
                   if (shortLinkMatch) {
                       const url = shortLinkMatch[1];
                       if(foundEpisodes[currentEpisodeNumber]) {
-                          foundEpisodes[currentEpisodeNumber].downloadLinks.push({ quality: '1080p', url: url, size: '' });
+                          foundEpisodes[currentEpisodeNumber].downloadLinks.push({ quality: '1080p', url: url, size: commonSize || '' });
                       }
-                      // Reset for the next episode block
                       currentEpisodeNumber = null;
                   }
               }
@@ -475,7 +475,7 @@ export default function UploadMovieComponent() {
           const createdEpisodes = Object.values(foundEpisodes).filter(ep => ep.downloadLinks.length > 0);
           
           if (createdEpisodes.length > 0) {
-              handleInputChange('episodes', [...(formData.episodes || []).filter(ep => ep.downloadLinks.some(l => l.url)), ...createdEpisodes]);
+              handleInputChange('episodes', [...manuallyAddedEpisodes, ...createdEpisodes].sort((a,b) => a.episodeNumber - b.episodeNumber));
               setBulkLinks('');
               toast({
                   title: 'Episodes Parsed',
@@ -502,7 +502,7 @@ export default function UploadMovieComponent() {
 
               const url = urls[0];
               let quality = '1080p';
-              let size = '';
+              let size = commonSize || '';
               
               const qualityMatch = line.match(qualityRegex);
               if (qualityMatch) {
@@ -510,7 +510,7 @@ export default function UploadMovieComponent() {
               }
 
               const sizeMatch = line.match(sizeRegex);
-              if (sizeMatch) {
+              if (sizeMatch && !commonSize) {
                   size = sizeMatch[0];
               }
 
@@ -533,6 +533,19 @@ export default function UploadMovieComponent() {
           }
       }
     };
+    
+    useEffect(() => {
+        if (commonSize && formData.contentType === 'series' && formData.episodes) {
+            const newEpisodes = formData.episodes.map(ep => ({
+                ...ep,
+                downloadLinks: ep.downloadLinks.map(link => ({
+                    ...link,
+                    size: commonSize
+                }))
+            }));
+            handleInputChange('episodes', newEpisodes);
+        }
+    }, [commonSize]);
 
 
   const handleSave = async () => {
@@ -842,9 +855,36 @@ export default function UploadMovieComponent() {
                           <div>
                               <div className="flex justify-between items-center mb-4">
                                   <Label className="text-lg">Episodes</Label>
-                                  <Button variant="outline" size="sm" onClick={addEpisode} disabled={isFormDisabled}>
-                                      <PlusCircle className="mr-2 h-4 w-4" /> Add Episode
-                                  </Button>
+                                  <div className="flex items-center gap-2">
+                                    <Input 
+                                      placeholder="Common Size" 
+                                      className="h-9 w-28"
+                                      value={commonSize}
+                                      onChange={(e) => setCommonSize(e.target.value)}
+                                      disabled={isFormDisabled}
+                                    />
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button variant="destructive" size="sm" disabled={isFormDisabled || !formData.episodes || formData.episodes.length === 0}>
+                                            <Trash2 className="mr-2 h-4 w-4" /> Remove All
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>This will delete all current episode sections. This action cannot be undone.</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={removeAllEpisodes}>Confirm</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
+                                    <Button variant="outline" size="sm" onClick={addEpisode} disabled={isFormDisabled}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Episode
+                                    </Button>
+                                  </div>
                               </div>
                               <div className="space-y-4">
                                   {(formData.episodes || []).map((episode, epIndex) => (
