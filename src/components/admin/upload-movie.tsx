@@ -435,92 +435,115 @@ export default function UploadMovieComponent() {
   };
 
     const handleParseBulkLinks = () => {
-      if (!bulkLinks) return;
-      
-      if (formData.contentType === 'series') {
-          const manuallyAddedEpisodes = (formData.episodes || []).filter(ep => ep.downloadLinks.length === 0);
-          
-          const episodeRegex = /📁\s*E(\d+)/g;
-          const shortLinkRegex = /✨\s*Short:\s*(https?:\/\/[^\s]+)/;
+        if (!bulkLinks) return;
+        
+        if (formData.contentType === 'series') {
+            const manuallyAddedEpisodes = (formData.episodes || []).filter(ep => ep.downloadLinks.length === 0);
+            
+            const episodeBlockRegex = /📁\s*E(\d+)([\s\S]*?)(?=(?:📁\s*E\d+)|$)/g;
+            const linkRegex = /✨\s*Short:\s*(https?:\/\/[^\s]+)/;
+            const qualityAndSizeRegex = /(\d{3,4}p)?\s*(\d+)?/i;
 
-          let createdEpisodes: Episode[] = [];
-          const textBlocks = bulkLinks.split(episodeRegex).slice(1); // Split by episode marker
 
-          for (let i = 0; i < textBlocks.length; i += 2) {
-              const episodeNumber = parseInt(textBlocks[i], 10);
-              const blockContent = textBlocks[i + 1];
-              
-              if (blockContent) {
-                  const shortLinkMatch = blockContent.match(shortLinkRegex);
-                  if (shortLinkMatch) {
-                      const url = shortLinkMatch[1];
-                      createdEpisodes.push({
-                          episodeNumber: episodeNumber,
-                          title: `Episode ${episodeNumber}`,
-                          downloadLinks: [{ quality: '1080p', url: url, size: commonSize || '' }],
-                      });
-                  }
-              }
-          }
-          
-          if (createdEpisodes.length > 0) {
-              handleInputChange('episodes', [...manuallyAddedEpisodes, ...createdEpisodes].sort((a,b) => a.episodeNumber - b.episodeNumber));
-              setBulkLinks('');
-              toast({
-                  title: 'Episodes Parsed',
-                  description: `Successfully added ${createdEpisodes.length} new episodes.`,
-              });
-          } else {
-              toast({
-                  variant: 'destructive',
-                  title: 'Parsing Failed',
-                  description: 'Could not find any valid episode blocks in the specified format.',
-              });
-          }
+            const newEpisodesMap = new Map<number, Episode>();
 
-      } else { // Movie logic
-          const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
-          const newLinks: DownloadLink[] = [];
-          const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
-          const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
-          const urlRegex = /https?:\/\/[^\s]+/g;
+            let match;
+            while ((match = episodeBlockRegex.exec(bulkLinks)) !== null) {
+                const episodeNumber = parseInt(match[1], 10);
+                const blockContent = match[2];
 
-          lines.forEach(line => {
-              const urls = line.match(urlRegex);
-              if (!urls) return;
+                const headerLine = blockContent.split('\n')[0].trim();
+                const qualityMatch = headerLine.match(qualityAndSizeRegex);
+                
+                let quality = '1080p';
+                let size = commonSize || '';
 
-              const url = urls[0];
-              let quality = '1080p';
-              let size = commonSize || '';
-              
-              const qualityMatch = line.match(qualityRegex);
-              if (qualityMatch) {
-                  quality = qualityMatch[0];
-              }
+                if (qualityMatch) {
+                    if (qualityMatch[1]) quality = qualityMatch[1];
+                    if (qualityMatch[2]) size = `${qualityMatch[2]}MB`;
+                }
 
-              const sizeMatch = line.match(sizeRegex);
-              if (sizeMatch && !commonSize) {
-                  size = sizeMatch[0];
-              }
+                const shortLinkMatch = blockContent.match(linkRegex);
+                
+                if (shortLinkMatch) {
+                    const url = shortLinkMatch[1];
+                    if (!newEpisodesMap.has(episodeNumber)) {
+                        newEpisodesMap.set(episodeNumber, {
+                            episodeNumber: episodeNumber,
+                            title: `Episode ${episodeNumber}`,
+                            downloadLinks: [],
+                        });
+                    }
+                    newEpisodesMap.get(episodeNumber)!.downloadLinks.push({
+                        quality,
+                        url,
+                        size: size || commonSize || '',
+                    });
+                }
+            }
 
-              newLinks.push({ quality, url, size });
-          });
+            const createdEpisodes = Array.from(newEpisodesMap.values());
+            
+            if (createdEpisodes.length > 0) {
+                const existingEpisodesWithLinks = (formData.episodes || []).filter(ep => ep.downloadLinks.some(l => l.url));
+                const finalEpisodes = [...manuallyAddedEpisodes, ...createdEpisodes].sort((a,b) => a.episodeNumber - b.episodeNumber);
+                handleInputChange('episodes', finalEpisodes);
+                setBulkLinks('');
+                toast({
+                    title: 'Episodes Parsed',
+                    description: `Successfully created/updated ${createdEpisodes.length} episodes.`,
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Parsing Failed',
+                    description: 'Could not find any valid episode blocks in the specified format.',
+                });
+            }
 
-          if (newLinks.length > 0) {
-              handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
-              setBulkLinks('');
-              toast({
-                  title: 'Links Parsed',
-                  description: `Successfully added ${newLinks.length} new download links.`,
-              });
-          } else {
-              toast({
-                  variant: 'destructive',
-                  title: 'Parsing Failed',
-                  description: 'Could not find any valid links in the text.',
-              });
-          }
-      }
+        } else { // Movie logic
+            const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
+            const newLinks: DownloadLink[] = [];
+            const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
+            const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
+            const urlRegex = /https?:\/\/[^\s]+/g;
+
+            lines.forEach(line => {
+                const urls = line.match(urlRegex);
+                if (!urls) return;
+
+                const url = urls[0];
+                let quality = '1080p';
+                let size = commonSize || '';
+                
+                const qualityMatch = line.match(qualityRegex);
+                if (qualityMatch) {
+                    quality = qualityMatch[0];
+                }
+
+                const sizeMatch = line.match(sizeRegex);
+                if (sizeMatch && !commonSize) {
+                    size = sizeMatch[0];
+                }
+
+                newLinks.push({ quality, url, size });
+            });
+
+            if (newLinks.length > 0) {
+                handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
+                setBulkLinks('');
+                toast({
+                    title: 'Links Parsed',
+                    description: `Successfully added ${newLinks.length} new download links.`,
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Parsing Failed',
+                    description: 'Could not find any valid links in the text.',
+                });
+            }
+        }
     };
     
     useEffect(() => {
