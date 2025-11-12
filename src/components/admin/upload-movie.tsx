@@ -436,43 +436,32 @@ export default function UploadMovieComponent() {
 
     const handleParseBulkLinks = () => {
       if (!bulkLinks) return;
-      const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
-
+      
       if (formData.contentType === 'series') {
           const manuallyAddedEpisodes = (formData.episodes || []).filter(ep => ep.downloadLinks.length === 0);
-          const episodeRegex = /📁\s*E(\d+)/;
+          
+          const episodeRegex = /📁\s*E(\d+)/g;
           const shortLinkRegex = /✨\s*Short:\s*(https?:\/\/[^\s]+)/;
 
-          let currentEpisodeNumber: number | null = null;
-          let foundEpisodes: { [key: number]: Episode } = {};
-          
-          for (const line of lines) {
-              const episodeMatch = line.match(episodeRegex);
-              if (episodeMatch) {
-                  currentEpisodeNumber = parseInt(episodeMatch[1], 10);
-                  if (!foundEpisodes[currentEpisodeNumber]) {
-                       foundEpisodes[currentEpisodeNumber] = {
-                          episodeNumber: currentEpisodeNumber,
-                          title: `Episode ${currentEpisodeNumber}`,
-                          downloadLinks: [],
-                       };
-                  }
-                  continue;
-              }
+          let createdEpisodes: Episode[] = [];
+          const textBlocks = bulkLinks.split(episodeRegex).slice(1); // Split by episode marker
 
-              if (currentEpisodeNumber !== null) {
-                  const shortLinkMatch = line.match(shortLinkRegex);
+          for (let i = 0; i < textBlocks.length; i += 2) {
+              const episodeNumber = parseInt(textBlocks[i], 10);
+              const blockContent = textBlocks[i + 1];
+              
+              if (blockContent) {
+                  const shortLinkMatch = blockContent.match(shortLinkRegex);
                   if (shortLinkMatch) {
                       const url = shortLinkMatch[1];
-                      if(foundEpisodes[currentEpisodeNumber]) {
-                          foundEpisodes[currentEpisodeNumber].downloadLinks.push({ quality: '1080p', url: url, size: commonSize || '' });
-                      }
-                      currentEpisodeNumber = null;
+                      createdEpisodes.push({
+                          episodeNumber: episodeNumber,
+                          title: `Episode ${episodeNumber}`,
+                          downloadLinks: [{ quality: '1080p', url: url, size: commonSize || '' }],
+                      });
                   }
               }
           }
-          
-          const createdEpisodes = Object.values(foundEpisodes).filter(ep => ep.downloadLinks.length > 0);
           
           if (createdEpisodes.length > 0) {
               handleInputChange('episodes', [...manuallyAddedEpisodes, ...createdEpisodes].sort((a,b) => a.episodeNumber - b.episodeNumber));
@@ -489,8 +478,8 @@ export default function UploadMovieComponent() {
               });
           }
 
-
       } else { // Movie logic
+          const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
           const newLinks: DownloadLink[] = [];
           const qualityRegex = /(4k|2160p|1080p|720p|480p)/i;
           const sizeRegex = /(\d+(\.\d+)?\s?(GB|MB))/i;
