@@ -465,7 +465,12 @@ export default function UploadMovieComponent() {
         });
 
         if (newLinks.length > 0) {
-            handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
+            if (formData.contentType === 'movie') {
+                handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
+            } else {
+                 // For series, we assume bulk links are for the full season
+                handleInputChange('seasonDownloadLinks', [...(formData.seasonDownloadLinks || []).filter(l => l.url), ...newLinks]);
+            }
             setBulkLinks('');
             toast({
                 title: 'Links Parsed',
@@ -748,24 +753,25 @@ export default function UploadMovieComponent() {
                 {/* Download Links Section */}
                 <div className="space-y-4 pt-2">
                     <Label>Download Links</Label>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="bulk-links" className="text-xs">Bulk Add Links</Label>
-                        <div className="flex items-start gap-2">
-                             <Textarea 
-                                id="bulk-links" 
-                                value={bulkLinks} 
-                                onChange={(e) => setBulkLinks(e.target.value)} 
-                                placeholder="Paste a block of text with links here. The parser will try to extract URLs, quality, and size." 
-                                rows={4}
-                                disabled={isFormDisabled}
-                            />
-                            <Button type="button" variant="outline" onClick={handleParseBulkLinks} disabled={isFormDisabled}>
-                                <ClipboardPaste className="mr-2 h-4 w-4" /> Parse
-                            </Button>
-                        </div>
+                    
+                    {/* Bulk Add Section */}
+                    <div className="p-3 border rounded-lg bg-card space-y-2">
+                        <Label htmlFor="bulk-links" className="text-sm font-medium">Bulk Add Links (Auto Mode)</Label>
+                        <Textarea 
+                            id="bulk-links" 
+                            value={bulkLinks} 
+                            onChange={(e) => setBulkLinks(e.target.value)} 
+                            placeholder="Paste a block of text with links here. The parser will try to extract URLs, quality, and size." 
+                            rows={4}
+                            disabled={isFormDisabled}
+                        />
+                        <Button type="button" size="sm" variant="secondary" onClick={handleParseBulkLinks} disabled={isFormDisabled || !bulkLinks}>
+                            <ClipboardPaste className="mr-2 h-4 w-4" /> Parse Links
+                        </Button>
                     </div>
                     
+                    {/* Manual Add Section */}
+                    <p className="text-sm font-medium text-muted-foreground">Manual Mode</p>
                     {formData.contentType === 'movie' ? (
                       <div className="space-y-3">
                         {(formData.downloadLinks || []).map((link, index) => (
