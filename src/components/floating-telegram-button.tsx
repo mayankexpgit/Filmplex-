@@ -17,7 +17,7 @@ export default function FloatingTelegramButton() {
   }
 
   return (
-    <div className="fixed bottom-8 left-8 z-50">
+    <div className="fixed bottom-28 left-8 z-50">
       <a
         href={contactInfo.telegramUrl}
         target="_blank"
