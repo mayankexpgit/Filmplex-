@@ -529,10 +529,9 @@ export default function UploadMovieComponent() {
   const handleSave = async () => {
     if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
+      setIsUploading(false);
       return;
     }
-    
-    setIsUploading(true);
     
     const { id: editId, tagsString, ...movieDataToSave } = formData;
       
@@ -569,7 +568,6 @@ export default function UploadMovieComponent() {
       });
       setIsUploading(false);
 
-      // Reset the form after a short delay to allow animations to be seen
       setTimeout(() => {
         resetForm();
       }, 500);
@@ -579,6 +577,11 @@ export default function UploadMovieComponent() {
       console.error("Database operation failed:", error);
       toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
     }
+  };
+
+  const confirmAndSave = () => {
+    setIsUploading(true);
+    handleSave();
   };
 
   const isFormDisabled = isFetchingAI || isSearching || isUploading;
@@ -968,7 +971,7 @@ export default function UploadMovieComponent() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSave}>Continue</AlertDialogAction>
+                      <AlertDialogAction onClick={confirmAndSave}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
