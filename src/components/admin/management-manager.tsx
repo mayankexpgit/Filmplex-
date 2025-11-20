@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks, updateSettlementStatus as storeUpdateSettlementStatus } from '@/store/movieStore';
-import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive, ListChecks, Target, X, Eye, IndianRupee, Hourglass, TimerOff, BookCheck, CircleDollarSign } from 'lucide-react';
+import { useMovieStore, addManagementMember, deleteManagementMember as storeDeleteManagementMember, updateManagementMember as storeUpdateManagementMember, updateManagementMemberTask, removeManagementMemberTask, checkAndUpdateOverdueTasks, updateSettlementStatus as storeUpdateSettlementStatus } from '@/store/movieStore';
+import { Loader2, PlusCircle, User, Trash2, KeyRound, Lock, Unlock, Calendar as CalendarIcon, Briefcase, TrendingUp, CheckCircle, XCircle, AlertCircle, History, Archive, ListChecks, Target, X, Eye, IndianRupee, Hourglass, TimerOff, BookCheck, CircleDollarSign, Edit } from 'lucide-react';
 import type { ManagementMember, AdminTask, Movie, TodoItem, Settlement } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '../ui/separator';
@@ -114,6 +114,52 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
     };
 };
 
+function EditMemberDialog({ member, onClose, onSave }: { member: ManagementMember; onClose: () => void; onSave: (id: string, updates: Partial<ManagementMember>) => void; }) {
+    const [name, setName] = useState(member.name);
+    const [displayName, setDisplayName] = useState(member.displayName);
+    const [isSaving, startSaving] = useTransition();
+
+    const handleSave = () => {
+        if (!name.trim()) {
+            // Toast can be added here if needed
+            return;
+        }
+        startSaving(() => {
+            onSave(member.id, { name, displayName: displayName.trim() || name });
+        });
+    };
+
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Admin: {member.displayName}</DialogTitle>
+                    <DialogDescription>
+                        Change the login name or display name for this team member.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-admin-name">Admin Login Name</Label>
+                        <Input id="edit-admin-name" value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-display-name">Display Name</Label>
+                        <Input id="edit-display-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                    <Button onClick={handleSave} disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Changes
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: AdminTask, allMovies: Movie[], adminName: string, onClose: () => void }) {
     const { completed, target, progress } = getTaskProgress(task, allMovies, adminName);
     
@@ -153,7 +199,7 @@ function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: Admi
                 </div>
                  <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Close</Button>
-                </DialogFooter>
+                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
@@ -410,6 +456,7 @@ export default function ManagementManager() {
   const { adminProfile } = useAuth();
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isSettlementDialogOpen, setIsSettlementDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ManagementMember | null>(null);
 
   const [name, setName] = useState('');
@@ -517,6 +564,23 @@ export default function ManagementManager() {
         }
     });
   };
+  
+  const handleSaveMember = useCallback(async (id: string, updates: Partial<ManagementMember>) => {
+    try {
+      await storeUpdateManagementMember(id, updates);
+      toast({
+        title: 'Success!',
+        description: `Admin details have been updated.`,
+      });
+      handleCloseDialogs();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: 'Could not update admin details.',
+      });
+    }
+  }, [toast]);
 
   const handleTaskSet = useCallback(async (memberId: string, task: Omit<AdminTask, 'id' | 'status' | 'startDate'>) => {
     try {
@@ -592,9 +656,15 @@ export default function ManagementManager() {
     setIsSettlementDialogOpen(true);
   }
 
+  const handleOpenEditDialog = (member: ManagementMember) => {
+      setSelectedMember(member);
+      setIsEditDialogOpen(true);
+  }
+
   const handleCloseDialogs = () => {
     setIsTaskDialogOpen(false);
     setIsSettlementDialogOpen(false);
+    setIsEditDialogOpen(false);
     setSelectedMember(null);
   }
 
@@ -697,6 +767,9 @@ export default function ManagementManager() {
                                     {activeTasks.length > 0 ? <AlertCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
                                     <span>{activeTasks.length} Active Task(s)</span>
                                 </Badge>
+                                {canManageTeam && isUnlocked && (
+                                     <Button variant="outline" size="icon" onClick={() => handleOpenEditDialog(member)}><Edit className="h-4 w-4" /></Button>
+                                )}
                                 {canManageTeam && (
                                     <>
                                         <Button variant="outline" size="icon" onClick={() => handleOpenSettlementDialog(member)}><CircleDollarSign className="h-4 w-4" /></Button>
@@ -727,7 +800,7 @@ export default function ManagementManager() {
                     </div>
                 ) : (
                     <div className="w-full space-y-2">
-                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Add/Remove Controls</Label>
+                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Add/Remove/Edit Controls</Label>
                         <div className="flex gap-2">
                             <Input 
                                 id="management-key" 
@@ -753,6 +826,9 @@ export default function ManagementManager() {
       </Dialog>
       <Dialog open={isSettlementDialogOpen} onOpenChange={(open) => !open && handleCloseDialogs()}>
           {selectedMember && <SettlementDialog member={selectedMember} onClose={handleCloseDialogs} onUpdateStatus={handleUpdateSettlement} />}
+      </Dialog>
+       <Dialog open={isEditDialogOpen} onOpenChange={(open) => !open && handleCloseDialogs()}>
+          {selectedMember && <EditMemberDialog member={selectedMember} onClose={handleCloseDialogs} onSave={handleSaveMember} />}
       </Dialog>
     </>
   );

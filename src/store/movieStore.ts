@@ -71,6 +71,7 @@ interface MovieState {
   securityLogs: SecurityLog[];
   notifications: Notification[];
   requests: UserRequest[];
+  managementTeam: ManagementMember[];
   
   // Per-movie state
   comments: Comment[];
@@ -134,6 +135,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
   notifications: [],
   requests: [],
   adminProfile: null,
+  managementTeam: [],
   comments: [],
 isCoinAnimationActive: false,
   isInitialized: false,
@@ -462,6 +464,15 @@ const deleteManagementMember = async (id: string): Promise<void> => {
     }));
 };
 
+const updateManagementMember = async (id: string, updates: Partial<ManagementMember>): Promise<void> => {
+    await dbUpdateManagementMember(id, updates);
+    useMovieStore.setState(state => ({
+        managementTeam: state.managementTeam.map(m => m.id === id ? { ...m, ...updates } : m),
+    }));
+    const memberName = updates.displayName || updates.name || 'an admin';
+    await addSecurityLogEntry(`Updated details for: "${memberName}"`);
+};
+
 const updateManagementMemberTask = async (memberId: string, taskData: Omit<AdminTask, 'id' | 'status' | 'startDate'>): Promise<void> => {
     const member = useMovieStore.getState().managementTeam.find(m => m.id === memberId);
     if (!member) return;
@@ -655,6 +666,7 @@ export {
     deleteRequest,
     addManagementMember,
     deleteManagementMember,
+    updateManagementMember,
     updateManagementMemberTask,
     updateAdminTask,
     removeManagementMemberTask,
