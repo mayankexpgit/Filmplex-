@@ -77,11 +77,5 @@ export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDe
  * @returns A promise that resolves to an array of search results.
  */
 export async function searchTMDb(title: string, fetchAll: boolean = false): Promise<TMDbSearchResult[]> {
-  try {
-    const results = await searchMoviesOnTMDb(title, fetchAll);
-    return results;
-  } catch (error: any) {
-     console.error("Error in searchTMDb server action:", error);
-     throw new Error(error.message || 'Failed to search TMDb.');
-  }
+    return searchMoviesOnTMDb(title, fetchAll);
 }
