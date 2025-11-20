@@ -29,6 +29,7 @@ import {
   addRequest as dbAddRequest,
   updateRequestStatus as dbUpdateRequestStatus,
   deleteRequest as dbDeleteRequest,
+  calculateEarning as dbCalculateEarning,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
 
@@ -661,6 +662,8 @@ const updateSettlementStatus = async (memberId: string, month: string, status: S
     await addSecurityLogEntry(`Updated ${memberName}'s settlement for ${month} to ${status}.`);
 }
 
+const calculateEarning = dbCalculateEarning;
+
 
 export { 
     useMovieStore, 
@@ -688,5 +691,6 @@ export {
     removeManagementMemberTask,
     checkAndUpdateOverdueTasks,
     calculateAllWallets,
-    updateSettlementStatus
+    updateSettlementStatus,
+    calculateEarning
 };

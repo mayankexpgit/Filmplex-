@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useMovieStore, calculateAllWallets } from '@/store/movieStore';
+import { useMovieStore, calculateAllWallets, calculateEarning } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import type { ManagementMember, Movie, AdminTask, TodoItem, Wallet, Settlement } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, H
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
-import { fetchDownloadAnalytics, calculateEarning } from '@/services/movieService';
+import { fetchDownloadAnalytics } from '@/services/movieService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
@@ -419,7 +419,8 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
 }
 
 function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: ManagementMember, movies: Movie[], isCalculatingWallet: boolean }) {
-    
+    const [movieEarnings, setMovieEarnings] = useState<Map<string, number>>(new Map());
+
     const { completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
             if (!a.createdAt || !b.createdAt) return 0;
@@ -434,6 +435,22 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
         return { completedMovies: completed, pendingMovies: pending };
     }, [admin, movies]);
     
+    useEffect(() => {
+        const calculateMovieEarnings = async () => {
+            const earningsMap = new Map<string, number>();
+            for (const movie of completedMovies) {
+                const earning = await calculateEarning(movie);
+                earningsMap.set(movie.id, earning);
+            }
+            setMovieEarnings(earningsMap);
+        };
+
+        if (completedMovies.length > 0) {
+            calculateMovieEarnings();
+        }
+    }, [completedMovies]);
+
+
     const now = new Date();
     const weeklyMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now), end: endOfWeek(now) }));
     const monthlyMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfMonth(now), end: endOfMonth(now) }));
@@ -447,16 +464,6 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
     const allTasks = admin.tasks || [];
     const sortedTasks = [...allTasks].sort((a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
     const activeTasks = admin.tasks?.filter(t => t.status === 'active' || t.status === 'incompleted') || [];
-
-    const movieEarnings = useMemo(() => {
-        const earningsMap = new Map<string, number>();
-        // This is a simplified display; real calculation happens on the server.
-        // We assume wallet data is up-to-date.
-        // For per-movie display, we can show a placeholder or a simplified client-side calculation if needed.
-        // For now, we will show what is in the wallet.
-        return earningsMap;
-    }, [completedMovies]);
-
 
     return (
         <div className="space-y-6">
@@ -559,6 +566,7 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
                                     <TableRow>
                                         <TableHead>Title</TableHead>
                                         <TableHead>Date</TableHead>
+                                        <TableHead className="text-right">Earning</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -566,6 +574,9 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
                                         <TableRow key={`${movie.id}-${index}`}>
                                             <TableCell>{movie.title}</TableCell>
                                             <TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PP') : 'N/A'}</TableCell>
+                                            <TableCell className="text-right font-mono text-green-500">
+                                                ₹{movieEarnings.has(movie.id) ? movieEarnings.get(movie.id)!.toFixed(2) : '...'}
+                                            </TableCell>
                                         </TableRow>
                                     )) : <TableRow key="no-completed-uploads"><TableCell colSpan={3} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
                                 </TableBody>
@@ -691,7 +702,7 @@ export default function AdminProfile() {
             </CardContent>
         </Card>
 
-        <DownloadAnalytics allMovies={allMovies} />
+        {isTopLevelAdmin && <DownloadAnalytics allMovies={allMovies} />}
       </div>
     )
 }
