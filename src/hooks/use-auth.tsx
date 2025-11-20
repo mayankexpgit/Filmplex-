@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAdminCredentials, fetchManagementTeam } from '@/services/movieService';
 import type { ManagementMember } from '@/lib/data';
-import { useMovieStore, getAdminName } from '@/store/movieStore';
+import { useMovieStore } from '@/store/movieStore';
 
 
 const ADMIN_STORAGE_KEY = 'filmplex_admin_name';
@@ -16,6 +16,16 @@ const setStoreAdminProfile = (profile: ManagementMember | null) => {
 };
 
 const setMovieStoreState = useMovieStore.setState;
+
+const getAdminName = (): string | null => {
+    try {
+        if (typeof window === 'undefined') return null;
+        return localStorage.getItem(ADMIN_STORAGE_KEY);
+    } catch (error) {
+        console.error("Could not access localStorage:", error);
+        return null;
+    }
+};
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
