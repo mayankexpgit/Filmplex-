@@ -41,6 +41,7 @@ import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import UploadProgressIndicator from './upload-progress-indicator';
 
 type FormData = Omit<Partial<Movie>, 'tags'> & {
     id?: string; // ID is optional, only present when editing
@@ -526,11 +527,10 @@ export default function UploadMovieComponent() {
     }, [commonSize]);
 
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      setIsUploading(false);
-      return;
+      return false;
     }
     
     const { id: editId, tagsString, ...movieDataToSave } = formData;
@@ -558,30 +558,31 @@ export default function UploadMovieComponent() {
       } else {
         await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
-      
+      return true;
+    } catch (error) {
+      console.error("Database operation failed:", error);
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
+      return false;
+    }
+  };
+
+  const confirmAndSave = async () => {
+    setIsUploading(true);
+    const success = await handleSave();
+    if (success) {
       startCoinAnimation();
-      
       toast({ 
           title: 'Upload Complete!', 
           description: `"${formData.title}" has been successfully saved.`,
           variant: 'success'
       });
-      setIsUploading(false);
-
       setTimeout(() => {
         resetForm();
+        setIsUploading(false);
       }, 500);
-
-    } catch (error) {
+    } else {
       setIsUploading(false);
-      console.error("Database operation failed:", error);
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
     }
-  };
-
-  const confirmAndSave = () => {
-    setIsUploading(true);
-    handleSave();
   };
 
   const isFormDisabled = isFetchingAI || isSearching || isUploading;
@@ -957,7 +958,7 @@ export default function UploadMovieComponent() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button disabled={isUploading} id="upload-confirm-button">
+                      <Button onClick={() => { /* This just opens the dialog */ }} disabled={isUploading} id="upload-confirm-button">
                           {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {isUploading ? 'Uploading...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
                       </Button>
