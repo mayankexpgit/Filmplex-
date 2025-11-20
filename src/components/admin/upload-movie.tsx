@@ -19,7 +19,6 @@ import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails, searchTMDb } from '@/ai/flows/movie-details-flow';
 import { type TMDbSearchResult } from '@/services/tmdbService';
-import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
 
 import {
   Dialog,
@@ -555,6 +554,8 @@ export default function UploadMovieComponent() {
          (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
     setHasDownloadLinks(linksPresent);
       
+    setIsUploading(true);
+
     try {
       if (editId) {
         await updateMovie(editId, finalMovieData);
@@ -562,8 +563,7 @@ export default function UploadMovieComponent() {
         await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
       
-      setIsUploading(false); // Hide the progress indicator
-      
+      setIsUploading(false);
       startCoinAnimation();
       
       toast({ 
@@ -572,7 +572,6 @@ export default function UploadMovieComponent() {
           variant: 'success'
       });
       
-      // Use a timeout to ensure animations can play before redirect
       setTimeout(() => {
         resetForm();
       }, 500);
@@ -590,8 +589,6 @@ export default function UploadMovieComponent() {
       e.preventDefault();
       return;
     }
-    // This function will now only be called after the user confirms the dialog.
-    setIsUploading(true);
     handleSave();
   };
 
@@ -601,7 +598,6 @@ export default function UploadMovieComponent() {
       e.preventDefault();
       return;
     }
-    // This function just opens the dialog now. The actual save is triggered by AlertDialogAction's onClick.
   }
 
 
@@ -614,7 +610,6 @@ export default function UploadMovieComponent() {
 
   return (
     <>
-      {isUploading && <UploadProgressIndicator hasDownloadLinks={hasDownloadLinks} />}
       <div className={cn(
         "grid grid-cols-1 gap-8",
         showPreview && "lg:grid-cols-2"
