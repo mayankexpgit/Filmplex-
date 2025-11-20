@@ -527,6 +527,11 @@ export default function UploadMovieComponent() {
 
 
   const handleSave = async () => {
+    if (!formData.title || !formData.genre) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
+      return;
+    }
+    
     setIsUploading(true);
     
     const { id: editId, tagsString, ...movieDataToSave } = formData;
@@ -548,13 +553,6 @@ export default function UploadMovieComponent() {
       delete finalMovieData.downloadLinks;
     }
       
-    const linksPresent =
-      (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
-      (finalMovieData.contentType === 'series' &&
-        ((finalMovieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
-         (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
-    setHasDownloadLinks(linksPresent);
-      
     try {
       if (editId) {
         await updateMovie(editId, finalMovieData);
@@ -569,7 +567,6 @@ export default function UploadMovieComponent() {
           description: `"${formData.title}" has been successfully saved.`,
           variant: 'success'
       });
-      
       setIsUploading(false);
 
       // Reset the form after a short delay to allow animations to be seen
@@ -583,24 +580,6 @@ export default function UploadMovieComponent() {
       toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
     }
   };
-  
-  const triggerSave = (e: React.MouseEvent) => {
-     if (!formData.title || !formData.genre) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      e.preventDefault();
-      return;
-    }
-    handleSave();
-  };
-
-  const confirmAndSave = (e: React.MouseEvent) => {
-    if (!formData.title || !formData.genre) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      e.preventDefault();
-      return;
-    }
-  }
-
 
   const isFormDisabled = isFetchingAI || isSearching || isUploading;
 
@@ -975,7 +954,7 @@ export default function UploadMovieComponent() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button onClick={confirmAndSave} disabled={isUploading} id="upload-confirm-button">
+                      <Button disabled={isUploading} id="upload-confirm-button">
                           {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {isUploading ? 'Uploading...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
                       </Button>
@@ -989,7 +968,7 @@ export default function UploadMovieComponent() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={triggerSave}>Continue</AlertDialogAction>
+                      <AlertDialogAction onClick={handleSave}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
@@ -1064,7 +1043,6 @@ export default function UploadMovieComponent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </>
   );
 }
