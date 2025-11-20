@@ -273,7 +273,7 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
     };
 };
 
-function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating: boolean }) {
+function WalletCard({ wallet }: { wallet?: Wallet }) {
     return (
         <Card>
             <CardHeader>
@@ -284,12 +284,6 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                 <CardDescription>Earnings from your content uploads.</CardDescription>
             </CardHeader>
             <CardContent>
-            {isCalculating ? (
-                <div className="flex flex-col items-center justify-center h-24 gap-2">
-                    <FilmpilexLoader />
-                    <p className="text-muted-foreground">Calculating balances...</p>
-                </div>
-            ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">This Week</p>
@@ -310,7 +304,6 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                         </p>
                     </div>
                 </div>
-            )}
             </CardContent>
             <CardFooter className="pt-4 border-t">
                 <Accordion type="single" collapsible className="w-full">
@@ -418,7 +411,7 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
     );
 }
 
-function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: ManagementMember, movies: Movie[], isCalculatingWallet: boolean }) {
+function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
     const [movieEarnings, setMovieEarnings] = useState<Map<string, number>>(new Map());
 
     const { completedMovies, pendingMovies } = useMemo(() => {
@@ -467,7 +460,7 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
 
     return (
         <div className="space-y-6">
-            <WalletCard wallet={admin.wallet} isCalculating={isCalculatingWallet} />
+            <WalletCard wallet={admin.wallet} />
 
             <MonthlyStatement settlements={admin.settlements || []} />
 
@@ -612,8 +605,7 @@ export default function AdminProfile() {
     const { adminProfile, isLoading } = useAuth();
     const { managementTeam, allMovies } = useMovieStore();
     const [selectedAdminName, setSelectedAdminName] = useState<string | undefined>(undefined);
-    const [isCalculating, setIsCalculating] = useState(false);
-
+    
     const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
 
     useEffect(() => {
@@ -621,24 +613,6 @@ export default function AdminProfile() {
         setSelectedAdminName(adminProfile.name);
       }
     }, [adminProfile, selectedAdminName]);
-
-    useEffect(() => {
-        const triggerWalletCalculation = async () => {
-            if (managementTeam.length > 0 && allMovies.length > 0) {
-                setIsCalculating(true);
-                try {
-                    await calculateAllWallets(managementTeam, allMovies);
-                } catch (error) {
-                    console.error("Wallet calculation failed:", error);
-                } finally {
-                    setIsCalculating(false);
-                }
-            }
-        };
-        // Always trigger calculation when movies or team data changes.
-        triggerWalletCalculation();
-    }, [managementTeam, allMovies]);
-
 
     const handleAdminChange = (name: string) => {
         setSelectedAdminName(name);
@@ -693,7 +667,7 @@ export default function AdminProfile() {
                 <Separator />
 
                 {selectedAdmin ? (
-                    <AdminAnalytics admin={selectedAdmin} movies={allMovies} isCalculatingWallet={isCalculating} />
+                    <AdminAnalytics admin={selectedAdmin} movies={allMovies} />
                 ) : (
                     <div className="text-center py-16 text-muted-foreground">
                         <p>Select an admin to see their statistics.</p>

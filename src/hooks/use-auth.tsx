@@ -40,12 +40,8 @@ export function useAuth() {
     if (adminName && managementTeam.length > 0) {
         const currentProfile = managementTeam.find(m => m.name === adminName);
         if (currentProfile) {
-            // This condition is crucial. It prevents re-renders if the profile object
-            // is structurally the same, but it will update if the wallet values change.
-            if (JSON.stringify(adminProfile) !== JSON.stringify(currentProfile)) {
-                setAdminProfile(currentProfile);
-                setStoreAdminProfile(currentProfile);
-            }
+            setAdminProfile(currentProfile);
+            setStoreAdminProfile(currentProfile);
         } else {
             // If the current admin is no longer in the team, log them out.
             logout();
