@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
@@ -183,7 +183,6 @@ export default function UploadMovieComponent() {
     startCoinAnimation: state.startCoinAnimation,
   }));
   const { adminProfile } = useAuth();
-  const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
@@ -530,63 +529,61 @@ export default function UploadMovieComponent() {
 
 
   const handleSave = async () => {
-    startTransition(async () => {
-      setIsUploading(true);
-      const { id: editId, tagsString, ...movieDataToSave } = formData;
-        
-      const finalMovieData: Partial<Movie> = {
-        ...movieDataToSave,
-        tags: tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-        screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
-      };
+    setIsUploading(true);
+    const { id: editId, tagsString, ...movieDataToSave } = formData;
+      
+    const finalMovieData: Partial<Movie> = {
+      ...movieDataToSave,
+      tags: tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+      screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
+    };
 
-      if (formData.contentType === 'movie') {
-        finalMovieData.downloadLinks = (finalMovieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
-        delete finalMovieData.episodes;
-        delete finalMovieData.seasonDownloadLinks;
-        delete finalMovieData.numberOfEpisodes;
+    if (formData.contentType === 'movie') {
+      finalMovieData.downloadLinks = (finalMovieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
+      delete finalMovieData.episodes;
+      delete finalMovieData.seasonDownloadLinks;
+      delete finalMovieData.numberOfEpisodes;
+    } else {
+      finalMovieData.episodes = (finalMovieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
+      finalMovieData.seasonDownloadLinks = (finalMovieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
+      delete finalMovieData.downloadLinks;
+    }
+      
+    const linksPresent =
+      (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
+      (finalMovieData.contentType === 'series' &&
+        ((finalMovieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
+         (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
+    setHasDownloadLinks(linksPresent);
+      
+    try {
+      if (editId) {
+        await updateMovie(editId, finalMovieData);
       } else {
-        finalMovieData.episodes = (finalMovieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
-        finalMovieData.seasonDownloadLinks = (finalMovieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
-        delete finalMovieData.downloadLinks;
+        await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
-        
-      const linksPresent =
-        (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
-        (finalMovieData.contentType === 'series' &&
-          ((finalMovieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
-           (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
-      setHasDownloadLinks(linksPresent);
-        
-      try {
-        if (editId) {
-          await updateMovie(editId, finalMovieData);
-        } else {
-          await addMovie(finalMovieData as Omit<Movie, 'id'>);
-        }
-        
-        setIsUploading(false);
+      
+      setIsUploading(false);
 
-        toast({ 
-            title: 'Upload Complete!', 
-            description: `"${formData.title}" has been successfully saved.`,
-            variant: 'success'
-        });
-        
-        if (linksPresent) {
-          startCoinAnimation();
-        }
-
-        setTimeout(() => {
-          resetForm();
-        }, 100);
-
-      } catch (error) {
-        setIsUploading(false);
-        console.error("Database operation failed:", error);
-        toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
+      toast({ 
+          title: 'Upload Complete!', 
+          description: `"${formData.title}" has been successfully saved.`,
+          variant: 'success'
+      });
+      
+      if (linksPresent) {
+        startCoinAnimation();
       }
-    });
+
+      setTimeout(() => {
+        resetForm();
+      }, 100);
+
+    } catch (error) {
+      setIsUploading(false);
+      console.error("Database operation failed:", error);
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
+    }
   };
   
   const triggerSave = (e: React.MouseEvent) => {
@@ -606,7 +603,7 @@ export default function UploadMovieComponent() {
   }
 
 
-  const isFormDisabled = isPending || isFetchingAI || isSearching || isUploading;
+  const isFormDisabled = isFetchingAI || isSearching || isUploading;
 
   const displayedSearchResults = showExactMatches
     ? searchResults.filter(item => item.title.toLowerCase() === formData.title?.toLowerCase())
@@ -981,7 +978,7 @@ export default function UploadMovieComponent() {
               <AlertDialog>
                   <AlertDialogTrigger asChild>
                       <Button onClick={confirmAndSave} disabled={isFormDisabled} id="upload-confirm-button">
-                          {isPending || isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {formData.id ? 'Update Content' : 'Confirm & Upload'}
                       </Button>
                   </AlertDialogTrigger>
