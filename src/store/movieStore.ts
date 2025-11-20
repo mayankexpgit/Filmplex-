@@ -273,30 +273,43 @@ const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
   const newId = await dbAddMovie(movieWithMetadata as Omit<Movie, 'id'>);
   const newMovie = { id: newId, ...movieWithMetadata } as Movie;
 
-  useMovieStore.setState(state => ({
-    allMovies: [newMovie, ...state.allMovies],
-    latestReleases: [newMovie, ...state.latestReleases]
-  }));
+  const currentAllMovies = useMovieStore.getState().allMovies;
+  const newAllMovies = [newMovie, ...currentAllMovies];
+
+  useMovieStore.setState({
+    allMovies: newAllMovies,
+    latestReleases: [newMovie, ...useMovieStore.getState().latestReleases]
+  });
+
+  // Trigger wallet recalculation
+  await calculateAllWallets(useMovieStore.getState().managementTeam, newAllMovies);
+
   await addSecurityLogEntry(`Uploaded Movie: "${movieData.title}"`);
 };
 
 const updateMovie = async (id: string, updatedMovieData: Partial<Movie>): Promise<void> => {
   const updateData = { ...updatedMovieData };
   
-
   await dbUpdateMovie(id, updateData);
 
   const applyUpdate = (movie: Movie) => movie.id === id ? { ...movie, ...updateData } : movie;
 
-  useMovieStore.setState(state => ({
-    allMovies: state.allMovies.map(applyUpdate),
-    latestReleases: state.latestReleases.map(applyUpdate),
-    featuredMovies: state.allMovies.map(applyUpdate).filter(m => m.isFeatured)
-  }));
+  const newAllMovies = useMovieStore.getState().allMovies.map(applyUpdate);
+
+  useMovieStore.setState({
+    allMovies: newAllMovies,
+    latestReleases: useMovieStore.getState().latestReleases.map(applyUpdate),
+    featuredMovies: newAllMovies.filter(m => m.isFeatured)
+  });
+
+  // Trigger wallet recalculation if it's a content update, not just a featured status toggle
+  if (!('isFeatured' in updateData && Object.keys(updateData).length === 1)) {
+    await calculateAllWallets(useMovieStore.getState().managementTeam, newAllMovies);
+  }
   
   const movieTitle = updatedMovieData.title || useMovieStore.getState().latestReleases.find(m => m.id === id)?.title || 'Unknown Movie';
   
-  if (Object.keys(updatedMovieData).length === 1 && 'isFeatured' in updatedMovieData) {
+  if ('isFeatured' in updatedMovieData && Object.keys(updatedMovieData).length === 1) {
      await addSecurityLogEntry(`Updated featured status for: "${movieTitle}"`);
   } else {
     await addSecurityLogEntry(`Updated Movie: "${movieTitle}"`);
@@ -307,11 +320,14 @@ const deleteMovie = async (id: string): Promise<void> => {
   const movie = useMovieStore.getState().latestReleases.find(m => m.id === id);
   if (movie) {
     await dbDeleteMovie(id);
-    useMovieStore.setState(state => ({
-        allMovies: state.allMovies.filter(m => m.id !== id),
-        latestReleases: state.latestReleases.filter(m => m.id !== id),
-        featuredMovies: state.featuredMovies.filter(m => m.id !== id)
-    }));
+    const newAllMovies = useMovieStore.getState().allMovies.filter(m => m.id !== id);
+    useMovieStore.setState({
+        allMovies: newAllMovies,
+        latestReleases: useMovieStore.getState().latestReleases.filter(m => m.id !== id),
+        featuredMovies: useMovieStore.getState().featuredMovies.filter(m => m.id !== id)
+    });
+    // Trigger wallet recalculation after deletion
+    await calculateAllWallets(useMovieStore.getState().managementTeam, newAllMovies);
     await addSecurityLogEntry(`Deleted Movie: "${movie.title}"`);
   }
 };
