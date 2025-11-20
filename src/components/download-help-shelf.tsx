@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
-import { DownloadCloud, HelpCircle, ShieldCheck, Video, Send } from 'lucide-react';
+import { DownloadCloud, HelpCircle, ShieldCheck, Video, Send, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from './ui/separator';
 
@@ -78,10 +78,10 @@ export default function DownloadHelpShelf() {
                             <span>Watch: How to Download</span>
                         </a>
                     </Button>
-                    <Button asChild variant="secondary" className="w-full justify-start gap-3">
+                    <Button asChild variant="default" className="w-full justify-start gap-3">
                          <a href={contactInfo.telegramUrl} target="_blank" rel="noopener noreferrer">
                             <Send className="h-5 w-5" />
-                            <span>Just in Min Contact (Telegram)</span>
+                            <span className="flex items-center gap-1">Just in <Zap className="h-4 w-4" /> Min Contact (Telegram)</span>
                         </a>
                     </Button>
                 </div>
