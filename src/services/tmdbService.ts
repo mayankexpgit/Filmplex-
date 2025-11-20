@@ -3,27 +3,19 @@
 'use server';
 
 import axios, { type AxiosRequestConfig } from 'axios';
-import getConfig from 'next/config';
 
 // --- API Key Management ---
 const getTMDbKeys = (): string[] => {
-    const { publicRuntimeConfig } = getConfig();
     const keys: string[] = [];
-    if (publicRuntimeConfig.TMDB_API_KEY_1) keys.push(publicRuntimeConfig.TMDB_API_KEY_1);
-    if (publicRuntimeConfig.TMDB_API_KEY_2) keys.push(publicRuntimeConfig.TMDB_API_KEY_2);
+    if (process.env.NEXT_PUBLIC_TMDB_API_KEY_1) keys.push(process.env.NEXT_PUBLIC_TMDB_API_KEY_1);
+    if (process.env.NEXT_PUBLIC_TMDB_API_KEY_2) keys.push(process.env.NEXT_PUBLIC_TMDB_API_KEY_2);
     // You can add more keys here if needed
-    // if (publicRuntimeConfig.TMDB_API_KEY_3) keys.push(publicRuntimeConfig.TMDB_API_KEY_3);
+    // if (process.env.NEXT_PUBLIC_TMDB_API_KEY_3) keys.push(process.env.NEXT_PUBLIC_TMDB_API_KEY_3);
     return keys;
 };
 
-let tmdbKeys: string[] = [];
+let tmdbKeys: string[] = getTMDbKeys();
 let currentKeyIndex = 0;
-
-// Initialize keys once
-if (typeof window === 'undefined') {
-    tmdbKeys = getTMDbKeys();
-}
-
 
 /**
  * Makes a request to the TMDb API with automatic key rotation.
@@ -33,10 +25,9 @@ if (typeof window === 'undefined') {
  * @returns The response data from the TMDb API.
  */
 const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length): Promise<any> => {
-    // Re-fetch keys on every request in case they were not available at startup
     const currentKeys = getTMDbKeys();
     if (currentKeys.length === 0) {
-        throw new Error('No TMDb API keys are configured. Please add TMDB_API_KEY_1 and TMDB_API_KEY_2 to your .env file and next.config.js.');
+        throw new Error('No TMDb API keys are configured. Please add NEXT_PUBLIC_TMDB_API_KEY_1 and NEXT_PUBLIC_TMDB_API_KEY_2 to your .env.local file.');
     }
     if (retries <= 0) {
         throw new Error('All TMDb API keys failed. Please check your keys and their usage limits.');
