@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetFooter,
   SheetClose,
+  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { DownloadCloud, HelpCircle, ShieldCheck, Video, Send, Zap, LifeBuoy } from 'lucide-react';
