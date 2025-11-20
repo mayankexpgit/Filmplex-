@@ -16,10 +16,9 @@ import { Calendar, CheckCircle, Clock, Target, Hourglass, BarChart2, Download, H
 import FilmpilexLoader from '../ui/filmplex-loader';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
-import { fetchDownloadAnalytics } from '@/services/movieService';
+import { fetchDownloadAnalytics, calculateEarning } from '@/services/movieService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import { Decimal } from 'decimal.js';
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
 
@@ -30,55 +29,6 @@ const getDisplayName = (fullName: string) => {
     }
     return fullName;
 }
-
-const hasValidLinks = (movie: Movie): boolean => {
-    if (movie.contentType === 'movie' && movie.downloadLinks) {
-        return movie.downloadLinks.some(l => l && l.url && l.url.trim() !== '');
-    }
-    if (movie.contentType === 'series') {
-        const hasEpisodeLinks = movie.episodes?.some(ep => ep.downloadLinks.some(l => l && l.url && l.url.trim() !== ''));
-        const hasSeasonLinks = movie.seasonDownloadLinks?.some(l => l && l.url && l.url.trim() !== '');
-        return !!(hasEpisodeLinks || hasSeasonLinks);
-    }
-    return false;
-};
-
-const getLinkCount = (movie: Movie, type: 'episode' | 'season'): number => {
-    if (movie.contentType !== 'series') return 0;
-
-    if (type === 'episode') {
-        return movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
-    }
-    if (type === 'season') {
-        return movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
-    }
-    return 0;
-}
-
-const calculateMovieEarning = (movie: Movie): number => {
-    if (!hasValidLinks(movie) || !movie.createdAt) {
-        return 0;
-    }
-    
-    const walletCalculationDate = new Date('2025-11-04T00:00:00.000Z');
-    const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
-
-    if (isLegacy) {
-        return new Decimal(0.50).toNumber();
-    }
-
-    if (movie.contentType === 'movie') {
-        const linkCount = movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
-        const earnings = new Decimal(linkCount).times(0.10);
-        return Decimal.min(earnings, 0.40).toNumber();
-    } else { // series
-        const episodeLinkCount = getLinkCount(movie, 'episode');
-        const seasonLinkCount = getLinkCount(movie, 'season');
-        const episodeEarnings = new Decimal(episodeLinkCount).times(0.06);
-        const seasonEarnings = new Decimal(seasonLinkCount).times(0.10);
-        return episodeEarnings.plus(seasonEarnings).toNumber();
-    }
-};
 
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
@@ -506,6 +456,16 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
     const sortedTasks = [...allTasks].sort((a, b) => parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime());
     const activeTasks = admin.tasks?.filter(t => t.status === 'active' || t.status === 'incompleted') || [];
 
+    const movieEarnings = useMemo(() => {
+        const earningsMap = new Map<string, number>();
+        // This is a simplified display; real calculation happens on the server.
+        // We assume wallet data is up-to-date.
+        // For per-movie display, we can show a placeholder or a simplified client-side calculation if needed.
+        // For now, we will show what is in the wallet.
+        return earningsMap;
+    }, [completedMovies]);
+
+
     return (
         <div className="space-y-6">
             <WalletCard wallet={admin.wallet} isCalculating={isCalculatingWallet} />
@@ -607,7 +567,6 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
                                     <TableRow>
                                         <TableHead>Title</TableHead>
                                         <TableHead>Date</TableHead>
-                                        <TableHead className="text-right">Earn</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -615,10 +574,6 @@ function AdminAnalytics({ admin, movies, isCalculatingWallet }: { admin: Managem
                                         <TableRow key={`${movie.id}-${index}`}>
                                             <TableCell>{movie.title}</TableCell>
                                             <TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PP') : 'N/A'}</TableCell>
-                                            <TableCell className="text-right flex items-center justify-end gap-1">
-                                                <IndianRupee className="h-4 w-4" />
-                                                {calculateMovieEarning(movie).toFixed(2)}
-                                            </TableCell>
                                         </TableRow>
                                     )) : <TableRow key="no-completed-uploads"><TableCell colSpan={3} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
                                 </TableBody>
@@ -748,5 +703,3 @@ export default function AdminProfile() {
       </div>
     )
 }
-
-    

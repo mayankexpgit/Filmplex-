@@ -292,7 +292,7 @@ const getLinkCount = (movie: Movie, type: 'episode' | 'season'): number => {
     return 0;
 };
 
-const calculateEarning = (movie: Movie): number => {
+export const calculateEarning = async (movie: Movie): Promise<number> => {
     if (!hasValidLinks(movie) || !movie.createdAt) {
         return 0;
     }
@@ -321,15 +321,15 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
     const now = new Date();
     const currentMonthStr = formatDate(now, 'yyyy-MM');
 
-    const updatedTeam = team.map(member => {
+    const updatedTeam = await Promise.all(team.map(async (member) => {
         const memberMovies = movies.filter(m => m.uploadedBy === member.name && m.createdAt);
         
         let totalEarnings = new Decimal(0);
         let currentMonthlyEarnings = new Decimal(0);
         let weekly = new Decimal(0);
 
-        memberMovies.forEach(movie => {
-            const earnings = new Decimal(calculateEarning(movie));
+        for (const movie of memberMovies) {
+            const earnings = new Decimal(await calculateEarning(movie));
             totalEarnings = totalEarnings.plus(earnings);
             
             const movieDate = parseISO(movie.createdAt!);
@@ -339,7 +339,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
                 currentMonthlyEarnings = currentMonthlyEarnings.plus(earnings);
             }
-        });
+        }
 
         const incompletedTasksCount = member.tasks?.filter(t => t.status === 'incompleted').length || 0;
         const penalty = new Decimal(incompletedTasksCount).times(0.50);
@@ -363,12 +363,14 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
         let finalMonthlyDisplay = new Decimal(currentMonthlyEarnings);
         if (currentMonthSettlement.status === 'credited' || currentMonthSettlement.status === 'penalty') {
             const settlementDate = currentMonthSettlement.settledAt ? parseISO(currentMonthSettlement.settledAt) : new Date(0);
-            const earningsAfterSettlement = memberMovies
-                .filter(movie => {
-                    const movieDate = parseISO(movie.createdAt!);
-                    return isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) }) && isAfter(movieDate, settlementDate);
-                })
-                .reduce((sum, movie) => sum.plus(new Decimal(calculateEarning(movie))), new Decimal(0));
+            
+            let earningsAfterSettlement = new Decimal(0);
+            for (const movie of memberMovies) {
+                 const movieDate = parseISO(movie.createdAt!);
+                 if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) }) && isAfter(movieDate, settlementDate)) {
+                    earningsAfterSettlement = earningsAfterSettlement.plus(new Decimal(await calculateEarning(movie)));
+                 }
+            }
             finalMonthlyDisplay = earningsAfterSettlement;
         }
 
@@ -379,7 +381,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
         };
         
         return { ...member, wallet, settlements };
-    });
+    }));
 
     const batch = writeBatch(db);
     updatedTeam.forEach(member => {
