@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -19,8 +17,8 @@ import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { getMovieDetails } from '@/ai/flows/movie-details-flow';
-import { searchMoviesOnTMDb, type TMDbSearchResult } from '@/services/tmdbService';
+import { getMovieDetails, searchTMDb } from '@/ai/flows/movie-details-flow';
+import { type TMDbSearchResult } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
 
 import {
@@ -352,13 +350,13 @@ export default function UploadMovieComponent() {
     setIsDialogOpen(true);
     setShowExactMatches(false);
     try {
-      const results = await searchMoviesOnTMDb(formData.title!, searchAllPages);
+      const results = await searchTMDb(formData.title!, searchAllPages);
       setSearchResults(results);
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Search Failed',
-        description: error.message || 'Could not search for movies.',
+        description: error.message || 'Could not search for movies. Please check your API keys.',
       });
       setIsDialogOpen(false);
     } finally {

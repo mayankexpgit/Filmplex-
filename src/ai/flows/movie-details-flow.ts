@@ -4,12 +4,13 @@
  * This flow uses the TMDb API for factual data and manually constructs other fields.
  *
  * - getMovieDetails - A function that fetches movie details based on the title and year.
+ * - searchTMDb - A function that searches TMDb for movies and series.
  * - MovieDetailsInput - The input type for the getMovieDetails function.
  * - MovieDetailsOutput - The return type for the getMovieDetails function.
  */
 
 import { z } from 'zod';
-import { fetchMovieDetailsFromTMDb } from '@/services/tmdbService';
+import { fetchMovieDetailsFromTMDb, searchMoviesOnTMDb, type TMDbSearchResult } from '@/services/tmdbService';
 
 const MovieDetailsInputSchema = z.object({
   tmdbId: z.number().describe('The TMDb ID of the movie or series to fetch details for.'),
@@ -65,5 +66,22 @@ export async function getMovieDetails(input: MovieDetailsInput): Promise<MovieDe
   } catch (error: any) {
     console.error("Error in getMovieDetails:", error);
     throw new Error(error.message || 'Could not fetch movie details. Please check the ID or fill manually.');
+  }
+}
+
+/**
+ * A server action to search for movies on TMDb.
+ * This acts as a secure bridge between client components and the TMDb service.
+ * @param title The title of the movie or series to search for.
+ * @param fetchAll Whether to fetch all pages of results.
+ * @returns A promise that resolves to an array of search results.
+ */
+export async function searchTMDb(title: string, fetchAll: boolean = false): Promise<TMDbSearchResult[]> {
+  try {
+    const results = await searchMoviesOnTMDb(title, fetchAll);
+    return results;
+  } catch (error: any) {
+     console.error("Error in searchTMDb server action:", error);
+     throw new Error(error.message || 'Failed to search TMDb.');
   }
 }
