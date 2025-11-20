@@ -22,14 +22,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
 
-const getDisplayName = (fullName: string) => {
-    if (!fullName) return '';
-    if (fullName.includes('.')) {
-        return fullName.split('.').pop() || fullName;
-    }
-    return fullName;
-}
-
 const isUploadCompleted = (movie: Movie): boolean => {
     if (movie.contentType === 'movie') {
         return !!movie.downloadLinks && movie.downloadLinks.some(link => link && link.url);
@@ -660,7 +652,7 @@ export default function AdminProfile() {
             <CardHeader>
                 <CardTitle>Admin Profile &amp; Analytics</CardTitle>
                 <CardDescription>
-                    {`Viewing profile for ${selectedAdmin ? getDisplayName(selectedAdmin.name) : '...'}. Joined on ${selectedAdmin && selectedAdmin.timestamp ? format(new Date(selectedAdmin.timestamp), 'MMMM d, yyyy') : '...'}`}
+                    {`Viewing profile for ${selectedAdmin ? selectedAdmin.name : '...'}. Joined on ${selectedAdmin && selectedAdmin.timestamp ? format(new Date(selectedAdmin.timestamp), 'MMMM d, yyyy') : '...'}`}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -673,7 +665,7 @@ export default function AdminProfile() {
                             <SelectContent>
                                 {managementTeam.map(member => (
                                     <SelectItem key={member.id} value={member.name}>
-                                        {getDisplayName(member.name)} <span className="text-xs text-muted-foreground ml-2">({member.info})</span>
+                                        {member.name} <span className="text-xs text-muted-foreground ml-2">({member.info})</span>
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -682,7 +674,7 @@ export default function AdminProfile() {
                     </div>
                  ) : (
                     <div className="flex items-center gap-4">
-                        <h3 className="text-lg font-semibold">{getDisplayName(adminProfile.name)}</h3>
+                        <h3 className="text-lg font-semibold">{adminProfile.name}</h3>
                         <Badge variant="secondary">{adminProfile.info}</Badge>
                     </div>
                  )}

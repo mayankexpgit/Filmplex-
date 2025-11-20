@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition, useMemo, useEffect, useCallback } from 'react';
@@ -122,7 +123,7 @@ function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: Admi
                 <DialogHeader>
                     <DialogTitle>Task Details: {task.title}</DialogTitle>
                     <DialogDescription>
-                        <span className="capitalize">{task.type} Task</span> assigned to {adminName.split('.').pop()}.
+                        <span className="capitalize">{task.type} Task</span> assigned to {adminName}.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -216,7 +217,7 @@ function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove, onClose
         <>
         <DialogContent className="max-w-3xl">
             <DialogHeader>
-                <DialogTitle>Task History & Management for {member.name.split('.').pop()}</DialogTitle>
+                <DialogTitle>Task History & Management for {member.name}</DialogTitle>
                 <DialogDescription>View past performance and assign a new task.</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[60vh] overflow-y-auto">
@@ -345,7 +346,7 @@ function SettlementDialog({ member, onClose, onUpdateStatus }: { member: Managem
     return (
         <DialogContent className="max-w-xl">
             <DialogHeader>
-                <DialogTitle>Monthly Settlement for {member.name.split('.').pop()}</DialogTitle>
+                <DialogTitle>Monthly Settlement for {member.name}</DialogTitle>
                 <DialogDescription>Manage the payment status for each month's earnings.</DialogDescription>
             </DialogHeader>
             <div className="py-4 max-h-[60vh] overflow-y-auto">
