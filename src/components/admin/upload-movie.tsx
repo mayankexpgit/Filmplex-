@@ -530,64 +530,63 @@ export default function UploadMovieComponent() {
 
 
   const handleSave = async () => {
-    setIsUploading(true);
-    // Create a mutable copy and remove the 'id' for the data to be saved.
-    // The 'id' in formData is only for tracking if we are in 'edit' mode.
-    const { id: editId, tagsString, ...movieDataToSave } = formData;
-      
-    const finalMovieData: Partial<Movie> = {
-      ...movieDataToSave,
-      tags: tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
-      screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
-    };
+    startTransition(async () => {
+      setIsUploading(true);
+      const { id: editId, tagsString, ...movieDataToSave } = formData;
+        
+      const finalMovieData: Partial<Movie> = {
+        ...movieDataToSave,
+        tags: tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+        screenshots: (formData.screenshots || []).filter(ss => ss && ss.trim() !== ''),
+      };
 
-    if (formData.contentType === 'movie') {
-      finalMovieData.downloadLinks = (finalMovieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
-      delete finalMovieData.episodes;
-      delete finalMovieData.seasonDownloadLinks;
-      delete finalMovieData.numberOfEpisodes;
-    } else {
-      finalMovieData.episodes = (finalMovieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
-      finalMovieData.seasonDownloadLinks = (finalMovieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
-      delete finalMovieData.downloadLinks;
-    }
-      
-    const linksPresent =
-      (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
-      (finalMovieData.contentType === 'series' &&
-        ((finalMovieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
-         (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
-    setHasDownloadLinks(linksPresent);
-      
-    try {
-      if (editId) {
-        // We are in edit mode
-        await updateMovie(editId, finalMovieData);
+      if (formData.contentType === 'movie') {
+        finalMovieData.downloadLinks = (finalMovieData.downloadLinks || []).filter(link => link && link.url.trim() !== '');
+        delete finalMovieData.episodes;
+        delete finalMovieData.seasonDownloadLinks;
+        delete finalMovieData.numberOfEpisodes;
       } else {
-        // We are in create mode
-        await addMovie(finalMovieData as Omit<Movie, 'id'>);
+        finalMovieData.episodes = (finalMovieData.episodes || []).map(ep => ({...ep, downloadLinks: ep.downloadLinks.filter(link => link && link.url.trim() !== '')})).filter(ep => ep && ep.downloadLinks.length > 0);
+        finalMovieData.seasonDownloadLinks = (finalMovieData.seasonDownloadLinks || []).filter(link => link && link.url.trim() !== '');
+        delete finalMovieData.downloadLinks;
       }
-      
-      setIsUploading(false);
+        
+      const linksPresent =
+        (finalMovieData.contentType === 'movie' && (finalMovieData.downloadLinks || []).some(l => l.url.trim() !== '')) ||
+        (finalMovieData.contentType === 'series' &&
+          ((finalMovieData.episodes || []).some(ep => ep.downloadLinks.some(l => l.url.trim() !== '')) ||
+           (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
+      setHasDownloadLinks(linksPresent);
+        
+      try {
+        if (editId) {
+          await updateMovie(editId, finalMovieData);
+        } else {
+          await addMovie(finalMovieData as Omit<Movie, 'id'>);
+        }
+        
+        setIsUploading(false);
 
-      toast({ 
-          title: 'Upload Complete!', 
-          description: `"${formData.title}" has been successfully saved.`,
-          variant: 'success'
-      });
-      
-      setTimeout(() => {
-          if (linksPresent) {
-            startCoinAnimation();
-          }
+        toast({ 
+            title: 'Upload Complete!', 
+            description: `"${formData.title}" has been successfully saved.`,
+            variant: 'success'
+        });
+        
+        if (linksPresent) {
+          startCoinAnimation();
+        }
+
+        setTimeout(() => {
           resetForm();
-      }, 100);
+        }, 100);
 
-    } catch (error) {
-      setIsUploading(false);
-      console.error("Database operation failed:", error);
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
-    }
+      } catch (error) {
+        setIsUploading(false);
+        console.error("Database operation failed:", error);
+        toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
+      }
+    });
   };
   
   const triggerSave = (e: React.MouseEvent) => {
@@ -596,7 +595,7 @@ export default function UploadMovieComponent() {
       e.preventDefault();
       return;
     }
-    startTransition(handleSave);
+    handleSave();
   };
 
   const confirmAndSave = (e: React.MouseEvent) => {
