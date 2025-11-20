@@ -184,6 +184,7 @@ export default function UploadMovieComponent() {
   }));
   const { adminProfile } = useAuth();
   const [isPending, startTransition] = useTransition();
+  const [isUploading, setIsUploading] = useState(false);
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -529,6 +530,7 @@ export default function UploadMovieComponent() {
 
 
   const handleSave = async () => {
+    setIsUploading(true);
     // Create a mutable copy and remove the 'id' for the data to be saved.
     // The 'id' in formData is only for tracking if we are in 'edit' mode.
     const { id: editId, tagsString, ...movieDataToSave } = formData;
@@ -566,22 +568,23 @@ export default function UploadMovieComponent() {
         await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
       
+      setIsUploading(false);
+
       toast({ 
           title: 'Upload Complete!', 
           description: `"${formData.title}" has been successfully saved.`,
           variant: 'success'
       });
       
-      // Add a small delay to allow the upload indicator to disappear
       setTimeout(() => {
           if (linksPresent) {
             startCoinAnimation();
           }
+          resetForm();
       }, 100);
 
-      resetForm();
-
     } catch (error) {
+      setIsUploading(false);
       console.error("Database operation failed:", error);
       toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
     }
@@ -593,7 +596,6 @@ export default function UploadMovieComponent() {
       e.preventDefault();
       return;
     }
-
     startTransition(handleSave);
   };
 
@@ -605,7 +607,7 @@ export default function UploadMovieComponent() {
   }
 
 
-  const isFormDisabled = isPending || isFetchingAI || isSearching;
+  const isFormDisabled = isPending || isFetchingAI || isSearching || isUploading;
 
   const displayedSearchResults = showExactMatches
     ? searchResults.filter(item => item.title.toLowerCase() === formData.title?.toLowerCase())
@@ -614,7 +616,7 @@ export default function UploadMovieComponent() {
 
   return (
     <>
-      {isPending && <UploadProgressIndicator hasDownloadLinks={hasDownloadLinks} />}
+      {isUploading && <UploadProgressIndicator hasDownloadLinks={hasDownloadLinks} />}
       <div className={cn(
         "grid grid-cols-1 gap-8",
         showPreview && "lg:grid-cols-2"
@@ -980,7 +982,7 @@ export default function UploadMovieComponent() {
               <AlertDialog>
                   <AlertDialogTrigger asChild>
                       <Button onClick={confirmAndSave} disabled={isFormDisabled} id="upload-confirm-button">
-                          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          {isPending || isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {formData.id ? 'Update Content' : 'Confirm & Upload'}
                       </Button>
                   </AlertDialogTrigger>
