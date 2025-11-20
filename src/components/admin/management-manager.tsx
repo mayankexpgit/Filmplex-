@@ -25,6 +25,17 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Textarea } from '../ui/textarea';
 import { Progress } from '../ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const adminRoles = [
     'Regulator',
@@ -458,6 +469,8 @@ export default function ManagementManager() {
   const [isSettlementDialogOpen, setIsSettlementDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ManagementMember | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<ManagementMember | null>(null);
+
 
   const [name, setName] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -547,13 +560,14 @@ export default function ManagementManager() {
     }
   }
 
-  const handleDeleteMember = (id: string, memberName: string) => {
+  const handleDeleteMember = () => {
+    if (!memberToDelete) return;
     startDeleteTransition(async () => {
         try {
-            await storeDeleteManagementMember(id);
+            await storeDeleteManagementMember(memberToDelete.id);
             toast({
                 title: 'Member Removed',
-                description: `Team member "${memberName}" has been deleted.`,
+                description: `Team member "${memberToDelete.displayName}" has been deleted.`,
             });
         } catch (error) {
              toast({
@@ -561,6 +575,8 @@ export default function ManagementManager() {
                 title: 'Database Error',
                 description: 'Could not remove the team member.',
             });
+        } finally {
+            setMemberToDelete(null);
         }
     });
   };
@@ -678,149 +694,171 @@ export default function ManagementManager() {
 
   return (
     <>
-      <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Team Member</CardTitle>
-            <CardDescription>
-              Add or remove members. Requires the management key to be unlocked. Each role can only be assigned once.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                  <Label htmlFor="member-name">Admin Login Name</Label>
-                  <Input
-                    id="member-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. dev.Mayank"
-                    disabled={isFormDisabled}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="display-name">Display Name (Public)</Label>
-                  <Input
-                    id="display-name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="e.g. Mayank"
-                    disabled={isFormDisabled}
-                  />
-                </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="member-role">Role</Label>
-               <Select value={selectedRole} onValueChange={setSelectedRole} disabled={isFormDisabled}>
-                  <SelectTrigger id="member-role">
-                      <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {availableRoles.length > 0 ? (
-                          availableRoles.map(role => (
-                              <SelectItem key={role} value={role}>{role}</SelectItem>
-                          ))
-                      ) : (
-                          <div className="p-2 text-center text-sm text-muted-foreground">All roles assigned</div>
-                      )}
-                  </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleAddMember} disabled={isFormDisabled || availableRoles.length === 0}>
-              {addPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-              {addPending ? 'Adding...' : 'Add Member'}
-            </Button>
-            {!canManageTeam && <p className="text-xs text-destructive mt-2">You do not have permission to manage the team.</p>}
-            {canManageTeam && !isUnlocked && <p className="text-xs text-muted-foreground mt-2">Unlock controls below to add or remove members.</p>}
-          </CardContent>
-        </Card>
-        
-        <Card>
+      <AlertDialog>
+        <div className="space-y-8">
+          <Card>
             <CardHeader>
-                <CardTitle>Current Team</CardTitle>
-                <CardDescription>
-                    This is the current list of management team members with their performance score and task status.
-                </CardDescription>
+              <CardTitle>Add New Team Member</CardTitle>
+              <CardDescription>
+                Add or remove members. Requires the management key to be unlocked. Each role can only be assigned once.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {sortedTeam.length === 0 ? (
-                    <p className="text-muted-foreground text-center">No team members added yet.</p>
-                ) : (
-                    sortedTeam.map(member => {
-                        const performanceScore = calculatePerformanceScore(member, allMovies);
-                        const activeTasks = member.tasks?.filter(t => t.status === 'active' || t.status === 'incompleted') || [];
-                        return (
-                            <div key={member.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                                <div className="flex items-center gap-4">
-                                <User className="h-6 w-6 text-primary" />
-                                <div>
-                                    <p className="font-semibold">{member.displayName}</p>
-                                    <p className="text-sm text-muted-foreground">{member.info} <span className="text-xs">({member.name})</span></p>
-                                </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                <Badge variant={getPerformanceBadgeVariant(performanceScore)} className="flex items-center gap-1.5">
-                                    <TrendingUp className="h-3.5 w-3.5" />
-                                    <span>{performanceScore.toFixed(1)} / 10</span>
-                                </Badge>
-                                <Badge variant={activeTasks.length > 0 ? 'destructive' : 'success'} className="flex items-center gap-1.5">
-                                    {activeTasks.length > 0 ? <AlertCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                                    <span>{activeTasks.length} Active Task(s)</span>
-                                </Badge>
-                                {canManageTeam && isUnlocked && (
-                                     <Button variant="outline" size="icon" onClick={() => handleOpenEditDialog(member)}><Edit className="h-4 w-4" /></Button>
-                                )}
-                                {canManageTeam && (
-                                    <>
-                                        <Button variant="outline" size="icon" onClick={() => handleOpenSettlementDialog(member)}><CircleDollarSign className="h-4 w-4" /></Button>
-                                        <Button variant="outline" size="icon" onClick={() => handleOpenTaskDialog(member)}><Briefcase className="h-4 w-4" /></Button>
-                                    </>
-                                )}
-                                {isUnlocked && canManageTeam && (
-                                <Button 
-                                    variant="destructive" 
-                                    size="icon" 
-                                    onClick={() => handleDeleteMember(member.id, member.displayName)}
-                                    disabled={deletePending}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                                )}
-                                </div>
-                            </div>
-                        )
-                    })
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="member-name">Admin Login Name</Label>
+                    <Input
+                      id="member-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. dev.Mayank"
+                      disabled={isFormDisabled}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="display-name">Display Name (Public)</Label>
+                    <Input
+                      id="display-name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="e.g. Mayank"
+                      disabled={isFormDisabled}
+                    />
+                  </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-role">Role</Label>
+                <Select value={selectedRole} onValueChange={setSelectedRole} disabled={isFormDisabled}>
+                    <SelectTrigger id="member-role">
+                        <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableRoles.length > 0 ? (
+                            availableRoles.map(role => (
+                                <SelectItem key={role} value={role}>{role}</SelectItem>
+                            ))
+                        ) : (
+                            <div className="p-2 text-center text-sm text-muted-foreground">All roles assigned</div>
+                        )}
+                    </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAddMember} disabled={isFormDisabled || availableRoles.length === 0}>
+                {addPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                {addPending ? 'Adding...' : 'Add Member'}
+              </Button>
+              {!canManageTeam && <p className="text-xs text-destructive mt-2">You do not have permission to manage the team.</p>}
+              {canManageTeam && !isUnlocked && <p className="text-xs text-muted-foreground mt-2">Unlock controls below to add or remove members.</p>}
             </CardContent>
-            {canManageTeam && (
-              <CardFooter className="bg-secondary/50 p-4 border-t">
-                {isUnlocked ? (
-                    <div className='w-full text-center'>
-                        <Button variant="ghost" onClick={() => setIsUnlocked(false)}><Lock className="mr-2 h-4 w-4" /> Lock Controls</Button>
-                    </div>
-                ) : (
-                    <div className="w-full space-y-2">
-                        <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Add/Remove/Edit Controls</Label>
-                        <div className="flex gap-2">
-                            <Input 
-                                id="management-key" 
-                                type="password"
-                                placeholder="Enter management key..."
-                                value={managementKey}
-                                onChange={(e) => setManagementKey(e.target.value)}
-                            />
-                            <Button variant="outline" onClick={handleUnlock}>
-                                <Unlock className="mr-2 h-4 w-4" />
-                                Unlock
-                            </Button>
-                        </div>
-                    </div>
-                )}
-              </CardFooter>
-            )}
-        </Card>
+          </Card>
+          
+          <Card>
+              <CardHeader>
+                  <CardTitle>Current Team</CardTitle>
+                  <CardDescription>
+                      This is the current list of management team members with their performance score and task status.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  {sortedTeam.length === 0 ? (
+                      <p className="text-muted-foreground text-center">No team members added yet.</p>
+                  ) : (
+                      sortedTeam.map(member => {
+                          const performanceScore = calculatePerformanceScore(member, allMovies);
+                          const activeTasks = member.tasks?.filter(t => t.status === 'active' || t.status === 'incompleted') || [];
+                          return (
+                              <div key={member.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                                  <div className="flex items-center gap-4">
+                                  <User className="h-6 w-6 text-primary" />
+                                  <div>
+                                      <p className="font-semibold">{member.displayName}</p>
+                                      <p className="text-sm text-muted-foreground">{member.info} <span className="text-xs">({member.name})</span></p>
+                                  </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                  <Badge variant={getPerformanceBadgeVariant(performanceScore)} className="flex items-center gap-1.5">
+                                      <TrendingUp className="h-3.5 w-3.5" />
+                                      <span>{performanceScore.toFixed(1)} / 10</span>
+                                  </Badge>
+                                  <Badge variant={activeTasks.length > 0 ? 'destructive' : 'success'} className="flex items-center gap-1.5">
+                                      {activeTasks.length > 0 ? <AlertCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                                      <span>{activeTasks.length} Active Task(s)</span>
+                                  </Badge>
+                                  {canManageTeam && isUnlocked && (
+                                      <Button variant="outline" size="icon" onClick={() => handleOpenEditDialog(member)}><Edit className="h-4 w-4" /></Button>
+                                  )}
+                                  {canManageTeam && (
+                                      <>
+                                          <Button variant="outline" size="icon" onClick={() => handleOpenSettlementDialog(member)}><CircleDollarSign className="h-4 w-4" /></Button>
+                                          <Button variant="outline" size="icon" onClick={() => handleOpenTaskDialog(member)}><Briefcase className="h-4 w-4" /></Button>
+                                      </>
+                                  )}
+                                  {isUnlocked && canManageTeam && (
+                                    <AlertDialogTrigger asChild>
+                                      <Button 
+                                          variant="destructive" 
+                                          size="icon" 
+                                          onClick={() => setMemberToDelete(member)}
+                                          disabled={deletePending}
+                                      >
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                  )}
+                                  </div>
+                              </div>
+                          )
+                      })
+                  )}
+              </CardContent>
+              {canManageTeam && (
+                <CardFooter className="bg-secondary/50 p-4 border-t">
+                  {isUnlocked ? (
+                      <div className='w-full text-center'>
+                          <Button variant="ghost" onClick={() => setIsUnlocked(false)}><Lock className="mr-2 h-4 w-4" /> Lock Controls</Button>
+                      </div>
+                  ) : (
+                      <div className="w-full space-y-2">
+                          <Label htmlFor="management-key" className="text-xs text-muted-foreground">Unlock Add/Remove/Edit Controls</Label>
+                          <div className="flex gap-2">
+                              <Input 
+                                  id="management-key" 
+                                  type="password"
+                                  placeholder="Enter management key..."
+                                  value={managementKey}
+                                  onChange={(e) => setManagementKey(e.target.value)}
+                              />
+                              <Button variant="outline" onClick={handleUnlock}>
+                                  <Unlock className="mr-2 h-4 w-4" />
+                                  Unlock
+                              </Button>
+                          </div>
+                      </div>
+                  )}
+                </CardFooter>
+              )}
+          </Card>
 
-      </div>
+        </div>
+        
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the admin
+                <span className="font-bold"> {memberToDelete?.displayName}</span> from the database.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setMemberToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMember} disabled={deletePending}>
+                {deletePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Confirm
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isTaskDialogOpen} onOpenChange={(open) => !open && handleCloseDialogs()}>
         {selectedMember && <TaskHistoryDialog member={selectedMember} allMovies={allMovies} onTaskSet={handleTaskSet} onTaskRemove={handleTaskRemove} onClose={handleCloseDialogs} />}
       </Dialog>
