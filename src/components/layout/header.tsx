@@ -136,13 +136,6 @@ const InfoRow = ({ Icon, label, value }: { Icon: React.ElementType; label: strin
 function ManagementPanel() {
     const managementTeam = useMovieStore((state) => state.managementTeam);
 
-    const getDisplayName = (fullName: string) => {
-        if (fullName.includes('.')) {
-            return fullName.split('.').pop() || fullName;
-        }
-        return fullName;
-    }
-
     return (
         <>
             <Sheet>
@@ -166,7 +159,7 @@ function ManagementPanel() {
                                     <div key={member.id} className="p-3 bg-secondary/50 rounded-lg">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h3 className="font-semibold">{getDisplayName(member.name)}</h3>
+                                                <h3 className="font-semibold">{member.displayName}</h3>
                                                 <p className="text-sm text-muted-foreground">{member.info}</p>
                                             </div>
                                         </div>

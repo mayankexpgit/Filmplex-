@@ -217,7 +217,7 @@ function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove, onClose
         <>
         <DialogContent className="max-w-3xl">
             <DialogHeader>
-                <DialogTitle>Task History & Management for {member.name}</DialogTitle>
+                <DialogTitle>Task History & Management for {member.displayName}</DialogTitle>
                 <DialogDescription>View past performance and assign a new task.</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[60vh] overflow-y-auto">
@@ -346,7 +346,7 @@ function SettlementDialog({ member, onClose, onUpdateStatus }: { member: Managem
     return (
         <DialogContent className="max-w-xl">
             <DialogHeader>
-                <DialogTitle>Monthly Settlement for {member.name}</DialogTitle>
+                <DialogTitle>Monthly Settlement for {member.displayName}</DialogTitle>
                 <DialogDescription>Manage the payment status for each month's earnings.</DialogDescription>
             </DialogHeader>
             <div className="py-4 max-h-[60vh] overflow-y-auto">
@@ -413,6 +413,7 @@ export default function ManagementManager() {
   const [selectedMember, setSelectedMember] = useState<ManagementMember | null>(null);
 
   const [name, setName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
 
   const [managementKey, setManagementKey] = useState('');
@@ -451,13 +452,14 @@ export default function ManagementManager() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please fill in the member name and select a role.',
+        description: 'Please fill in the admin login name and select a role.',
       });
       return;
     }
     
     const newMember: Omit<ManagementMember, 'id' | 'timestamp'> = {
         name,
+        displayName: displayName.trim() === '' ? name : displayName,
         info: selectedRole,
         tasks: [],
     };
@@ -467,9 +469,10 @@ export default function ManagementManager() {
         await addManagementMember(newMember);
         toast({
           title: 'Success!',
-          description: `Team member "${name}" has been added with the role "${selectedRole}".`,
+          description: `Team member "${newMember.displayName}" has been added.`,
         });
         setName('');
+        setDisplayName('');
         setSelectedRole('');
       } catch (error) {
         toast({
@@ -614,15 +617,27 @@ export default function ManagementManager() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="member-name">Member Name</Label>
-              <Input
-                id="member-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. John Doe"
-                disabled={isFormDisabled}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="member-name">Admin Login Name</Label>
+                  <Input
+                    id="member-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. dev.Mayank"
+                    disabled={isFormDisabled}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="display-name">Display Name (Public)</Label>
+                  <Input
+                    id="display-name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="e.g. Mayank"
+                    disabled={isFormDisabled}
+                  />
+                </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="member-role">Role</Label>
@@ -669,8 +684,8 @@ export default function ManagementManager() {
                                 <div className="flex items-center gap-4">
                                 <User className="h-6 w-6 text-primary" />
                                 <div>
-                                    <p className="font-semibold">{member.name}</p>
-                                    <p className="text-sm text-muted-foreground">{member.info}</p>
+                                    <p className="font-semibold">{member.displayName}</p>
+                                    <p className="text-sm text-muted-foreground">{member.info} <span className="text-xs">({member.name})</span></p>
                                 </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -692,7 +707,7 @@ export default function ManagementManager() {
                                 <Button 
                                     variant="destructive" 
                                     size="icon" 
-                                    onClick={() => handleDeleteMember(member.id, member.name)}
+                                    onClick={() => handleDeleteMember(member.id, member.displayName)}
                                     disabled={deletePending}
                                 >
                                     <Trash2 className="h-4 w-4" />

@@ -68,7 +68,8 @@ export interface Settlement {
 
 export interface ManagementMember {
     id:string;
-    name: string;
+    name: string; // This is the adminName for login
+    displayName: string; // This will be the "real name" for display
     info: string;
     timestamp: string; 
     tasks?: AdminTask[];
