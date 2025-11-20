@@ -33,15 +33,16 @@ export default function DownloadHelpShelf() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="fixed bottom-8 right-8 z-50">
+        <div className="fixed bottom-8 right-8 z-50 flex flex-col items-center gap-1 cursor-pointer group">
            <Button
             variant="outline"
             size="icon"
-            className="rounded-full h-14 w-14 shadow-lg bg-background/80 border-border/40 backdrop-blur-sm"
+            className="rounded-full h-14 w-14 shadow-lg bg-background/80 border-border/40 backdrop-blur-sm group-hover:bg-accent"
             aria-label="Download Help"
           >
             <span className="material-symbols-outlined text-primary text-2xl">file_download_off</span>
           </Button>
+          <p className="text-xs text-muted-foreground group-hover:text-foreground">Problem while facing download?</p>
         </div>
       </DialogTrigger>
       <DialogContent className="max-w-md">
