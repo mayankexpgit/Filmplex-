@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
@@ -37,7 +39,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
@@ -482,31 +483,33 @@ export default function UploadMovieComponent() {
                 });
             }
 
-        } else { // Movie logic
-            const lines = bulkLinks.split('\n').filter(line => line.trim() !== '');
+        } else { // Movie logic (New, corrected logic)
             const newLinks: DownloadLink[] = [];
-            const urlRegex = /https?:\/\/[^\s]+/g;
+            const blocks = bulkLinks.split('📁').filter(b => b.trim() !== '');
 
-            lines.forEach(line => {
-                const urls = line.match(urlRegex);
-                if (!urls) return;
+            blocks.forEach(block => {
+                const qualityMatch = block.match(/^\s*([^\s]+)/);
+                const shortLinkMatch = block.match(/✨\s*Short:\s*(https?:\/\/[^\s]+)/);
 
-                const url = urls[0];
-                newLinks.push({ quality: '', url, size: commonSize || '' });
+                if (qualityMatch && shortLinkMatch) {
+                    const quality = qualityMatch[1];
+                    const url = shortLinkMatch[1];
+                    newLinks.push({ quality, url, size: '' }); // Size is intentionally left empty
+                }
             });
 
             if (newLinks.length > 0) {
-                handleInputChange('downloadLinks', [...(formData.downloadLinks || []).filter(l => l.url), ...newLinks]);
+                handleInputChange('downloadLinks', newLinks); // Replace existing links
                 setBulkLinks('');
                 toast({
                     title: 'Links Parsed',
-                    description: `Successfully added ${newLinks.length} new download links.`,
+                    description: `Successfully parsed ${newLinks.length} new download links for the movie.`,
                 });
             } else {
                 toast({
                     variant: 'destructive',
                     title: 'Parsing Failed',
-                    description: 'Could not find any valid links in the text.',
+                    description: 'Could not find any valid movie links in the specified format (📁 Quality... ✨ Short: URL...).',
                 });
             }
         }
@@ -619,7 +622,7 @@ export default function UploadMovieComponent() {
             <CardTitle>{formData.id ? 'Edit Content' : 'Upload Content'}</CardTitle>
             <CardDescription>Fill in the details. Use the preview button to see your changes live.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow overflow-hidden">
+          <CardContent className="flex-grow">
             <ScrollArea className="h-full pr-6">
               <div className="space-y-4">
                 
@@ -641,14 +644,31 @@ export default function UploadMovieComponent() {
 
                 {/* Basic Info */}
                 <div className="space-y-2">
-                  <Label htmlFor="movie-title">Title</Label>
-                  <div className="flex items-center gap-2">
-                      <Input id="movie-title" value={formData.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} disabled={isFormDisabled} placeholder="e.g. The Matrix" />
-                      <Button variant="outline" size="icon" onClick={handleSearchClick} disabled={isFormDisabled} className="ai-glow-button">
-                          {isSearching || isFetchingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                          <span className="sr-only">Auto-fill with AI</span>
-                      </Button>
-                  </div>
+                    <Label htmlFor="movie-title">Title</Label>
+                    <div className="flex items-start gap-2 overflow-visible relative">
+                        <Input
+                            id="movie-title"
+                            value={formData.title || ''}
+                            onChange={(e) => handleInputChange('title', e.target.value)}
+                            disabled={isFormDisabled}
+                            placeholder="e.g. The Matrix"
+                            className="flex-1"
+                        />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleSearchClick}
+                            disabled={isFormDisabled}
+                            className="ai-glow-button flex-shrink-0 overflow-visible relative z-30"
+                        >
+                            {isSearching || isFetchingAI ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Sparkles className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">Auto-fill with AI</span>
+                        </Button>
+                    </div>
                 </div>
                 
                  {formData.contentType === 'series' && (
@@ -777,8 +797,14 @@ export default function UploadMovieComponent() {
                           onChange={(e) => handleScreenshotChange(index, e.target.value)}
                           disabled={isFormDisabled}
                         />
-                        <Button variant="ghost" size="icon" onClick={() => removeScreenshot(index)} disabled={isFormDisabled}>
-                          <XCircle className="h-5 w-5 text-destructive" />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeScreenshot(index)}
+                            disabled={isFormDisabled}
+                            className="overflow-visible relative z-20 flex-shrink-0"
+                        >
+                            <XCircle className="h-5 w-5 text-destructive" />
                         </Button>
                     </div>
                   ))}
