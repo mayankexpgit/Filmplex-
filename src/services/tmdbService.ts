@@ -14,27 +14,30 @@ const getTMDbKeys = (): string[] => {
     return keys;
 };
 
-let tmdbKeys: string[] = getTMDbKeys();
 let currentKeyIndex = 0;
 
 /**
  * Makes a request to the TMDb API with automatic key rotation.
+ * Keys are fetched from the environment on each attempt, ensuring they are always up-to-date.
  * If a request fails due to an invalid key or rate limiting, it retries with the next available key.
  * @param config - The Axios request configuration.
- * @param retries - The number of remaining retries (should match the number of keys).
+ * @param retries - The number of remaining retries. This is initialized based on the number of available keys.
  * @returns The response data from the TMDb API.
  */
-const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length): Promise<any> => {
-    const currentKeys = getTMDbKeys();
-    if (currentKeys.length === 0) {
-        throw new Error('No TMDb API keys are configured. Please add TMDB_API_KEY_1 and TMDB_API_KEY_2 to your .env file.');
+const tmdbRequest = async (config: AxiosRequestConfig, retries?: number): Promise<any> => {
+    const availableKeys = getTMDbKeys();
+    
+    if (availableKeys.length === 0) {
+        throw new Error('No TMDb API keys are configured. Please add TMDB_API_KEY_1 and/or TMDB_API_KEY_2 to your .env file.');
     }
-    if (retries <= 0) {
+
+    const maxRetries = retries ?? availableKeys.length;
+    if (maxRetries <= 0) {
         throw new Error('All TMDb API keys failed. Please check your keys and their usage limits.');
     }
 
     try {
-        const key = currentKeys[currentKeyIndex];
+        const key = availableKeys[currentKeyIndex];
         const response = await axios({
             ...config,
             params: {
@@ -47,8 +50,8 @@ const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length
         if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 429)) {
             // 401: Invalid API Key, 429: Rate Limit Exceeded. Rotate key and retry.
             console.warn(`TMDb key at index ${currentKeyIndex} failed. Rotating to the next key.`);
-            currentKeyIndex = (currentKeyIndex + 1) % currentKeys.length;
-            return tmdbRequest(config, retries - 1);
+            currentKeyIndex = (currentKeyIndex + 1) % availableKeys.length;
+            return tmdbRequest(config, maxRetries - 1);
         }
         // For other errors, re-throw them.
         console.error('An unexpected error occurred while fetching from TMDb:', error);
@@ -141,10 +144,6 @@ const fetchPages = async (title: string, type: 'movie' | 'tv', fetchAll: boolean
 
 
 export const searchMoviesOnTMDb = async (title: string, fetchAll: boolean = false): Promise<TMDbSearchResult[]> => {
-    const currentKeys = getTMDbKeys();
-    if (currentKeys.length === 0) {
-        throw new Error('TMDb API key is not configured.');
-    }
     const lowerCaseTitle = title.toLowerCase();
 
     // Fetch pages for both movies and TV shows in parallel based on the fetchAll flag
@@ -217,11 +216,6 @@ const getTrailerUrl = (videos: any[]): string | undefined => {
 
 
 export const fetchMovieDetailsFromTMDb = async (tmdbId: number, type: ContentType): Promise<FormattedTMDbData> => {
-    const currentKeys = getTMDbKeys();
-    if (currentKeys.length === 0) {
-        throw new Error('TMDb API key is not configured.');
-    }
-
     const endpointType = type === 'series' ? 'tv' : 'movie';
 
     let details;
