@@ -39,6 +39,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
@@ -483,7 +484,7 @@ export default function UploadMovieComponent() {
                 });
             }
 
-        } else { // Movie logic (New, corrected logic)
+        } else { // Movie logic
             const newLinks: DownloadLink[] = [];
             const blocks = bulkLinks.split('📁').filter(b => b.trim() !== '');
 
@@ -494,12 +495,12 @@ export default function UploadMovieComponent() {
                 if (qualityMatch && shortLinkMatch) {
                     const quality = qualityMatch[1];
                     const url = shortLinkMatch[1];
-                    newLinks.push({ quality, url, size: '' }); // Size is intentionally left empty
+                    newLinks.push({ quality, url, size: '' });
                 }
             });
 
             if (newLinks.length > 0) {
-                handleInputChange('downloadLinks', newLinks); // Replace existing links
+                handleInputChange('downloadLinks', newLinks);
                 setBulkLinks('');
                 toast({
                     title: 'Links Parsed',
@@ -509,7 +510,7 @@ export default function UploadMovieComponent() {
                 toast({
                     variant: 'destructive',
                     title: 'Parsing Failed',
-                    description: 'Could not find any valid movie links in the specified format (📁 Quality... ✨ Short: URL...).',
+                    description: 'Could not find any valid movie links. The format should be: 📁 Quality ... ✨ Short: URL ...',
                 });
             }
         }
