@@ -562,7 +562,6 @@ export default function UploadMovieComponent() {
         await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
       
-      setIsUploading(false);
       startCoinAnimation();
       
       toast({ 
@@ -571,6 +570,9 @@ export default function UploadMovieComponent() {
           variant: 'success'
       });
       
+      setIsUploading(false);
+
+      // Reset the form after a short delay to allow animations to be seen
       setTimeout(() => {
         resetForm();
       }, 500);
