@@ -7,10 +7,10 @@ import axios, { type AxiosRequestConfig } from 'axios';
 // --- API Key Management ---
 const getTMDbKeys = (): string[] => {
     const keys: string[] = [];
-    if (process.env.NEXT_PUBLIC_TMDB_API_KEY_1) keys.push(process.env.NEXT_PUBLIC_TMDB_API_KEY_1);
-    if (process.env.NEXT_PUBLIC_TMDB_API_KEY_2) keys.push(process.env.NEXT_PUBLIC_TMDB_API_KEY_2);
+    if (process.env.TMDB_API_KEY_1) keys.push(process.env.TMDB_API_KEY_1);
+    if (process.env.TMDB_API_KEY_2) keys.push(process.env.TMDB_API_KEY_2);
     // You can add more keys here if needed
-    // if (process.env.NEXT_PUBLIC_TMDB_API_KEY_3) keys.push(process.env.NEXT_PUBLIC_TMDB_API_KEY_3);
+    // if (process.env.TMDB_API_KEY_3) keys.push(process.env.TMDB_API_KEY_3);
     return keys;
 };
 
@@ -27,7 +27,7 @@ let currentKeyIndex = 0;
 const tmdbRequest = async (config: AxiosRequestConfig, retries = tmdbKeys.length): Promise<any> => {
     const currentKeys = getTMDbKeys();
     if (currentKeys.length === 0) {
-        throw new Error('No TMDb API keys are configured. Please add NEXT_PUBLIC_TMDB_API_KEY_1 and NEXT_PUBLIC_TMDB_API_KEY_2 to your .env.local file.');
+        throw new Error('No TMDb API keys are configured. Please add TMDB_API_KEY_1 and TMDB_API_KEY_2 to your .env file.');
     }
     if (retries <= 0) {
         throw new Error('All TMDb API keys failed. Please check your keys and their usage limits.');
