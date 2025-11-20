@@ -46,6 +46,7 @@ import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import DownloadHelpPanel from '../download-help-shelf';
 
 
 function UpcomingReleasesPanel() {
@@ -442,6 +443,7 @@ export function Header() {
             <ChangelogPanel />
             <RequestZonePanel />
             <HelpCenterPanel />
+            <DownloadHelpPanel />
           </DropdownMenuContent>
         </DropdownMenu>
 

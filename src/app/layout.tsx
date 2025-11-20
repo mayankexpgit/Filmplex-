@@ -5,7 +5,6 @@ import { Toaster } from '@/components/ui/toaster';
 import FloatingTelegramButton from '@/components/floating-telegram-button';
 import { Analytics } from '@vercel/analytics/react';
 import MalwareProtectionShelf from '@/components/malware-protection-shelf';
-import DownloadHelpShelf from '@/components/download-help-shelf';
 
 
 export const metadata: Metadata = {
@@ -53,7 +52,6 @@ export default function RootLayout({
           {children}
         </div>
         <MalwareProtectionShelf />
-        <DownloadHelpShelf />
         <FloatingTelegramButton />
         <Toaster />
         <footer className="w-full bg-secondary text-secondary-foreground py-4 mt-auto">
