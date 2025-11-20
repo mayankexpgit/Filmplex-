@@ -37,6 +37,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
@@ -528,7 +529,6 @@ export default function UploadMovieComponent() {
 
 
   const handleSave = async () => {
-    setIsUploading(true);
     const { id: editId, tagsString, ...movieDataToSave } = formData;
       
     const finalMovieData: Partial<Movie> = {
@@ -563,6 +563,7 @@ export default function UploadMovieComponent() {
       }
       
       setIsUploading(false); // Hide the progress indicator
+      
       startCoinAnimation();
       
       toast({ 
@@ -590,6 +591,7 @@ export default function UploadMovieComponent() {
       return;
     }
     // This function will now only be called after the user confirms the dialog.
+    setIsUploading(true);
     handleSave();
   };
 
@@ -597,6 +599,7 @@ export default function UploadMovieComponent() {
     if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
       e.preventDefault();
+      return;
     }
     // This function just opens the dialog now. The actual save is triggered by AlertDialogAction's onClick.
   }
