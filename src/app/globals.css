@@ -98,7 +98,7 @@
   }
   .ai-glow-button::before {
     content: '';
-    @apply absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-no-repeat;
+    @apply absolute -top-1/2 -left-1/2 w-[200%] h-[200%];
     background-image: conic-gradient(
       from var(--gradient-angle, 0deg),
       transparent 20%,
@@ -207,4 +207,35 @@
 @keyframes final-check {
   from { transform: scale(0.5); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+/* Curved Arrow Animation */
+@keyframes point-to-button {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) rotate(-15deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5px) rotate(15deg);
+  }
+}
+
+.animate-point-to-button {
+  animation: point-to-button 2s ease-in-out infinite;
+  animation-delay: 1s; /* Start after a small delay */
+  opacity: 0; /* Initially hidden */
+}
+
+/* Hide arrow when parent group is hovered */
+.group:hover .animate-point-to-button {
+  opacity: 0;
+  animation: none;
 }

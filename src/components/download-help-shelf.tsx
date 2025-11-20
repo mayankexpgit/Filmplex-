@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -33,7 +32,16 @@ export default function DownloadHelpShelf() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="fixed bottom-8 right-8 z-50 flex flex-col items-center gap-1 cursor-pointer group">
+        <div className="group fixed bottom-8 right-8 z-50 flex items-end gap-3 cursor-pointer">
+           <div className="relative hidden sm:block">
+              <div className="absolute -bottom-2 -right-12 w-20 h-20 opacity-0 group-hover:opacity-0 transition-opacity duration-300 animate-point-to-button">
+                  <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M85.3553 14.6447C87.308 16.5973 87.308 19.7631 85.3553 21.7157L31.0711 75.9999L25 69.9288L79.2843 15.6447C81.2369 13.692 84.4027 13.692 86.3553 15.6447L85.3553 14.6447Z" fill="hsl(var(--primary))"/>
+                      <path d="M25 70L28 92L50 89L25 70Z" fill="hsl(var(--primary))"/>
+                  </svg>
+              </div>
+              <p className="text-sm text-muted-foreground group-hover:text-foreground whitespace-nowrap">Problem while facing download?</p>
+          </div>
            <Button
             variant="outline"
             size="icon"
@@ -42,7 +50,6 @@ export default function DownloadHelpShelf() {
           >
             <span className="material-symbols-outlined text-primary text-2xl">file_download_off</span>
           </Button>
-          <p className="text-xs text-muted-foreground group-hover:text-foreground">Problem while facing download?</p>
         </div>
       </DialogTrigger>
       <DialogContent className="max-w-md">
