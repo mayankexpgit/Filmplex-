@@ -116,7 +116,7 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string)
 
 function EditMemberDialog({ member, onClose, onSave }: { member: ManagementMember; onClose: () => void; onSave: (id: string, updates: Partial<ManagementMember>) => void; }) {
     const [name, setName] = useState(member.name);
-    const [displayName, setDisplayName] = useState(member.displayName);
+    const [displayName, setDisplayName] = useState(member.displayName || '');
     const [isSaving, startSaving] = useTransition();
 
     const handleSave = () => {
