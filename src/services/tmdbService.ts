@@ -1,7 +1,3 @@
-
-
-'use server';
-
 import axios, { type AxiosRequestConfig } from 'axios';
 
 // --- API Key Management ---
