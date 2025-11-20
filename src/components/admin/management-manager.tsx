@@ -141,33 +141,31 @@ function EditMemberDialog({ member, onClose, onSave }: { member: ManagementMembe
     };
 
     return (
-        <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit Admin: {member.displayName}</DialogTitle>
-                    <DialogDescription>
-                        Change the login name or display name for this team member.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-4 space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-admin-name">Admin Login Name</Label>
-                        <Input id="edit-admin-name" value={name} onChange={(e) => setName(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-display-name">Display Name</Label>
-                        <Input id="edit-display-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-                    </div>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Edit Admin: {member.displayName}</DialogTitle>
+                <DialogDescription>
+                    Change the login name or display name for this team member.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="edit-admin-name">Admin Login Name</Label>
+                    <Input id="edit-admin-name" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
-                <DialogFooter>
-                    <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                    <Button onClick={handleSave} disabled={isSaving}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-display-name">Display Name</Label>
+                    <Input id="edit-display-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Changes
+                </Button>
+            </DialogFooter>
+        </DialogContent>
     );
 }
 
@@ -871,3 +869,5 @@ export default function ManagementManager() {
     </>
   );
 }
+
+    
