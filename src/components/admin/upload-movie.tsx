@@ -19,7 +19,6 @@ import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { getMovieDetails, searchTMDb } from '@/ai/flows/movie-details-flow';
 import { type TMDbSearchResult } from '@/services/tmdbService';
-
 import {
   Dialog,
   DialogContent,
@@ -528,6 +527,8 @@ export default function UploadMovieComponent() {
 
 
   const handleSave = async () => {
+    setIsUploading(true);
+    
     const { id: editId, tagsString, ...movieDataToSave } = formData;
       
     const finalMovieData: Partial<Movie> = {
@@ -554,8 +555,6 @@ export default function UploadMovieComponent() {
          (finalMovieData.seasonDownloadLinks || []).some(l => l.url.trim() !== '')));
     setHasDownloadLinks(linksPresent);
       
-    setIsUploading(true);
-
     try {
       if (editId) {
         await updateMovie(editId, finalMovieData);
