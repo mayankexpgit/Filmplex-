@@ -19,6 +19,7 @@ import { Progress } from '../ui/progress';
 import { fetchDownloadAnalytics } from '@/services/movieService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Decimal } from 'decimal.js';
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
 
@@ -42,18 +43,17 @@ const hasValidLinks = (movie: Movie): boolean => {
     return false;
 };
 
-const getLinkCount = (movie: Movie): number => {
-    if (movie.contentType === 'movie') {
-        return movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
+const getLinkCount = (movie: Movie, type: 'episode' | 'season'): number => {
+    if (movie.contentType !== 'series') return 0;
+
+    if (type === 'episode') {
+        return movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
     }
-    if (movie.contentType === 'series') {
-        const episodeLinks = movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
-        const seasonLinks = movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
-        return episodeLinks + seasonLinks;
+    if (type === 'season') {
+        return movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
     }
     return 0;
-};
-
+}
 
 const calculateMovieEarning = (movie: Movie): number => {
     if (!hasValidLinks(movie) || !movie.createdAt) {
@@ -64,16 +64,19 @@ const calculateMovieEarning = (movie: Movie): number => {
     const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
 
     if (isLegacy) {
-        return 0.50;
+        return new Decimal(0.50).toNumber();
     }
 
-    // New upload logic
-    const linkCount = getLinkCount(movie);
     if (movie.contentType === 'movie') {
-        const earnings = Math.floor(linkCount / 2) * 0.15;
-        return Math.min(earnings, 0.40);
+        const linkCount = movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
+        const earnings = new Decimal(linkCount).times(0.10);
+        return Decimal.min(earnings, 0.40).toNumber();
     } else { // series
-        return Math.floor(linkCount / 2) * 0.30;
+        const episodeLinkCount = getLinkCount(movie, 'episode');
+        const seasonLinkCount = getLinkCount(movie, 'season');
+        const episodeEarnings = new Decimal(episodeLinkCount).times(0.06);
+        const seasonEarnings = new Decimal(seasonLinkCount).times(0.10);
+        return episodeEarnings.plus(seasonEarnings).toNumber();
     }
 };
 
@@ -382,11 +385,11 @@ function WalletCard({ wallet, isCalculating }: { wallet?: Wallet, isCalculating:
                                 <ul className="space-y-2 text-sm text-muted-foreground pl-4">
                                     <li className="flex items-start gap-2">
                                         <Film className="h-4 w-4 mt-1 text-primary"/>
-                                        <span><b>Movies:</b> ₹0.15 for every 2 valid links (max ₹0.40 per movie).</span>
+                                        <span><b>Movies:</b> ₹0.10 per valid link (max ₹0.40 per movie).</span>
                                     </li>
                                      <li className="flex items-start gap-2">
                                         <Tv className="h-4 w-4 mt-1 text-primary"/>
-                                        <span><b>Web Series:</b> ₹0.30 for every 2 valid links (no maximum limit).</span>
+                                        <span><b>Web Series:</b> ₹0.06 per episode link & ₹0.10 per season link (no limit).</span>
                                     </li>
                                 </ul>
                             </div>

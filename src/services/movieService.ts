@@ -21,6 +21,7 @@ import {
 import type { Movie, Notification, Comment, Reactions, ManagementMember, AdminTask, DownloadRecord, Wallet, Settlement, UserRequest } from '@/lib/data';
 import type { ContactInfo, SecurityLog, AdminCredentials } from '@/store/movieStore';
 import { isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isBefore, format as formatDate, isAfter } from 'date-fns';
+import { Decimal } from 'decimal.js';
 
 
 // --- Admin Credentials ---
@@ -279,17 +280,17 @@ const hasValidLinks = (movie: Movie): boolean => {
     return false;
 }
 
-const getLinkCount = (movie: Movie): number => {
-    if (movie.contentType === 'movie') {
-        return movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
+const getLinkCount = (movie: Movie, type: 'episode' | 'season'): number => {
+    if (movie.contentType !== 'series') return 0;
+
+    if (type === 'episode') {
+        return movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
     }
-    if (movie.contentType === 'series') {
-        const episodeLinks = movie.episodes?.reduce((sum, ep) => sum + (ep.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0), 0) || 0;
-        const seasonLinks = movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
-        return episodeLinks + seasonLinks;
+    if (type === 'season') {
+        return movie.seasonDownloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
     }
     return 0;
-}
+};
 
 const calculateEarning = (movie: Movie): number => {
     if (!hasValidLinks(movie) || !movie.createdAt) {
@@ -300,16 +301,19 @@ const calculateEarning = (movie: Movie): number => {
     const isLegacy = isBefore(parseISO(movie.createdAt), walletCalculationDate);
 
     if (isLegacy) {
-        return 0.50;
+        return new Decimal(0.50).toNumber();
     }
-
-    // New upload logic
-    const linkCount = getLinkCount(movie);
+    
     if (movie.contentType === 'movie') {
-        const earnings = Math.floor(linkCount / 2) * 0.15;
-        return Math.min(earnings, 0.40);
+        const linkCount = movie.downloadLinks?.filter(l => l && l.url && l.url.trim() !== '').length || 0;
+        const earnings = new Decimal(linkCount).times(0.10);
+        return Decimal.min(earnings, 0.40).toNumber();
     } else { // series
-        return Math.floor(linkCount / 2) * 0.30;
+        const episodeLinkCount = getLinkCount(movie, 'episode');
+        const seasonLinkCount = getLinkCount(movie, 'season');
+        const episodeEarnings = new Decimal(episodeLinkCount).times(0.06);
+        const seasonEarnings = new Decimal(seasonLinkCount).times(0.10);
+        return episodeEarnings.plus(seasonEarnings).toNumber();
     }
 };
 
@@ -320,27 +324,27 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
     const updatedTeam = team.map(member => {
         const memberMovies = movies.filter(m => m.uploadedBy === member.name && m.createdAt);
         
-        let totalEarnings = 0;
-        let currentMonthlyEarnings = 0;
-        let weekly = 0;
+        let totalEarnings = new Decimal(0);
+        let currentMonthlyEarnings = new Decimal(0);
+        let weekly = new Decimal(0);
 
         memberMovies.forEach(movie => {
-            const earnings = calculateEarning(movie);
-            totalEarnings += earnings;
+            const earnings = new Decimal(calculateEarning(movie));
+            totalEarnings = totalEarnings.plus(earnings);
             
             const movieDate = parseISO(movie.createdAt!);
             if (isWithinInterval(movieDate, { start: startOfWeek(now), end: endOfWeek(now) })) {
-                weekly += earnings;
+                weekly = weekly.plus(earnings);
             }
             if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) })) {
-                currentMonthlyEarnings += earnings;
+                currentMonthlyEarnings = currentMonthlyEarnings.plus(earnings);
             }
         });
 
         const incompletedTasksCount = member.tasks?.filter(t => t.status === 'incompleted').length || 0;
-        const penalty = incompletedTasksCount * 0.50;
+        const penalty = new Decimal(incompletedTasksCount).times(0.50);
 
-        const totalAfterPenalty = totalEarnings - penalty;
+        const totalAfterPenalty = totalEarnings.minus(penalty);
 
         const settlements = [...(member.settlements || [])];
         let currentMonthSettlement = settlements.find(s => s.month === currentMonthStr);
@@ -349,14 +353,14 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             currentMonthSettlement = {
                 month: currentMonthStr,
                 status: 'pending',
-                amount: parseFloat(currentMonthlyEarnings.toFixed(2))
+                amount: currentMonthlyEarnings.toDecimalPlaces(2).toNumber()
             };
             settlements.push(currentMonthSettlement);
         } else {
-             currentMonthSettlement.amount = parseFloat(currentMonthlyEarnings.toFixed(2));
+             currentMonthSettlement.amount = currentMonthlyEarnings.toDecimalPlaces(2).toNumber();
         }
 
-        let finalMonthlyDisplay = currentMonthlyEarnings;
+        let finalMonthlyDisplay = new Decimal(currentMonthlyEarnings);
         if (currentMonthSettlement.status === 'credited' || currentMonthSettlement.status === 'penalty') {
             const settlementDate = currentMonthSettlement.settledAt ? parseISO(currentMonthSettlement.settledAt) : new Date(0);
             const earningsAfterSettlement = memberMovies
@@ -364,14 +368,14 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
                     const movieDate = parseISO(movie.createdAt!);
                     return isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) }) && isAfter(movieDate, settlementDate);
                 })
-                .reduce((sum, movie) => sum + calculateEarning(movie), 0);
+                .reduce((sum, movie) => sum.plus(new Decimal(calculateEarning(movie))), new Decimal(0));
             finalMonthlyDisplay = earningsAfterSettlement;
         }
 
         const wallet: Wallet = {
-            total: parseFloat(totalAfterPenalty.toFixed(2)),
-            monthly: parseFloat(finalMonthlyDisplay.toFixed(2)),
-            weekly: parseFloat(weekly.toFixed(2)),
+            total: totalAfterPenalty.toDecimalPlaces(2).toNumber(),
+            monthly: finalMonthlyDisplay.toDecimalPlaces(2).toNumber(),
+            weekly: weekly.toDecimalPlaces(2).toNumber(),
         };
         
         return { ...member, wallet, settlements };
