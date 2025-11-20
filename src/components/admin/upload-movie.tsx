@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
+import { useMovieStore, addMovie, updateMovie, searchTMDb } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
 import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff, ClipboardPaste, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,7 +17,7 @@ import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { getMovieDetails, searchTMDb } from '@/ai/flows/movie-details-flow';
+import { getMovieDetails } from '@/ai/flows/movie-details-flow';
 import { type TMDbSearchResult } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
 
@@ -37,7 +37,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
@@ -350,7 +349,7 @@ export default function UploadMovieComponent() {
     setIsDialogOpen(true);
     setShowExactMatches(false);
     try {
-      const results = await searchTMDb(formData.title!);
+      const results = await searchTMDb(formData.title!, searchAllPages);
       setSearchResults(results);
     } catch (error: any) {
       toast({
@@ -563,7 +562,11 @@ export default function UploadMovieComponent() {
         await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
       
-      setIsUploading(false);
+      setIsUploading(false); // Hide the progress indicator
+      
+      if (linksPresent) {
+        startCoinAnimation();
+      }
 
       toast({ 
           title: 'Upload Complete!', 
@@ -571,13 +574,10 @@ export default function UploadMovieComponent() {
           variant: 'success'
       });
       
-      if (linksPresent) {
-        startCoinAnimation();
-      }
-
+      // Use a timeout to ensure animations can play before redirect
       setTimeout(() => {
         resetForm();
-      }, 100);
+      }, 500);
 
     } catch (error) {
       setIsUploading(false);
@@ -592,6 +592,7 @@ export default function UploadMovieComponent() {
       e.preventDefault();
       return;
     }
+    // This function will now only be called after the user confirms the dialog.
     handleSave();
   };
 
@@ -600,6 +601,7 @@ export default function UploadMovieComponent() {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
       e.preventDefault();
     }
+    // This function just opens the dialog now. The actual save is triggered by AlertDialogAction's onClick.
   }
 
 
@@ -979,7 +981,7 @@ export default function UploadMovieComponent() {
                   <AlertDialogTrigger asChild>
                       <Button onClick={confirmAndSave} disabled={isFormDisabled} id="upload-confirm-button">
                           {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          {formData.id ? 'Update Content' : 'Confirm & Upload'}
+                          {isUploading ? 'Uploading...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
                       </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
