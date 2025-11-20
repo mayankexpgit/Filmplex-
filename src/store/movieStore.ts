@@ -31,8 +31,6 @@ import {
   deleteRequest as dbDeleteRequest,
 } from '@/services/movieService';
 import { format, isAfter, parseISO } from 'date-fns';
-import { getAdminName } from '@/hooks/use-auth';
-
 
 // --- Types ---
 export interface ContactInfo {
@@ -96,6 +94,25 @@ interface MovieState {
   stopCoinAnimation: () => void;
   fetchInitialData: (isAdmin: boolean) => Promise<void>;
 }
+
+// =================================================================
+// 0. UTILITY FUNCTIONS
+// =================================================================
+
+/**
+ * A utility function to safely get the admin name from localStorage.
+ * This can be used outside of a React component context (e.g., in Zustand store actions).
+ */
+export const getAdminName = (): string | null => {
+    try {
+        if (typeof window === 'undefined') return null;
+        return localStorage.getItem('filmplex_admin_name');
+    } catch (error) {
+        console.error("Could not access localStorage:", error);
+        return null;
+    }
+};
+
 
 // =================================================================
 // 1. ZUSTAND STORE DEFINITION
