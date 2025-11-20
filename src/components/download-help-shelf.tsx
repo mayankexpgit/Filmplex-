@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
-import { DownloadCloud, HelpCircle, ShieldCheck, Video, Send, Zap, LifeBuoy } from 'lucide-react';
+import { DownloadCloud, HelpCircle, ShieldCheck, Video, Send, Zap } from 'lucide-react';
 import { DropdownMenuItem } from './ui/dropdown-menu';
 import { Separator } from './ui/separator';
 
@@ -26,8 +26,8 @@ export default function DownloadHelpPanel() {
     <Sheet>
       <SheetTrigger asChild>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <LifeBuoy className="mr-2 h-4 w-4"/>
-            Download Help
+            <span className="material-symbols-outlined mr-2 h-4 w-4">file_download_off</span>
+            Download Issue
         </DropdownMenuItem>
       </SheetTrigger>
       <SheetContent className="w-[400px]">
