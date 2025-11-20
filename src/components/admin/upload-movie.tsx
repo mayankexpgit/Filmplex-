@@ -350,7 +350,7 @@ export default function UploadMovieComponent() {
     setIsDialogOpen(true);
     setShowExactMatches(false);
     try {
-      const results = await searchTMDb(formData.title!, searchAllPages);
+      const results = await searchTMDb(formData.title!);
       setSearchResults(results);
     } catch (error: any) {
       toast({
@@ -571,10 +571,13 @@ export default function UploadMovieComponent() {
           description: `"${formData.title}" has been successfully saved.`,
           variant: 'success'
       });
-
-      if (linksPresent) {
-        startCoinAnimation();
-      }
+      
+      // Add a small delay to allow the upload indicator to disappear
+      setTimeout(() => {
+          if (linksPresent) {
+            startCoinAnimation();
+          }
+      }, 100);
 
       resetForm();
 
