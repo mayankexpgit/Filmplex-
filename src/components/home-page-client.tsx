@@ -91,7 +91,7 @@ export function HomePageClient() {
     if (gQuery !== selectedGenre) setSelectedGenre(gQuery);
     if (pQuery !== currentPage) setCurrentPage(pQuery);
     
-  }, [searchParams, setSearchQuery, searchQuery, setSelectedGenre, selectedGenre, setCurrentPage, currentPage]);
+  }, [searchParams, searchQuery, selectedGenre, currentPage, setSearchQuery, setSelectedGenre, setCurrentPage]);
   
   useEffect(() => {
     if (!isInitialized) {
