@@ -1,23 +1,30 @@
-
 'use client';
 
-import { useTransition, useMemo } from 'react';
+import { useTransition, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useMovieStore, updateRequestStatus, deleteRequest } from '@/store/movieStore';
+import { useMovieStore, updateRequestStatus, deleteRequest, fetchRequests } from '@/store/movieStore';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import type { UserRequest } from '@/lib/data';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
+import FilmpilexLoader from '../ui/filmplex-loader';
 
 export default function GetAnythingManager() {
-  const { requests } = useMovieStore();
+  const { requests, isInitialized } = useMovieStore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    // Fetch requests when the component mounts if not already initialized
+    if (!isInitialized) {
+        fetchRequests();
+    }
+  }, [isInitialized]);
 
   // Sort requests by timestamp so newest appear first
   const sortedRequests = useMemo(() => {
@@ -76,6 +83,13 @@ export default function GetAnythingManager() {
         }
     }
 
+    if (!isInitialized) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <FilmpilexLoader />
+            </div>
+        );
+    }
 
   return (
     <Card>

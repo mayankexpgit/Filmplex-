@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useTransition, useMemo, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Trash2, MessageSquare, ArrowLeft, ThumbsUp, Heart, Smile, SmilePlus, Fr
 import { useMovieStore, deleteComment as storeDeleteComment, fetchCommentsForMovie } from '@/store/movieStore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import type { Movie, Reactions } from '@/lib/data';
 import { Input } from '../ui/input';
 import { Separator } from '../ui/separator';
@@ -28,6 +27,7 @@ function MovieCommentsView({ movie, onBack }: { movie: Movie, onBack: () => void
     const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
+        // Fetch comments specifically for this movie when the view opens.
         if (movie.id) {
             fetchCommentsForMovie(movie.id);
         }
@@ -102,7 +102,7 @@ function MovieCommentsView({ movie, onBack }: { movie: Movie, onBack: () => void
                                 </div>
                                 <p className="text-sm text-muted-foreground">{item.text}</p>
                                 <p className="text-xs text-muted-foreground pt-1">
-                                {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                                {formatDistanceToNow(parseISO(item.timestamp), { addSuffix: true })}
                                 </p>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} disabled={isPending}>

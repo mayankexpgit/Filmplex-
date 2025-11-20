@@ -19,7 +19,6 @@ import {
   addComment as dbAddComment,
   deleteComment as dbDeleteComment,
   updateReaction as dbUpdateReaction,
-  fetchAllComments as dbFetchAllComments,
   fetchManagementTeam as dbFetchManagementTeam,
   addManagementMember as dbAddManagementMember,
   deleteManagementMember as dbDeleteManagementMember,
@@ -74,8 +73,6 @@ interface MovieState {
   securityLogs: SecurityLog[];
   notifications: Notification[];
   requests: UserRequest[];
-  allComments: Comment[];
-  managementTeam: ManagementMember[];
   
   // Per-movie state
   comments: Comment[];
@@ -93,7 +90,6 @@ interface MovieState {
   setCurrentPage: (page: number) => void;
   setState: (state: Partial<MovieState>) => void;
   setComments: (comments: Comment[]) => void;
-  setAllComments: (comments: Comment[]) => void;
   addCommentToState: (comment: Comment) => void;
   incrementReaction: (movieId: string, reaction: keyof Reactions) => void;
   startCoinAnimation: () => void;
@@ -120,11 +116,9 @@ const useMovieStore = create<MovieState>((set, get) => ({
   securityLogs: [],
   notifications: [],
   requests: [],
-  allComments: [],
-  managementTeam: [],
   adminProfile: null,
   comments: [],
-  isCoinAnimationActive: false,
+isCoinAnimationActive: false,
   isInitialized: false,
 
   // --- Actions ---
@@ -142,7 +136,6 @@ const useMovieStore = create<MovieState>((set, get) => ({
   setCurrentPage: (page: number) => set({ currentPage: page }),
   setState: (state: Partial<MovieState>) => set(state),
   setComments: (comments) => set({ comments }),
-  setAllComments: (comments) => set({ allComments: comments }),
   addCommentToState: (comment) => set(state => ({ comments: [comment, ...state.comments] })),
   incrementReaction: (movieId, reaction) => set(state => {
     const updateMovieInList = (list: Movie[]) => 
@@ -169,47 +162,40 @@ const useMovieStore = create<MovieState>((set, get) => ({
     isFetchingData = true;
     
     try {
+      // Always fetch the core data
       let [
         allMovies,
         notifications,
         contactInfo,
         managementTeam,
-        requests,
       ] = await Promise.all([
         dbFetchMovies(),
         dbFetchNotifications(),
         dbFetchContactInfo(),
         dbFetchManagementTeam(),
-        dbFetchRequests(),
       ]);
       
       const stateUpdate: Partial<MovieState> = {
-        allMovies: allMovies,
+        allMovies,
         latestReleases: allMovies,
         featuredMovies: allMovies.filter((movie: Movie) => movie.isFeatured),
         notifications,
         contactInfo,
         managementTeam,
-        requests,
       };
       
+      // Conditionally fetch admin-specific data only if needed and not fetched yet.
+      // This is now handled by individual pages to improve performance.
       if (isAdmin) {
-        const [securityLogs, allComments] = await Promise.all([
-          dbFetchSecurityLogs(),
-          dbFetchAllComments(allMovies),
-        ]);
-        stateUpdate.securityLogs = securityLogs;
-        stateUpdate.allComments = allComments;
-        // This is a critical step that must be done for admins
-        const teamWithUpdatedTasks = await checkAndUpdateOverdueTasks(managementTeam, allMovies);
-        stateUpdate.managementTeam = teamWithUpdatedTasks; // Use the team with updated tasks
+         const teamWithUpdatedTasks = await checkAndUpdateOverdueTasks(managementTeam, allMovies);
+         stateUpdate.managementTeam = teamWithUpdatedTasks;
       }
 
       set({ ...stateUpdate, isInitialized: true });
 
     } catch (error) {
       console.error("Failed to fetch initial data:", error);
-      set({ isInitialized: true });
+      set({ isInitialized: true }); // Still set to true to prevent re-fetching on error
     } finally {
       isFetchingData = false;
     }
@@ -242,7 +228,7 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
     const newLog = {
         admin: adminName,
         action,
-        timestamp: new Date().toLocaleString(),
+        timestamp: new Date().toISOString(),
     };
     try {
         const id = await dbAddSecurityLog(newLog);
@@ -397,8 +383,13 @@ const submitRequest = async (movieName: string, comment: string): Promise<UserRe
   return newRequest;
 };
 
-const fetchRequests = async (): Promise<UserRequest[]> => {
-    return await dbFetchRequests();
+const fetchRequests = async (): Promise<void> => {
+    try {
+        const requests = await dbFetchRequests();
+        useMovieStore.setState({ requests });
+    } catch (error) {
+        console.error("Failed to fetch user requests:", error);
+    }
 };
 
 const updateRequestStatus = async (requestId: string, status: UserRequest['status']): Promise<void> => {
@@ -419,6 +410,15 @@ const deleteRequest = async (requestId: string): Promise<void> => {
   await addSecurityLogEntry(`Deleted request ID: ${requestId}`);
 };
 
+// --- Security Logs (On-demand fetching) ---
+const fetchSecurityLogs = async (): Promise<void> => {
+    try {
+        const logs = await dbFetchSecurityLogs();
+        useMovieStore.setState({ securityLogs: logs });
+    } catch (error) {
+        console.error("Failed to fetch security logs:", error);
+    }
+};
 
 // --- Management Team & Tasks ---
 
@@ -429,7 +429,7 @@ const addManagementMember = async (memberData: Omit<ManagementMember, 'id' | 'ti
     };
     const id = await dbAddManagementMember(fullMemberData);
     useMovieStore.setState(state => ({
-        managementTeam: [...state.managementTeam, { id, ...fullMemberData }].sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()),
+        managementTeam: [...state.managementTeam, { id, ...fullMemberData }].sort((a,b) => parseISO(a.timestamp).getTime() - parseISO(b.timestamp).getTime()),
     }));
     await addSecurityLogEntry(`Added management member: "${memberData.name}"`);
 };
@@ -627,6 +627,7 @@ export {
     updateContactInfo,
     addNotification,
     deleteNotification,
+    fetchSecurityLogs,
     fetchCommentsForMovie,
     submitComment,
     deleteComment,

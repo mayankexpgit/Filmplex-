@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -32,9 +31,10 @@ export default function AdminLayout({
   }, [isAuthenticated, isLoading, router, pathname]);
 
   useEffect(() => {
+    // Only fetch essential, public-facing data when the admin layout loads.
+    // Page-specific data will be fetched within those pages themselves.
     if (isAuthenticated && !isInitialized) {
-      // Fetch all data, including admin-specific data like suggestions
-      fetchInitialData(true);
+      fetchInitialData(false);
     }
   }, [isAuthenticated, isInitialized]);
 

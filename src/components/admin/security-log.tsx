@@ -1,16 +1,23 @@
-
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '../ui/scroll-area';
-import { useMovieStore } from '@/store/movieStore';
+import { useMovieStore, fetchSecurityLogs } from '@/store/movieStore';
 import { Separator } from '../ui/separator';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import FilmpilexLoader from '../ui/filmplex-loader';
 
 export default function SecurityLog() {
-  const { securityLogs, latestReleases, featuredMovies } = useMovieStore();
+  const { securityLogs, latestReleases, featuredMovies, isInitialized } = useMovieStore();
+
+  useEffect(() => {
+    // Fetch logs when the component mounts if not already initialized
+    if (!isInitialized) {
+        fetchSecurityLogs();
+    }
+  }, [isInitialized]);
 
   const latestUploads = useMemo(() => {
     const allMovies = [...latestReleases, ...featuredMovies].filter(
@@ -19,9 +26,17 @@ export default function SecurityLog() {
     
     return allMovies
       .filter(movie => movie.createdAt) // Only include movies with a creation date
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+      .sort((a, b) => parseISO(b.createdAt!).getTime() - parseISO(a.createdAt!).getTime())
       .slice(0, 10);
   }, [latestReleases, featuredMovies]);
+
+  if (!isInitialized) {
+      return (
+          <div className="flex justify-center items-center h-64">
+              <FilmpilexLoader />
+          </div>
+      );
+  }
   
   return (
     <div className="space-y-8">
@@ -41,13 +56,19 @@ export default function SecurityLog() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {securityLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">{log.admin}</TableCell>
-                    <TableCell>{log.action}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{log.timestamp}</TableCell>
+                {securityLogs.length > 0 ? (
+                  securityLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">{log.admin}</TableCell>
+                      <TableCell>{log.action}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">{parseISO(log.timestamp).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="h-24 text-center">No security logs found.</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </ScrollArea>
@@ -77,7 +98,7 @@ export default function SecurityLog() {
                     <TableCell className="font-medium">{movie.title}</TableCell>
                     <TableCell>{movie.year}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(movie.createdAt!), { addSuffix: true })}
+                      {formatDistanceToNow(parseISO(movie.createdAt!), { addSuffix: true })}
                     </TableCell>
                   </TableRow>
                 ))}
