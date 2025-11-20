@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useMovieStore, addMovie, updateMovie, searchTMDb } from '@/store/movieStore';
+import { useMovieStore, addMovie, updateMovie } from '@/store/movieStore';
 import type { Movie, DownloadLink, Episode } from '@/lib/data';
 import { Loader2, PlusCircle, XCircle, Sparkles, Search, AlertTriangle, Eye, EyeOff, ClipboardPaste, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,7 +17,7 @@ import MovieDetailPreview from '../admin/movie-detail-preview';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { getMovieDetails } from '@/ai/flows/movie-details-flow';
+import { getMovieDetails, searchTMDb } from '@/ai/flows/movie-details-flow';
 import { type TMDbSearchResult } from '@/services/tmdbService';
 import UploadProgressIndicator from '@/components/admin/upload-progress-indicator';
 
@@ -563,11 +563,8 @@ export default function UploadMovieComponent() {
       }
       
       setIsUploading(false); // Hide the progress indicator
+      startCoinAnimation();
       
-      if (linksPresent) {
-        startCoinAnimation();
-      }
-
       toast({ 
           title: 'Upload Complete!', 
           description: `"${formData.title}" has been successfully saved.`,
@@ -967,11 +964,11 @@ export default function UploadMovieComponent() {
           </CardContent>
           <CardFooter className="justify-between border-t pt-4">
               <div className="flex gap-2">
-                  {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isFormDisabled}>Cancel Edit</Button>}
+                  {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isUploading}>Cancel Edit</Button>}
                    <Button 
                     variant="outline" 
                     onClick={() => setShowPreview(!showPreview)} 
-                    disabled={isFormDisabled}
+                    disabled={isUploading}
                   >
                     {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
                     {showPreview ? 'Hide Preview' : 'Show Preview'}
@@ -979,7 +976,7 @@ export default function UploadMovieComponent() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button onClick={confirmAndSave} disabled={isFormDisabled} id="upload-confirm-button">
+                      <Button onClick={confirmAndSave} disabled={isUploading} id="upload-confirm-button">
                           {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           {isUploading ? 'Uploading...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
                       </Button>
