@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
-import { FileWarning, DownloadCloud, HelpCircle, ShieldCheck, Video, Send } from 'lucide-react';
+import { DownloadCloud, HelpCircle, ShieldCheck, Video, Send } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from './ui/separator';
 
@@ -39,7 +40,7 @@ export default function DownloadHelpShelf() {
             className="rounded-full h-14 w-14 shadow-lg bg-background/80 border-border/40 backdrop-blur-sm"
             aria-label="Download Help"
           >
-            <FileWarning className="h-6 w-6 text-primary" />
+            <span className="material-symbols-outlined text-primary text-2xl">file_download_off</span>
           </Button>
         </div>
       </DialogTrigger>
