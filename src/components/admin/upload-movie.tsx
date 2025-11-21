@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
@@ -181,7 +181,6 @@ export default function UploadMovieComponent() {
     startCoinAnimation: state.startCoinAnimation,
   }));
   const { adminProfile } = useAuth();
-  const [isUploading, setIsUploading] = useState(false);
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -525,10 +524,10 @@ export default function UploadMovieComponent() {
     }, [commonSize]);
 
 
-  const handleSave = async (): Promise<boolean> => {
+  const handleSave = async () => {
     if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      return false;
+      return;
     }
     
     const { id: editId, tagsString, ...movieDataToSave } = formData;
@@ -556,34 +555,23 @@ export default function UploadMovieComponent() {
       } else {
         await addMovie(finalMovieData as Omit<Movie, 'id'>);
       }
-      return true;
-    } catch (error) {
-      console.error("Database operation failed:", error);
-      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
-      return false;
-    }
-  };
-
-  const confirmAndSave = async () => {
-    setIsUploading(true);
-    const success = await handleSave();
-    
-    if (success) {
-      setIsUploading(false); // Reset button state immediately
+      
       startCoinAnimation();
       toast({
         title: formData.id ? 'Update Complete!' : 'Upload Complete!',
         description: `"${formData.title}" has been successfully saved.`,
         variant: 'success'
       });
-      // Do NOT reset the form automatically. Let the user do it.
-    } else {
-      setIsUploading(false); // Reset on failure as well
+      resetForm();
+
+    } catch (error) {
+      console.error("Database operation failed:", error);
+      toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
     }
   };
 
 
-  const isFormDisabled = isFetchingAI || isSearching || isUploading;
+  const isFormDisabled = isFetchingAI || isSearching;
 
   const displayedSearchResults = showExactMatches
     ? searchResults.filter(item => item.title.toLowerCase() === formData.title?.toLowerCase())
@@ -947,7 +935,6 @@ export default function UploadMovieComponent() {
                   <Button
                     variant="secondary"
                     onClick={resetForm}
-                    disabled={isUploading}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Upload New
@@ -955,7 +942,6 @@ export default function UploadMovieComponent() {
                    <Button 
                     variant="outline" 
                     onClick={() => setShowPreview(!showPreview)} 
-                    disabled={isUploading}
                   >
                     {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
                     {showPreview ? 'Hide Preview' : 'Show Preview'}
@@ -963,9 +949,8 @@ export default function UploadMovieComponent() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button disabled={isUploading} id="upload-confirm-button">
-                          {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          {isUploading ? 'Saving...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
+                      <Button id="upload-confirm-button">
+                          {formData.id ? 'Update Content' : 'Confirm & Upload'}
                       </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -977,7 +962,7 @@ export default function UploadMovieComponent() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={confirmAndSave}>Continue</AlertDialogAction>
+                      <AlertDialogAction onClick={handleSave}>Continue</AlertDialogAction>
                       </AlertDialogFooter>
                   </AlertDialogContent>
               </AlertDialog>
