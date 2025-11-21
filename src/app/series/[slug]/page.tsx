@@ -6,7 +6,7 @@ import type { Movie, Comment as CommentType, Reactions } from '@/lib/data';
 import { useMovieStore, fetchInitialData, fetchCommentsForMovie, submitComment, submitReaction } from '@/store/movieStore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo, CheckCircle, Rocket, Flame, Share2 } from 'lucide-react';
+import { Zap, ThumbsUp, Heart, Smile, SmilePlus, Frown, Angry, Send, Star, LayoutGrid, Users, Video, CalendarDays, Globe, Languages, BadgeCheck, Clock, ListVideo, CheckCircle, Rocket, Flame, Share2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import MovieCardSmall from '@/components/movie-card-small';
@@ -426,6 +426,10 @@ export default function SeriesDetailPage() {
                                     </Button>
                                 ))}
                             </div>
+                            <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
+                                <Info className="h-4 w-4" />
+                                <span>Use vpn if not downloading</span>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -450,6 +454,10 @@ export default function SeriesDetailPage() {
                     </a>
                   </Button>
                 ))}
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
+                <Info className="h-4 w-4" />
+                <span>Use vpn if not downloading</span>
               </div>
             </section>
           )}
