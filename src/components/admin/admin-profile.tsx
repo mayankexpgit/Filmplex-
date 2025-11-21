@@ -419,12 +419,16 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
         };
 
-        // Hybrid filtering logic for backward compatibility
-        const allAdminMovies = movies.filter(movie => 
-            movie.uploadedBy === admin.id || 
-            movie.uploadedBy === admin.name ||
-            (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') // One-time data migration for dev.Aman -> AMAN2007AK
-        );
+        const allAdminMovies = movies.filter(movie => {
+            if (!movie.uploadedBy) return false;
+            // Case 1: Match by permanent ID (for new uploads)
+            if (movie.uploadedBy === admin.id) return true;
+            // Case 2: Match by current name (for older uploads before ID system)
+            if (movie.uploadedBy === admin.name) return true;
+            // Case 3: One-time data migration for dev.Aman -> AMAN2007AK
+            if (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
+            return false;
+        });
         
         const completed = allAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
