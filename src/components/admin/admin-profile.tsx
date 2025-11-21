@@ -250,10 +250,10 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     );
 }
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies
-        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(movie => (movie.uploadedBy === adminId || movie.uploadedBy === adminName) && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
         .filter(isUploadCompleted);
 
     let target = 0;
@@ -419,7 +419,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
         };
 
-        const allAdminMovies = movies.filter(movie => movie.uploadedBy === admin.name);
+        const allAdminMovies = movies.filter(movie => movie.uploadedBy === admin.id || movie.uploadedBy === admin.name);
         
         const completed = allAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
@@ -473,7 +473,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {activeTasks.map(task => {
-                             const { completed, target, progress } = getTaskProgress(task, movies, admin.name);
+                             const { completed, target, progress } = getTaskProgress(task, movies, admin.id, admin.name);
                              const Icon = task.type === 'target' ? Target : ListChecks;
 
                              return (
@@ -667,3 +667,5 @@ export default function AdminProfile() {
       </div>
     )
 }
+
+    

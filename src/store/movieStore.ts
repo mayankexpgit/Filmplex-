@@ -103,6 +103,19 @@ interface MovieState {
 // =================================================================
 
 /**
+ * A utility function to safely get the admin profile from the store state.
+ * This is crucial for actions that need the admin's permanent ID.
+ */
+export const getAdminProfile = (): ManagementMember | null => {
+    try {
+        return useMovieStore.getState().adminProfile;
+    } catch (error) {
+        console.error("Could not access admin profile from store:", error);
+        return null;
+    }
+};
+
+/**
  * A utility function to safely get the admin name from localStorage.
  * This can be used outside of a React component context (e.g., in Zustand store actions).
  */
@@ -262,15 +275,15 @@ const addSecurityLogEntry = async (action: string): Promise<void> => {
 };
 
 const addMovie = async (movieData: Omit<Movie, 'id'>): Promise<void> => {
-  const adminName = getAdminName();
-  if (!adminName) {
-    throw new Error("Cannot add movie: admin name not found.");
+  const adminProfile = getAdminProfile();
+  if (!adminProfile) {
+    throw new Error("Cannot add movie: admin profile not found or user not logged in.");
   }
   
   const movieWithMetadata = {
     ...movieData,
     createdAt: new Date().toISOString(),
-    uploadedBy: adminName,
+    uploadedBy: adminProfile.id, // Use permanent ID
     reactions: { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 }
   };
   const newId = await dbAddMovie(movieWithMetadata as Omit<Movie, 'id'>);
@@ -571,7 +584,7 @@ const checkAndUpdateOverdueTasks = async (team: ManagementMember[], allMovies: M
 
             const taskStartDate = parseISO(task.startDate);
             const completedMoviesForTask = allMovies
-                .filter(movie => movie.uploadedBy === member.name && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+                .filter(movie => (movie.uploadedBy === member.id || movie.uploadedBy === member.name) && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
                 .filter(isUploadCompleted);
 
             let isCompleted = false;
@@ -685,3 +698,5 @@ export {
     calculateAllWallets,
     updateSettlementStatus
 };
+
+    

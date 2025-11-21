@@ -104,10 +104,10 @@ const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
     }
 };
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
     const taskStartDate = parseISO(task.startDate);
-    const completedMoviesForTask = allMovies
-        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+     const completedMoviesForTask = allMovies
+        .filter(movie => (movie.uploadedBy === adminId || movie.uploadedBy === adminName) && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
         .filter(isUploadCompleted);
 
     let target = 0;
@@ -169,8 +169,8 @@ function EditMemberDialog({ member, onClose, onSave }: { member: ManagementMembe
     );
 }
 
-function TaskDetailsDialog({ task, allMovies, adminName, onClose }: { task: AdminTask, allMovies: Movie[], adminName: string, onClose: () => void }) {
-    const { completed, target, progress } = getTaskProgress(task, allMovies, adminName);
+function TaskDetailsDialog({ task, allMovies, adminId, adminName, onClose }: { task: AdminTask, allMovies: Movie[], adminId: string, adminName: string, onClose: () => void }) {
+    const { completed, target, progress } = getTaskProgress(task, allMovies, adminId, adminName);
     
     return (
         <Dialog open={true} onOpenChange={onClose}>
@@ -372,7 +372,7 @@ function TaskHistoryDialog({ member, allMovies, onTaskSet, onTaskRemove, onClose
             </DialogFooter>
         </DialogContent>
 
-        {viewingTask && <TaskDetailsDialog task={viewingTask} allMovies={allMovies} adminName={member.name} onClose={() => setViewingTask(null)} />}
+        {viewingTask && <TaskDetailsDialog task={viewingTask} allMovies={allMovies} adminId={member.id} adminName={member.name} onClose={() => setViewingTask(null)} />}
         </>
     );
 }
@@ -869,5 +869,7 @@ export default function ManagementManager() {
     </>
   );
 }
+
+    
 
     
