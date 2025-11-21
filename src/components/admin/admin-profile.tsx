@@ -411,7 +411,7 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
     );
 }
 
-function AdminAnalytics({ admin, movies, movieEarnings }: { admin: ManagementMember, movies: Movie[], movieEarnings: Map<string, number> }) {
+function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
 
     const { completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
@@ -552,7 +552,7 @@ function AdminAnalytics({ admin, movies, movieEarnings }: { admin: ManagementMem
                                             <TableCell>{movie.title}</TableCell>
                                             <TableCell>{movie.createdAt ? format(new Date(movie.createdAt), 'PP') : 'N/A'}</TableCell>
                                             <TableCell className="text-right font-mono text-green-500">
-                                                ₹{movieEarnings.has(movie.id) ? movieEarnings.get(movie.id)!.toFixed(2) : '...'}
+                                                ₹{(movie.earning ?? 0).toFixed(2)}
                                             </TableCell>
                                         </TableRow>
                                     )) : <TableRow key="no-completed-uploads"><TableCell colSpan={3} className="text-center h-24">No completed uploads.</TableCell></TableRow>}
@@ -587,13 +587,11 @@ function AdminAnalytics({ admin, movies, movieEarnings }: { admin: ManagementMem
 
 export default function AdminProfile() {
     const { adminProfile, isLoading } = useAuth();
-    const { managementTeam, allMovies, calculateEarning } = useMovieStore(state => ({
+    const { managementTeam, allMovies } = useMovieStore(state => ({
         managementTeam: state.managementTeam,
         allMovies: state.allMovies,
-        calculateEarning: state.calculateEarning,
     }));
     const [selectedAdminName, setSelectedAdminName] = useState<string | undefined>(undefined);
-    const [movieEarnings, setMovieEarnings] = useState<Map<string, number>>(new Map());
     
     const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
 
@@ -610,24 +608,6 @@ export default function AdminProfile() {
     const selectedAdmin = useMemo(() => {
         return managementTeam.find(m => m.name === selectedAdminName);
     }, [selectedAdminName, managementTeam]);
-
-    useEffect(() => {
-        const calculateAllMovieEarnings = async () => {
-            if (!selectedAdmin) return;
-            const earningsMap = new Map<string, number>();
-            const adminMovies = allMovies.filter(m => m.uploadedBy === selectedAdmin.name);
-
-            for (const movie of adminMovies) {
-                const earning = await calculateEarning(movie);
-                earningsMap.set(movie.id, earning);
-            }
-            setMovieEarnings(earningsMap);
-        };
-
-        if (selectedAdmin) {
-            calculateAllMovieEarnings();
-        }
-    }, [selectedAdmin, allMovies, calculateEarning]);
 
 
     if (isLoading || !adminProfile) {
@@ -674,7 +654,7 @@ export default function AdminProfile() {
                 <Separator />
 
                 {selectedAdmin ? (
-                    <AdminAnalytics admin={selectedAdmin} movies={allMovies} movieEarnings={movieEarnings} />
+                    <AdminAnalytics admin={selectedAdmin} movies={allMovies} />
                 ) : (
                     <div className="text-center py-16 text-muted-foreground">
                         <p>Select an admin to see their statistics.</p>

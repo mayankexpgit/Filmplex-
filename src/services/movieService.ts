@@ -66,14 +66,18 @@ export const fetchMovies = async (): Promise<Movie[]> => {
 
 
 export const addMovie = async (movie: Omit<Movie, 'id'>): Promise<string> => {
+  const earning = await calculateEarning(movie as Movie);
+  const movieWithEarning = { ...movie, earning };
   const moviesCollection = collection(db, 'movies');
-  const docRef = await addDoc(moviesCollection, movie);
+  const docRef = await addDoc(moviesCollection, movieWithEarning);
   return docRef.id;
 };
 
 export const updateMovie = async (id: string, updatedMovie: Partial<Movie>): Promise<void> => {
+  const earning = await calculateEarning({ ...await getDoc(doc(db, 'movies', id)).then(d => d.data()), ...updatedMovie } as Movie);
+  const movieWithEarning = { ...updatedMovie, earning };
   const movieDoc = doc(db, 'movies', id);
-  await updateDoc(movieDoc, updatedMovie);
+  await updateDoc(movieDoc, movieWithEarning);
 };
 
 export const deleteMovie = async (id: string): Promise<void> => {
@@ -329,7 +333,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
         let weekly = new Decimal(0);
 
         for (const movie of memberMovies) {
-            const earnings = new Decimal(await calculateEarning(movie));
+            const earnings = new Decimal(movie.earning ?? await calculateEarning(movie));
             totalEarnings = totalEarnings.plus(earnings);
             
             const movieDate = parseISO(movie.createdAt!);
@@ -368,7 +372,7 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
             for (const movie of memberMovies) {
                  const movieDate = parseISO(movie.createdAt!);
                  if (isWithinInterval(movieDate, { start: startOfMonth(now), end: endOfMonth(now) }) && isAfter(movieDate, settlementDate)) {
-                    earningsAfterSettlement = earningsAfterSettlement.plus(new Decimal(await calculateEarning(movie)));
+                    earningsAfterSettlement = earningsAfterSettlement.plus(new Decimal(movie.earning ?? await calculateEarning(movie)));
                  }
             }
             finalMonthlyDisplay = earningsAfterSettlement;

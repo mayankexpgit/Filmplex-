@@ -114,6 +114,7 @@ export interface Movie {
   numberOfEpisodes?: number;
 
   reactions?: Reactions;
+  earning?: number;
 }
 
 export interface UserRequest {
