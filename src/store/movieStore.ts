@@ -421,15 +421,6 @@ const submitRequest = async (movieName: string, comment: string): Promise<UserRe
   return newRequest;
 };
 
-const fetchRequests = async (): Promise<void> => {
-    try {
-        const requests = await dbFetchRequests();
-        useMovieStore.setState({ requests });
-    } catch (error) {
-        console.error("Failed to fetch user requests:", error);
-    }
-};
-
 const updateRequestStatus = async (requestId: string, status: UserRequest['status']): Promise<void> => {
   await dbUpdateRequestStatus(requestId, status);
   useMovieStore.setState(state => ({
@@ -681,7 +672,6 @@ export {
     submitComment,
     deleteComment,
     submitReaction,
-    fetchRequests,
     submitRequest,
     updateRequestStatus,
     deleteRequest,

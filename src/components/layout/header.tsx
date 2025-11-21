@@ -21,7 +21,7 @@ import {
   SheetFooter,
   SheetClose
 } from '@/components/ui/sheet';
-import { useMovieStore, submitRequest, fetchRequests } from '@/store/movieStore';
+import { useMovieStore, submitRequest } from '@/store/movieStore';
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
@@ -47,6 +47,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import DownloadHelpPanel from '../download-help-shelf';
+import { fetchRequests } from '@/services/movieService';
 
 
 function UpcomingReleasesPanel() {
