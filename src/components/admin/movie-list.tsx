@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, deleteMovie, updateMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit, Loader2, Star, CheckSquare } from 'lucide-react';
 import {
   AlertDialog,
@@ -140,7 +139,7 @@ export default function MovieList() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <ScrollArea className="h-[400px]">
+          <div className="border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -177,9 +176,16 @@ export default function MovieList() {
                     </TableRow>
                   );
                 })}
+                 {filteredMovies.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                            No movies found.
+                        </TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
       <AlertDialogContent>
