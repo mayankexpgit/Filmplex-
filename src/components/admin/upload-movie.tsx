@@ -41,7 +41,6 @@ import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import UploadProgressIndicator from './upload-progress-indicator';
 
 type FormData = Omit<Partial<Movie>, 'tags'> & {
     id?: string; // ID is optional, only present when editing
@@ -197,7 +196,6 @@ export default function UploadMovieComponent() {
   const [searchAllPages, setSearchAllPages] = useState(false);
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  const [hasDownloadLinks, setHasDownloadLinks] = useState(false);
   const [bulkLinks, setBulkLinks] = useState('');
   const [commonSize, setCommonSize] = useState('');
 
@@ -569,6 +567,7 @@ export default function UploadMovieComponent() {
   const confirmAndSave = async () => {
     setIsUploading(true);
     const success = await handleSave();
+    
     if (success) {
       startCoinAnimation();
       toast({ 
@@ -576,14 +575,15 @@ export default function UploadMovieComponent() {
           description: `"${formData.title}" has been successfully saved.`,
           variant: 'success'
       });
+      setIsUploading(false); // Reset button state immediately
       setTimeout(() => {
         resetForm();
-        setIsUploading(false);
-      }, 500);
+      }, 500); // Delay reset to allow feedback to be seen
     } else {
-      setIsUploading(false);
+      setIsUploading(false); // Reset on failure as well
     }
   };
+
 
   const isFormDisabled = isFetchingAI || isSearching || isUploading;
 
