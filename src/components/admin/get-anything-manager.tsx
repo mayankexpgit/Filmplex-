@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { useMovieStore, updateRequestStatus, deleteRequest, fetchRequests } from '@/store/movieStore';
+import { useMovieStore, updateRequestStatus, deleteRequest } from '@/store/movieStore';
+import { fetchRequests } from '@/services/movieService';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -15,16 +16,20 @@ import { cn } from '@/lib/utils';
 import FilmpilexLoader from '../ui/filmplex-loader';
 
 export default function GetAnythingManager() {
-  const { requests, isInitialized } = useMovieStore();
+  const { requests, isInitialized, setState } = useMovieStore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     // Fetch requests when the component mounts if not already initialized
-    if (!isInitialized) {
-        fetchRequests();
+    const loadRequests = async () => {
+        if (!isInitialized) {
+            const serverRequests = await fetchRequests();
+            setState({ requests: serverRequests, isInitialized: true });
+        }
     }
-  }, [isInitialized]);
+    loadRequests();
+  }, [isInitialized, setState]);
 
   // Sort requests by timestamp so newest appear first
   const sortedRequests = useMemo(() => {
