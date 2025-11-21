@@ -1,13 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    unoptimized: true,   // ✅ disables Next.js image optimization
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**', // Allow any hostname
-      },
-    ],
+    unoptimized: true, // ✅ disables Next.js image optimization, allowing all image sources without config.
   },
 };
 
