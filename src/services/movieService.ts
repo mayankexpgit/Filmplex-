@@ -1,5 +1,4 @@
 
-
 'use server';
 import { db } from '@/lib/firebase';
 import {
@@ -48,18 +47,33 @@ export const fetchAdminCredentials = async (): Promise<AdminCredentials> => {
 // --- Movie Functions ---
 
 export const fetchMovies = async (): Promise<Movie[]> => {
-  // Fetch all documents from the 'movies' collection without any specific query.
-  // This ensures that every single movie in the database is retrieved.
   const moviesCollectionRef = collection(db, 'movies');
   const movieSnapshot = await getDocs(moviesCollectionRef);
   let movieList = movieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
-  
-  // Ensure every movie has a reactions object to prevent runtime errors
-  movieList.forEach(movie => {
+
+  const batch = writeBatch(db);
+  let hasUpdates = false;
+
+  for (const movie of movieList) {
+    // Ensure every movie has a reactions object to prevent runtime errors
     if (!movie.reactions) {
       movie.reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
     }
-  });
+
+    // One-time migration: If 'earning' is not present, calculate and save it.
+    if (movie.earning === undefined) {
+      const calculatedEarning = await calculateEarning(movie);
+      movie.earning = calculatedEarning;
+      const movieRef = doc(db, 'movies', movie.id);
+      batch.update(movieRef, { earning: calculatedEarning });
+      hasUpdates = true;
+    }
+  }
+
+  if (hasUpdates) {
+    await batch.commit();
+    console.log("Successfully migrated earnings for existing movies.");
+  }
 
   return movieList;
 };
