@@ -254,20 +254,10 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], admin: ManagementM
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies.filter(movie => {
          if (!movie.uploadedBy || !movie.createdAt) return false;
-         // Check if movie was created after the task started
          if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
-         
-         // Check ownership using the robust filter
-         // Case 1: Match by permanent ID
-         if (movie.uploadedBy === admin.id) return true;
-         // Case 2: Match by current name (for older uploads)
-         if (movie.uploadedBy === admin.name) return true;
-         // Case 3: Special one-time migration for dev.Aman -> AMAN2007AK
-         if (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
-         
-         return false;
-    })
-    .filter(isUploadCompleted);
+         // The ONLY rule: match by permanent ID.
+         return movie.uploadedBy === admin.id;
+    }).filter(isUploadCompleted);
 
     let target = 0;
     if (task.type === 'target') {
@@ -432,16 +422,8 @@ function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember,
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
         };
 
-        const filteredAdminMovies = allMovies.filter(movie => {
-            if (!movie.uploadedBy) return false;
-            // Case 1: Match by permanent ID (for new uploads)
-            if (movie.uploadedBy === admin.id) return true;
-            // Case 2: Match by current name (for older uploads before ID system)
-            if (movie.uploadedBy === admin.name) return true;
-            // Case 3: One-time data migration for dev.Aman -> AMAN2007AK
-            if (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
-            return false;
-        });
+        // The ONLY rule for filtering movies: match by permanent ID.
+        const filteredAdminMovies = allMovies.filter(movie => movie.uploadedBy === admin.id);
         
         const completed = filteredAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
         const pending = filteredAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
@@ -689,5 +671,3 @@ export default function AdminProfile() {
       </div>
     )
 }
-
-    

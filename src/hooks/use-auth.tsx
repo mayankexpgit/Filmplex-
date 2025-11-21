@@ -4,12 +4,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchAdminCredentials, fetchManagementTeam } from '@/services/movieService';
+import { fetchAdminCredentials, fetchManagementTeam, updateMovie } from '@/services/movieService';
 import type { ManagementMember } from '@/lib/data';
 import { useMovieStore } from '@/store/movieStore';
 
 
-const ADMIN_STORAGE_KEY = 'filmplex_admin_name';
+const ADMIN_STORAGE_KEY = 'filmplex_admin_id'; // Changed from name to ID
 
 const setStoreAdminProfile = (profile: ManagementMember | null) => {
     useMovieStore.setState({ adminProfile: profile });
@@ -98,9 +98,10 @@ export function useAuth() {
   const login = useCallback(async (loginName: string, username: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const [credentials, team] = await Promise.all([
+      const [credentials, team, allMovies] = await Promise.all([
         fetchAdminCredentials(),
-        fetchManagementTeam()
+        fetchManagementTeam(),
+        useMovieStore.getState().allMovies.length > 0 ? useMovieStore.getState().allMovies : (await import('@/services/movieService')).fetchMovies()
       ]);
       setMovieStoreState({ managementTeam: team });
       
@@ -115,6 +116,25 @@ export function useAuth() {
       if (!credentialsAreValid) {
         console.log("Login failed: Invalid username or password.");
         return false;
+      }
+
+      // One-time data migration logic on login
+      const moviesUploadedByOldName = allMovies.filter(movie => movie.uploadedBy === memberProfile.name && movie.uploadedBy !== memberProfile.id);
+      if (moviesUploadedByOldName.length > 0) {
+        console.log(`Migrating ${moviesUploadedByOldName.length} movies from old name "${memberProfile.name}" to ID "${memberProfile.id}"...`);
+        const updatePromises = moviesUploadedByOldName.map(movie => 
+          updateMovie(movie.id, { uploadedBy: memberProfile.id })
+        );
+        await Promise.all(updatePromises);
+        console.log("Migration complete.");
+        // We should refetch movies in the store, but for now this will fix future loads
+        const updatedAllMovies = allMovies.map(movie => {
+          if (movie.uploadedBy === memberProfile.name) {
+            return { ...movie, uploadedBy: memberProfile.id };
+          }
+          return movie;
+        });
+        setMovieStoreState({ allMovies: updatedAllMovies, latestReleases: updatedAllMovies, featuredMovies: updatedAllMovies.filter(m => m.isFeatured) });
       }
 
       setIsAuthenticated(true);

@@ -74,7 +74,7 @@ const calculatePerformanceScore = (admin: ManagementMember, allMovies: Movie[]):
     }
 
     const completedAdminMovies = allMovies
-        .filter(movie => movie.uploadedBy === admin.name)
+        .filter(movie => movie.uploadedBy === admin.id) // Filter by ID
         .filter(isUploadCompleted);
     
     const totalUploadsScore = Math.min(3, (completedAdminMovies.length / 50) * 3);
@@ -107,7 +107,7 @@ const TaskStatusBadge = ({ task }: { task?: AdminTask }) => {
 const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
     const taskStartDate = parseISO(task.startDate);
      const completedMoviesForTask = allMovies
-        .filter(movie => (movie.uploadedBy === adminId || movie.uploadedBy === adminName) && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(movie => (movie.uploadedBy === adminId) && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
         .filter(isUploadCompleted);
 
     let target = 0;
@@ -869,8 +869,3 @@ export default function ManagementManager() {
     </>
   );
 }
-
-    
-
-    
-

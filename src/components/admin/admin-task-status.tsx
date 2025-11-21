@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -28,18 +29,9 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], admin: ManagementM
     const completedMoviesForTask = allMovies
         .filter(movie => {
              if (!movie.uploadedBy || !movie.createdAt) return false;
-             // Check if movie was created after the task started
              if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
-             
-             // Check ownership using the robust filter
-             // Case 1: Match by permanent ID
-             if (movie.uploadedBy === admin.id) return true;
-             // Case 2: Match by current name (for older uploads)
-             if (movie.uploadedBy === admin.name) return true;
-             // Case 3: Special one-time migration for dev.Aman -> AMAN2007AK
-             if (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
-
-             return false;
+             // The ONLY rule: match by permanent ID.
+             return movie.uploadedBy === admin.id;
         })
         .filter(isUploadCompleted);
 
@@ -165,5 +157,3 @@ export default function AdminTaskStatus({ task, allMovies, adminName, adminId }:
         </Card>
     );
 }
-
-    
