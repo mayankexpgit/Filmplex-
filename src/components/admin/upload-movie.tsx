@@ -569,16 +569,14 @@ export default function UploadMovieComponent() {
     const success = await handleSave();
     
     if (success) {
-      startCoinAnimation();
-      toast({ 
-          title: 'Upload Complete!', 
-          description: `"${formData.title}" has been successfully saved.`,
-          variant: 'success'
-      });
       setIsUploading(false); // Reset button state immediately
-      setTimeout(() => {
-        resetForm();
-      }, 500); // Delay reset to allow feedback to be seen
+      startCoinAnimation();
+      toast({
+        title: formData.id ? 'Update Complete!' : 'Upload Complete!',
+        description: `"${formData.title}" has been successfully saved.`,
+        variant: 'success'
+      });
+      // Do NOT reset the form automatically. Let the user do it.
     } else {
       setIsUploading(false); // Reset on failure as well
     }
@@ -946,7 +944,14 @@ export default function UploadMovieComponent() {
           </CardContent>
           <CardFooter className="justify-between border-t pt-4">
               <div className="flex gap-2">
-                  {formData.id && <Button variant="secondary" onClick={resetForm} disabled={isUploading}>Cancel Edit</Button>}
+                  <Button
+                    variant="secondary"
+                    onClick={resetForm}
+                    disabled={isUploading}
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Upload New
+                  </Button>
                    <Button 
                     variant="outline" 
                     onClick={() => setShowPreview(!showPreview)} 
@@ -958,9 +963,9 @@ export default function UploadMovieComponent() {
               </div>
               <AlertDialog>
                   <AlertDialogTrigger asChild>
-                      <Button onClick={() => { /* This just opens the dialog */ }} disabled={isUploading} id="upload-confirm-button">
+                      <Button disabled={isUploading} id="upload-confirm-button">
                           {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                          {isUploading ? 'Uploading...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
+                          {isUploading ? 'Saving...' : (formData.id ? 'Update Content' : 'Confirm & Upload')}
                       </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
