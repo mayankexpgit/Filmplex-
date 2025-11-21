@@ -21,12 +21,16 @@ import { CheckCircle } from 'lucide-react';
 const adminChangelogData = [
    {
     version: '1.9',
-    date: 'October 9, 2025',
-    title: 'Admin Experience Enhancements',
+    date: 'November 4, 2025',
+    title: 'Earning System Overhaul & Major Bug Fixes',
     changes: [
-      'A new dedicated "What\'s New (Admin)" section has been added to the dashboard. This serves as a comprehensive log for all backend and frontend updates, ensuring the team stays informed about every change, big or small.',
-      'User-facing changelog now includes a note about admin-only updates for clarity.',
-      'Corrected release dates in the user changelog to reflect actual development milestones.',
+      '**Earning System Rearchitected:** The entire admin earning logic has been rebuilt for accuracy and stability. Earnings are now calculated **once** during upload/update and **saved permanently** to the database with each movie. This completely eliminates the "jumping earnings" bug and ensures data is always consistent.',
+      '**One-Time Earning Migration:** A smart, one-time migration process has been implemented. On first load, the system automatically calculates and saves the correct earnings for all legacy movies that were missing this data, ensuring no past work is lost.',
+      '**Instant Earning Display:** The "Completed Uploads" table in the Admin Profile now loads earnings instantly, with no "..." or delays, as it reads the pre-calculated value directly from the database.',
+      '**Upload Form Bug Fix:** Fixed the critical bug where the "Confirm & Upload" button would get stuck in a loading state. A delay has been added to ensure the coin animation plays completely before the form is reset.',
+      '**Movie Deletion Fix:** Squashed the annoying bug in "Movie List" where the page would jump to the top after deleting a movie. The scroll position is now maintained for a smoother workflow.',
+      '**Series Parsing Improvement:** The "Parse Links" feature for series has been improved. It no longer auto-fills the episode title, allowing admins to manually enter the correct title without having to delete a pre-filled one.',
+      '**Wallet Calculation Rules:** Added a detailed, expandable "How is this calculated?" section directly in the Admin Profile page, providing full transparency on earning rules for all content types and penalties.',
     ],
   },
   {
@@ -168,7 +172,7 @@ export default function AdminChangelog() {
                     {item.changes.map((change, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <CheckCircle className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                        <span className="text-muted-foreground">{change}</span>
+                        <span className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: change.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></span>
                       </li>
                     ))}
                   </ul>

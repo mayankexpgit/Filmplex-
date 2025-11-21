@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -16,6 +17,15 @@ import { Badge } from './ui/badge';
 import { CheckCircle } from 'lucide-react';
 
 const changelogData = [
+  {
+    version: '1.9',
+    date: 'November 4, 2025',
+    title: 'Download Helper & UI Polish',
+    changes: [
+      '**Download Help:** Added an info icon with the message "Use vpn if not downloading" below all download link sections to proactively help users with common issues.',
+      '**UI Refinements:** Small visual improvements and stability fixes for a smoother browsing experience.',
+    ],
+  },
   {
     version: '1.8',
     date: 'October 8, 2025',
@@ -44,8 +54,8 @@ const changelogData = [
     changes: [
       'Users can now react to movies with emojis (Like, Love, Haha, etc.).',
       'Added a full-featured comments section on movie detail pages.',
-      'Introduced a "Suggestions Box" for users to request new content.',
-      'You can now contact specific management members directly.',
+      'Introduced a "Request Zone" for users to request new content and track its status.',
+      'You can now see a list of the management team in the "Help Center".',
     ],
   },
   {
@@ -101,7 +111,7 @@ export default function Changelog() {
                   {item.changes.map((change, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <CheckCircle className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                      <span className="text-muted-foreground">{change}</span>
+                      <span className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: change.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></span>
                     </li>
                   ))}
                 </ul>
