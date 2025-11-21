@@ -24,14 +24,14 @@ const isUploadCompleted = (movie: Movie): boolean => {
     return false;
 };
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], admin: ManagementMember) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies
         .filter(movie => {
              if (!movie.uploadedBy || !movie.createdAt) return false;
              if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
              // The ONLY rule: match by permanent ID.
-             return movie.uploadedBy === admin.id;
+             return movie.uploadedBy === adminId;
         })
         .filter(isUploadCompleted);
 
@@ -120,7 +120,7 @@ export default function AdminTaskStatus({ task, allMovies, adminName, adminId }:
     
     const { completed, target, progress } = useMemo(() => {
         if (!adminProfile) return { completed: 0, target: 0, progress: 0 };
-        return getTaskProgress(task, allMovies, adminProfile);
+        return getTaskProgress(task, allMovies, adminProfile.id);
     }, [task, allMovies, adminProfile]);
 
     const Icon = task.type === 'target' ? Target : ListChecks;

@@ -250,13 +250,13 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     );
 }
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], admin: ManagementMember) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies.filter(movie => {
          if (!movie.uploadedBy || !movie.createdAt) return false;
          if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
          // The ONLY rule: match by permanent ID.
-         return movie.uploadedBy === admin.id;
+         return movie.uploadedBy === adminId;
     }).filter(isUploadCompleted);
 
     let target = 0;
@@ -327,7 +327,7 @@ function WalletCard({ wallet }: { wallet?: Wallet }) {
                                     </li>
                                      <li className="flex items-start gap-2">
                                         <Tv className="h-4 w-4 mt-1 text-primary"/>
-                                        <span><b>Web Series:</b> ₹0.06 per episode link & ₹0.10 per season link (no limit).</span>
+                                        <span><b>Web Series:</b> ₹0.06 per episode link &amp; ₹0.10 per season link (no limit).</span>
                                     </li>
                                 </ul>
                             </div>
@@ -416,7 +416,7 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
 
 function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember, movies: Movie[] }) {
 
-    const { allAdminMovies, completedMovies, pendingMovies } = useMemo(() => {
+    const { completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
             if (!a.createdAt || !b.createdAt) return 0;
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
@@ -428,8 +428,8 @@ function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember,
         const completed = filteredAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
         const pending = filteredAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
         
-        return { allAdminMovies: filteredAdminMovies, completedMovies: completed, pendingMovies: pending };
-    }, [admin, allMovies]);
+        return { completedMovies: completed, pendingMovies: pending };
+    }, [admin.id, allMovies]);
     
 
     const now = new Date();
@@ -477,7 +477,7 @@ function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember,
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {activeTasks.map(task => {
-                             const { completed, target, progress } = getTaskProgress(task, allMovies, admin);
+                             const { completed, target, progress } = getTaskProgress(task, allMovies, admin.id);
                              const Icon = task.type === 'target' ? Target : ListChecks;
 
                              return (

@@ -341,8 +341,12 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
     const currentMonthStr = formatDate(now, 'yyyy-MM');
 
     const updatedTeam = await Promise.all(team.map(async (member) => {
-        // The ONLY rule for filtering movies: match by permanent ID.
-        const memberMovies = movies.filter(movie => movie.uploadedBy === member.id);
+        // This is the CORE migration logic.
+        const memberMovies = movies.filter(movie => {
+            if (!movie.uploadedBy) return false;
+            // Always match by permanent ID.
+            return movie.uploadedBy === member.id;
+        });
         
         let totalEarnings = new Decimal(0);
         let currentMonthlyEarnings = new Decimal(0);

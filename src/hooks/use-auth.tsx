@@ -103,7 +103,6 @@ export function useAuth() {
         fetchManagementTeam(),
         useMovieStore.getState().allMovies.length > 0 ? useMovieStore.getState().allMovies : (await import('@/services/movieService')).fetchMovies()
       ]);
-      setMovieStoreState({ managementTeam: team });
       
       const memberProfile = team.find(member => member.name === loginName);
       
@@ -117,6 +116,8 @@ export function useAuth() {
         console.log("Login failed: Invalid username or password.");
         return false;
       }
+      
+      let allMoviesState = allMovies;
 
       // One-time data migration logic on login
       const moviesUploadedByOldName = allMovies.filter(movie => movie.uploadedBy === memberProfile.name && movie.uploadedBy !== memberProfile.id);
@@ -127,15 +128,18 @@ export function useAuth() {
         );
         await Promise.all(updatePromises);
         console.log("Migration complete.");
-        // We should refetch movies in the store, but for now this will fix future loads
+        
+        // Update local state immediately to reflect migration
         const updatedAllMovies = allMovies.map(movie => {
           if (movie.uploadedBy === memberProfile.name) {
             return { ...movie, uploadedBy: memberProfile.id };
           }
           return movie;
         });
-        setMovieStoreState({ allMovies: updatedAllMovies, latestReleases: updatedAllMovies, featuredMovies: updatedAllMovies.filter(m => m.isFeatured) });
+        allMoviesState = updatedAllMovies;
       }
+
+      setMovieStoreState({ managementTeam: team, allMovies: allMoviesState, latestReleases: allMoviesState, featuredMovies: allMoviesState.filter(m => m.isFeatured) });
 
       setIsAuthenticated(true);
       setAdminProfile(memberProfile);
