@@ -454,7 +454,7 @@ export default function UploadMovieComponent() {
                     } else {
                         episodesMap.set(episodeNumber, {
                             episodeNumber,
-                            title: `Episode ${episodeNumber}`,
+                            title: '', // Set title to empty string for manual entry
                             downloadLinks: [newLink],
                         });
                     }
