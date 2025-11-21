@@ -48,12 +48,12 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
     <Card className="overflow-hidden bg-secondary border-0 group rounded-lg flex flex-col h-full cursor-pointer">
        <CardContent className="p-0 flex flex-col h-full">
         <div className="relative block overflow-hidden aspect-[2/3]">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
             data-ai-hint="movie poster"
           />
           {qualityToDisplay && (
@@ -98,12 +98,12 @@ export default function MovieCard({ movie, variant = 'large' }: MovieCardProps) 
   const smallVariantContent = (
      <div className="group cursor-pointer">
         <div className="relative block overflow-hidden aspect-[2/3]">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={movie.posterUrl}
             alt={`Poster for ${movie.title}`}
-            fill
-            sizes="20vw"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
             data-ai-hint="movie poster"
           />
         </div>
