@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,32 @@ import { Badge } from '../ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 
 const topLevelRoles = ['Regulator', 'Co-Founder'];
+
+function MovieRow({ movie, onEdit, onDeleteTrigger, onToggleFeatured, isPending, canDelete, isTopLevelAdmin, featuredMovies }: { movie: Movie, onEdit: (movie: Movie) => void, onDeleteTrigger: (movie: Movie) => void, onToggleFeatured: (movie: Movie) => void, isPending: boolean, canDelete: boolean, isTopLevelAdmin: boolean, featuredMovies: Movie[] }) {
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{movie.title}</TableCell>
+      <TableCell>{movie.year}</TableCell>
+      <TableCell className="text-right space-x-2">
+        {isTopLevelAdmin && (
+          <Button variant="ghost" size="icon" onClick={() => onToggleFeatured(movie)} disabled={isPending}>
+            {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
+          </Button>
+        )}
+        <Button variant="ghost" size="icon" onClick={() => onEdit(movie)}>
+            <Edit className="h-4 w-4" />
+        </Button>
+        {canDelete && (
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={() => onDeleteTrigger(movie)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </AlertDialogTrigger>
+        )}
+      </TableCell>
+    </TableRow>
+  )
+}
 
 export default function MovieList() {
   const { toast } = useToast();
@@ -104,17 +130,20 @@ export default function MovieList() {
     });
   }
 
-  const sortedMovies = [...allMovies].sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return dateB - dateA;
-  });
+  const sortedMovies = useMemo(() => {
+    return [...allMovies].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+    });
+  }, [allMovies]);
 
-  const filteredMovies = searchQuery
-    ? sortedMovies.filter((movie) =>
+  const filteredMovies = useMemo(() => {
+    if (!searchQuery) return sortedMovies;
+    return sortedMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : sortedMovies;
+    );
+  }, [sortedMovies, searchQuery]);
 
 
   return (
@@ -147,33 +176,19 @@ export default function MovieList() {
               </TableHeader>
               <TableBody>
                 {filteredMovies.length > 0 ? (
-                  filteredMovies.map((movie) => {
-                    const canDelete = isTopLevelAdmin;
-                    
-                    return (
-                      <TableRow key={movie.id}>
-                        <TableCell className="font-medium">{movie.title}</TableCell>
-                        <TableCell>{movie.year}</TableCell>
-                        <TableCell className="text-right space-x-2">
-                          {isTopLevelAdmin && (
-                            <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
-                              {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
-                              <Edit className="h-4 w-4" />
-                          </Button>
-                          {canDelete && (
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                  filteredMovies.map((movie) => (
+                    <MovieRow 
+                      key={movie.id}
+                      movie={movie}
+                      onEdit={handleEdit}
+                      onDeleteTrigger={setMovieToDelete}
+                      onToggleFeatured={handleToggleFeatured}
+                      isPending={isPending}
+                      canDelete={isTopLevelAdmin || false}
+                      isTopLevelAdmin={isTopLevelAdmin || false}
+                      featuredMovies={featuredMovies}
+                    />
+                  ))
                 ) : (
                     <TableRow>
                         <TableCell colSpan={3} className="h-24 text-center">
