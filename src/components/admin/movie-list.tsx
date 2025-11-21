@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMovieStore, deleteMovie, updateMovie } from '@/store/movieStore';
 import type { Movie } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit, Loader2, Star, CheckSquare } from 'lucide-react';
+import { Trash2, Edit, Loader2, Star } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,20 +104,18 @@ export default function MovieList() {
     });
   }
 
-  const filteredMovies = useMemo(() => {
-    const sortedMovies = [...allMovies].sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
-    });
+  const sortedMovies = [...allMovies].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+  });
 
-    if (!searchQuery) {
-      return sortedMovies;
-    }
-    return sortedMovies.filter((movie) =>
+  const filteredMovies = searchQuery
+    ? sortedMovies.filter((movie) =>
         movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-  }, [allMovies, searchQuery]);
+      )
+    : sortedMovies;
+
 
   return (
     <AlertDialog>
@@ -149,34 +146,35 @@ export default function MovieList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMovies.map((movie, index) => {
-                  const canDelete = isTopLevelAdmin;
-                  
-                  return (
-                    <TableRow key={`${movie.id}-${index}`}>
-                      <TableCell className="font-medium">{movie.title}</TableCell>
-                      <TableCell>{movie.year}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        {isTopLevelAdmin && (
-                           <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
-                            {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
-                            <Edit className="h-4 w-4" />
-                        </Button>
-                        {canDelete && (
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                {filteredMovies.length > 0 ? (
+                  filteredMovies.map((movie) => {
+                    const canDelete = isTopLevelAdmin;
+                    
+                    return (
+                      <TableRow key={movie.id}>
+                        <TableCell className="font-medium">{movie.title}</TableCell>
+                        <TableCell>{movie.year}</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          {isTopLevelAdmin && (
+                            <Button variant="ghost" size="icon" onClick={() => handleToggleFeatured(movie)} disabled={isPending}>
+                              {movie.isFeatured ? <Star className="h-4 w-4 text-primary fill-current" /> : <Star className="h-4 w-4 text-muted-foreground" />}
                             </Button>
-                          </AlertDialogTrigger>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                 {filteredMovies.length === 0 && (
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
+                              <Edit className="h-4 w-4" />
+                          </Button>
+                          {canDelete && (
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => setMovieToDelete(movie)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
                     <TableRow>
                         <TableCell colSpan={3} className="h-24 text-center">
                             No movies found.
