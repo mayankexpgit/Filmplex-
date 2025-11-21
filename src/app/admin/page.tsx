@@ -33,7 +33,7 @@ function AdminTaskDialog() {
     }, [unfinishedTask]);
 
 
-    if (!unfinishedTask) {
+    if (!unfinishedTask || !adminProfile) {
         return null;
     }
 
@@ -49,7 +49,7 @@ function AdminTaskDialog() {
                         This is your currently assigned task. The dialog will close once the task is completed.
                     </DialogDescription>
                 </DialogHeader>
-                <AdminTaskStatus task={unfinishedTask} allMovies={allMovies} adminName={adminProfile!.name} />
+                <AdminTaskStatus task={unfinishedTask} allMovies={allMovies} adminName={adminProfile.name} adminId={adminProfile.id} />
                 <DialogFooter>
                     <Button asChild>
                         <Link href="/admin/upload-movie">

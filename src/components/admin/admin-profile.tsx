@@ -253,7 +253,18 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
 const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies
-        .filter(movie => (movie.uploadedBy === adminId || movie.uploadedBy === adminName) && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(movie => {
+             if (!movie.uploadedBy || !movie.createdAt) return false;
+             // Check if movie was created after the task started
+             if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
+             
+             // Check ownership
+             if (movie.uploadedBy === adminId) return true;
+             if (movie.uploadedBy === adminName) return true;
+             if (adminName === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
+             
+             return false;
+        })
         .filter(isUploadCompleted);
 
     let target = 0;
@@ -413,13 +424,13 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
 
 function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember, movies: Movie[] }) {
 
-    const { completedMovies, pendingMovies } = useMemo(() => {
+    const { allAdminMovies, completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
             if (!a.createdAt || !b.createdAt) return 0;
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
         };
 
-        const allAdminMovies = allMovies.filter(movie => {
+        const filteredAdminMovies = allMovies.filter(movie => {
             if (!movie.uploadedBy) return false;
             // Case 1: Match by permanent ID (for new uploads)
             if (movie.uploadedBy === admin.id) return true;
@@ -430,10 +441,10 @@ function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember,
             return false;
         });
         
-        const completed = allAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
-        const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
+        const completed = filteredAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
+        const pending = filteredAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
         
-        return { completedMovies: completed, pendingMovies: pending };
+        return { allAdminMovies: filteredAdminMovies, completedMovies: completed, pendingMovies: pending };
     }, [admin, allMovies]);
     
 
@@ -676,7 +687,3 @@ export default function AdminProfile() {
       </div>
     )
 }
-
-    
-
-    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -24,10 +25,21 @@ const isUploadCompleted = (movie: Movie): boolean => {
     return false;
 };
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies
-        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(movie => {
+             if (!movie.uploadedBy || !movie.createdAt) return false;
+             // Check if movie was created after the task started
+             if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
+             
+             // Check ownership
+             if (movie.uploadedBy === adminId) return true;
+             if (movie.uploadedBy === adminName) return true;
+             if (adminName === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
+             
+             return false;
+        })
         .filter(isUploadCompleted);
 
     let target = 0;
@@ -60,7 +72,7 @@ export default function FloatingTaskButton() {
 
   const { completed, target, progress } = useMemo(() => {
     if (!activeTask || !adminProfile) return { completed: 0, target: 0, progress: 0 };
-    return getTaskProgress(activeTask, allMovies, adminProfile.name);
+    return getTaskProgress(activeTask, allMovies, adminProfile.id, adminProfile.name);
   }, [activeTask, allMovies, adminProfile]);
   
 

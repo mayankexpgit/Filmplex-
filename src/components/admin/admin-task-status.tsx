@@ -22,10 +22,21 @@ const isUploadCompleted = (movie: Movie): boolean => {
     return false;
 };
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminName: string) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies
-        .filter(movie => movie.uploadedBy === adminName && movie.createdAt && isAfter(parseISO(movie.createdAt), taskStartDate))
+        .filter(movie => {
+             if (!movie.uploadedBy || !movie.createdAt) return false;
+             // Check if movie was created after the task started
+             if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
+             
+             // Check ownership
+             if (movie.uploadedBy === adminId) return true;
+             if (movie.uploadedBy === adminName) return true;
+             if (adminName === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
+             
+             return false;
+        })
         .filter(isUploadCompleted);
 
     let target = 0;
@@ -105,12 +116,13 @@ interface AdminTaskStatusProps {
     task: AdminTask;
     allMovies: Movie[];
     adminName: string;
+    adminId: string;
 }
 
-export default function AdminTaskStatus({ task, allMovies, adminName }: AdminTaskStatusProps) {
+export default function AdminTaskStatus({ task, allMovies, adminName, adminId }: AdminTaskStatusProps) {
     const { completed, target, progress } = useMemo(
-        () => getTaskProgress(task, allMovies, adminName),
-        [task, allMovies, adminName]
+        () => getTaskProgress(task, allMovies, adminId, adminName),
+        [task, allMovies, adminId, adminName]
     );
 
     const Icon = task.type === 'target' ? Target : ListChecks;
