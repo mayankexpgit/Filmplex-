@@ -18,10 +18,11 @@ import { CheckCircle } from 'lucide-react';
 
 const changelogData = [
   {
-    version: '1.9',
+    version: '1.9.90',
     date: 'November 4, 2025',
-    title: 'Download Helper & UI Polish',
+    title: 'Security, Download Help & UI Polish',
     changes: [
+      '**Malware Protection:** Introduced a new "Protected" shelf at the bottom-left of the screen. This smart tracker identifies and neutralizes potentially harmful files, ensuring your downloads are always secure.',
       '**Download Help:** Added an info icon with the message "Use vpn if not downloading" below all download link sections to proactively help users with common issues.',
       '**UI Refinements:** Small visual improvements and stability fixes for a smoother browsing experience.',
     ],
