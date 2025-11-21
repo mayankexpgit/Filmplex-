@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
@@ -524,10 +524,10 @@ export default function UploadMovieComponent() {
     }, [commonSize]);
 
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     if (!formData.title || !formData.genre) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title and Genre are mandatory fields.' });
-      return;
+      return false;
     }
     
     const { id: editId, tagsString, ...movieDataToSave } = formData;
@@ -562,11 +562,16 @@ export default function UploadMovieComponent() {
         description: `"${formData.title}" has been successfully saved.`,
         variant: 'success'
       });
-      resetForm();
+      setTimeout(() => {
+        resetForm();
+      }, 2000); // Delay reset to allow animation to play
+      
+      return true;
 
     } catch (error) {
       console.error("Database operation failed:", error);
       toast({ variant: 'destructive', title: 'Database Error', description: 'Could not save the movie. Please try again.' });
+      return false;
     }
   };
 
