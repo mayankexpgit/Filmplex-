@@ -2,7 +2,6 @@
 'use client';
 
 import type { Movie } from '@/lib/data';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Download, Zap } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
@@ -44,11 +43,11 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           
           <div className="relative w-full max-w-sm aspect-[2/3] overflow-hidden rounded-lg mb-8">
-            <Image
+             {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={posterSrc}
               alt={`Poster for ${movie?.title}`}
-              fill
-              className="object-cover"
+              className="w-full h-full object-cover"
               data-ai-hint="movie poster"
             />
           </div>
@@ -92,11 +91,10 @@ export default function MovieDetailPreview({ movie }: PreviewProps) {
               <div className="flex flex-col items-center gap-4">
                 {movie.screenshots.map((src, index) => (
                   src && <div key={index} className="relative w-full max-w-2xl overflow-hidden rounded-lg">
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={src}
                       alt={`Screenshot ${index + 1} for ${movie.title}`}
-                      width={1280}
-                      height={720}
                       className="object-contain w-full h-auto"
                       data-ai-hint="movie screenshot"
                     />
