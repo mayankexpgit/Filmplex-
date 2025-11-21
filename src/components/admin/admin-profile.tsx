@@ -411,7 +411,7 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
     );
 }
 
-function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
+function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember, movies: Movie[] }) {
 
     const { completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
@@ -419,7 +419,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
         };
 
-        const allAdminMovies = movies.filter(movie => {
+        const allAdminMovies = allMovies.filter(movie => {
             if (!movie.uploadedBy) return false;
             // Case 1: Match by permanent ID (for new uploads)
             if (movie.uploadedBy === admin.id) return true;
@@ -434,7 +434,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
         
         return { completedMovies: completed, pendingMovies: pending };
-    }, [admin, movies]);
+    }, [admin, allMovies]);
     
 
     const now = new Date();
@@ -482,7 +482,7 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {activeTasks.map(task => {
-                             const { completed, target, progress } = getTaskProgress(task, movies, admin.id, admin.name);
+                             const { completed, target, progress } = getTaskProgress(task, allMovies, admin.id, admin.name);
                              const Icon = task.type === 'target' ? Target : ListChecks;
 
                              return (
