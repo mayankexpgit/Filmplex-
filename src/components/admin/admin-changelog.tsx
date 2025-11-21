@@ -20,7 +20,7 @@ import { CheckCircle } from 'lucide-react';
 
 const adminChangelogData = [
    {
-    version: '1.9',
+    version: '1.9.90',
     date: 'November 4, 2025',
     title: 'Earning System Overhaul & Major Bug Fixes',
     changes: [
