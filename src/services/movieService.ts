@@ -341,16 +341,17 @@ export const calculateAllWallets = async (team: ManagementMember[], movies: Movi
     const currentMonthStr = formatDate(now, 'yyyy-MM');
 
     const updatedTeam = await Promise.all(team.map(async (member) => {
-        const memberMovies = movies.filter(movie => {
+        let memberMovies = movies.filter(movie => {
             if (!movie.uploadedBy || !movie.createdAt) return false;
-            // Case 1: Match by permanent ID (for new uploads)
-            if (movie.uploadedBy === member.id) return true;
-            // Case 2: Match by current name (for older uploads before ID system)
-            if (movie.uploadedBy === member.name) return true;
-            // Case 3: One-time data migration for dev.Aman -> AMAN2007AK
-            if (member.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
-            return false;
+            // Case 1 & 2: Match by permanent ID or current name
+            return movie.uploadedBy === member.id || movie.uploadedBy === member.name;
         });
+
+        // Case 3: One-time data migration for dev.Aman -> AMAN2007AK
+        if (member.name === 'AMAN2007AK') {
+            const devAmanMovies = movies.filter(movie => movie.uploadedBy === 'dev.Aman');
+            memberMovies = [...memberMovies, ...devAmanMovies];
+        }
         
         let totalEarnings = new Decimal(0);
         let currentMonthlyEarnings = new Decimal(0);
@@ -453,5 +454,6 @@ export const updateSettlementStatus = async (memberId: string, month: string, st
 
     await updateDoc(memberDoc, { settlements });
 };
+
 
 
