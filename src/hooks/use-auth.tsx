@@ -17,7 +17,7 @@ const setStoreAdminProfile = (profile: ManagementMember | null) => {
 
 const setMovieStoreState = useMovieStore.setState;
 
-const getAdminName = (): string | null => {
+const getAdminId = (): string | null => {
     try {
         if (typeof window === 'undefined') return null;
         return localStorage.getItem(ADMIN_STORAGE_KEY);
@@ -30,15 +30,15 @@ const getAdminName = (): string | null => {
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [adminName, setAdminName] = useState<string | null>(null);
   const [adminProfile, setAdminProfile] = useState<ManagementMember | null>(null);
   const router = useRouter();
   
   const managementTeam = useMovieStore(state => state.managementTeam);
 
   useEffect(() => {
-    if (adminName && managementTeam.length > 0) {
-        const currentProfile = managementTeam.find(m => m.name === adminName);
+    const adminId = getAdminId();
+    if (adminId && managementTeam.length > 0) {
+        const currentProfile = managementTeam.find(m => m.id === adminId);
         if (currentProfile) {
             setAdminProfile(currentProfile);
             setStoreAdminProfile(currentProfile);
@@ -47,24 +47,23 @@ export function useAuth() {
             logout();
         }
     }
-  }, [managementTeam, adminName]);
+  }, [managementTeam]);
 
 
   useEffect(() => {
     const checkLocalStorage = async () => {
       try {
-        const storedAdminName = getAdminName();
-        if (storedAdminName) {
+        const storedAdminId = getAdminId();
+        if (storedAdminId) {
           setIsLoading(true);
 
           const initialTeam = (useMovieStore.getState().managementTeam || []).length > 0 
             ? useMovieStore.getState().managementTeam 
             : await fetchManagementTeam();
             
-          const memberProfile = initialTeam.find(member => member.name === storedAdminName);
+          const memberProfile = initialTeam.find(member => member.id === storedAdminId);
           
           if (memberProfile) {
-            setAdminName(storedAdminName);
             setAdminProfile(memberProfile);
             setStoreAdminProfile(memberProfile);
             setIsAuthenticated(true);
@@ -86,7 +85,6 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     setIsAuthenticated(false);
-    setAdminName(null);
     setAdminProfile(null);
     setStoreAdminProfile(null);
     try {
@@ -120,10 +118,9 @@ export function useAuth() {
       }
 
       setIsAuthenticated(true);
-      setAdminName(loginName);
       setAdminProfile(memberProfile);
       setStoreAdminProfile(memberProfile);
-      localStorage.setItem(ADMIN_STORAGE_KEY, loginName);
+      localStorage.setItem(ADMIN_STORAGE_KEY, memberProfile.id); // Store the permanent ID
       
       return true;
 
@@ -138,7 +135,7 @@ export function useAuth() {
   return {
     isAuthenticated,
     isLoading,
-    adminName,
+    adminName: adminProfile?.name, // Keep providing name for display purposes
     adminProfile,
     login,
     logout,
