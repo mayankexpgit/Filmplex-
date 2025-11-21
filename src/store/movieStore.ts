@@ -95,6 +95,7 @@ interface MovieState {
   startCoinAnimation: () => void;
   stopCoinAnimation: () => void;
   fetchInitialData: (isAdmin: boolean) => Promise<void>;
+  calculateEarning: (movie: Movie) => Promise<number>;
 }
 
 // =================================================================
@@ -138,7 +139,7 @@ const useMovieStore = create<MovieState>((set, get) => ({
   adminProfile: null,
   managementTeam: [],
   comments: [],
-isCoinAnimationActive: false,
+  isCoinAnimationActive: false,
   isInitialized: false,
 
   // --- Actions ---
@@ -220,6 +221,7 @@ isCoinAnimationActive: false,
       isFetchingData = false;
     }
   },
+  calculateEarning: dbCalculateEarning,
 }));
 
 
@@ -691,6 +693,5 @@ export {
     removeManagementMemberTask,
     checkAndUpdateOverdueTasks,
     calculateAllWallets,
-    updateSettlementStatus,
-    calculateEarning
+    updateSettlementStatus
 };

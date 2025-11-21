@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useMovieStore, calculateAllWallets, calculateEarning } from '@/store/movieStore';
+import { useMovieStore } from '@/store/movieStore';
 import { useAuth } from '@/hooks/use-auth';
 import type { ManagementMember, Movie, AdminTask, TodoItem, Wallet, Settlement } from '@/lib/data';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -411,8 +411,7 @@ function MonthlyStatement({ settlements }: { settlements: Settlement[] }) {
     );
 }
 
-function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Movie[] }) {
-    const [movieEarnings, setMovieEarnings] = useState<Map<string, number>>(new Map());
+function AdminAnalytics({ admin, movies, movieEarnings }: { admin: ManagementMember, movies: Movie[], movieEarnings: Map<string, number> }) {
 
     const { completedMovies, pendingMovies } = useMemo(() => {
         const sortMoviesByDate = (a: Movie, b: Movie) => {
@@ -428,21 +427,6 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
         return { completedMovies: completed, pendingMovies: pending };
     }, [admin, movies]);
     
-    useEffect(() => {
-        const calculateMovieEarnings = async () => {
-            const earningsMap = new Map<string, number>();
-            for (const movie of completedMovies) {
-                const earning = await calculateEarning(movie);
-                earningsMap.set(movie.id, earning);
-            }
-            setMovieEarnings(earningsMap);
-        };
-
-        if (completedMovies.length > 0) {
-            calculateMovieEarnings();
-        }
-    }, [completedMovies]);
-
 
     const now = new Date();
     const weeklyMovies = completedMovies.filter(m => m.createdAt && isWithinInterval(new Date(m.createdAt), { start: startOfWeek(now), end: endOfWeek(now) }));
@@ -603,8 +587,13 @@ function AdminAnalytics({ admin, movies }: { admin: ManagementMember, movies: Mo
 
 export default function AdminProfile() {
     const { adminProfile, isLoading } = useAuth();
-    const { managementTeam, allMovies } = useMovieStore();
+    const { managementTeam, allMovies, calculateEarning } = useMovieStore(state => ({
+        managementTeam: state.managementTeam,
+        allMovies: state.allMovies,
+        calculateEarning: state.calculateEarning,
+    }));
     const [selectedAdminName, setSelectedAdminName] = useState<string | undefined>(undefined);
+    const [movieEarnings, setMovieEarnings] = useState<Map<string, number>>(new Map());
     
     const isTopLevelAdmin = adminProfile && topLevelRoles.includes(adminProfile.info);
 
@@ -621,6 +610,24 @@ export default function AdminProfile() {
     const selectedAdmin = useMemo(() => {
         return managementTeam.find(m => m.name === selectedAdminName);
     }, [selectedAdminName, managementTeam]);
+
+    useEffect(() => {
+        const calculateAllMovieEarnings = async () => {
+            if (!selectedAdmin) return;
+            const earningsMap = new Map<string, number>();
+            const adminMovies = allMovies.filter(m => m.uploadedBy === selectedAdmin.name);
+
+            for (const movie of adminMovies) {
+                const earning = await calculateEarning(movie);
+                earningsMap.set(movie.id, earning);
+            }
+            setMovieEarnings(earningsMap);
+        };
+
+        if (selectedAdmin) {
+            calculateAllMovieEarnings();
+        }
+    }, [selectedAdmin, allMovies, calculateEarning]);
 
 
     if (isLoading || !adminProfile) {
@@ -667,7 +674,7 @@ export default function AdminProfile() {
                 <Separator />
 
                 {selectedAdmin ? (
-                    <AdminAnalytics admin={selectedAdmin} movies={allMovies} />
+                    <AdminAnalytics admin={selectedAdmin} movies={allMovies} movieEarnings={movieEarnings} />
                 ) : (
                     <div className="text-center py-16 text-muted-foreground">
                         <p>Select an admin to see their statistics.</p>
