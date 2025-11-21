@@ -7,7 +7,7 @@ import { useMovieStore } from '@/store/movieStore';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMemo } from 'react';
-import type { AdminTask, Movie } from '@/lib/data';
+import type { AdminTask, Movie, ManagementMember } from '@/lib/data';
 import { parseISO, isAfter, format } from 'date-fns';
 
 const CIRCLE_RADIUS = 32;
@@ -25,7 +25,7 @@ const isUploadCompleted = (movie: Movie): boolean => {
     return false;
 };
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], admin: ManagementMember) => {
     const taskStartDate = parseISO(task.startDate);
     const completedMoviesForTask = allMovies
         .filter(movie => {
@@ -33,11 +33,14 @@ const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, a
              // Check if movie was created after the task started
              if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
              
-             // Check ownership
-             if (movie.uploadedBy === adminId) return true;
-             if (movie.uploadedBy === adminName) return true;
-             if (adminName === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
-             
+             // Check ownership using the robust filter
+             // Case 1: Match by permanent ID
+             if (movie.uploadedBy === admin.id) return true;
+             // Case 2: Match by current name (for older uploads)
+             if (movie.uploadedBy === admin.name) return true;
+             // Case 3: Special one-time migration for dev.Aman -> AMAN2007AK
+             if (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
+
              return false;
         })
         .filter(isUploadCompleted);
@@ -72,7 +75,7 @@ export default function FloatingTaskButton() {
 
   const { completed, target, progress } = useMemo(() => {
     if (!activeTask || !adminProfile) return { completed: 0, target: 0, progress: 0 };
-    return getTaskProgress(activeTask, allMovies, adminProfile.id, adminProfile.name);
+    return getTaskProgress(activeTask, allMovies, adminProfile);
   }, [activeTask, allMovies, adminProfile]);
   
 
@@ -131,3 +134,5 @@ export default function FloatingTaskButton() {
     </TooltipProvider>
   );
 }
+
+    

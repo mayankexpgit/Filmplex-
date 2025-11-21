@@ -250,22 +250,24 @@ function DownloadAnalytics({ allMovies }: { allMovies: Movie[] }) {
     );
 }
 
-const getTaskProgress = (task: AdminTask, allMovies: Movie[], adminId: string, adminName: string) => {
+const getTaskProgress = (task: AdminTask, allMovies: Movie[], admin: ManagementMember) => {
     const taskStartDate = parseISO(task.startDate);
-    const completedMoviesForTask = allMovies
-        .filter(movie => {
-             if (!movie.uploadedBy || !movie.createdAt) return false;
-             // Check if movie was created after the task started
-             if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
-             
-             // Check ownership
-             if (movie.uploadedBy === adminId) return true;
-             if (movie.uploadedBy === adminName) return true;
-             if (adminName === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
-             
-             return false;
-        })
-        .filter(isUploadCompleted);
+    const completedMoviesForTask = allMovies.filter(movie => {
+         if (!movie.uploadedBy || !movie.createdAt) return false;
+         // Check if movie was created after the task started
+         if (!isAfter(parseISO(movie.createdAt), taskStartDate)) return false;
+         
+         // Check ownership using the robust filter
+         // Case 1: Match by permanent ID
+         if (movie.uploadedBy === admin.id) return true;
+         // Case 2: Match by current name (for older uploads)
+         if (movie.uploadedBy === admin.name) return true;
+         // Case 3: Special one-time migration for dev.Aman -> AMAN2007AK
+         if (admin.name === 'AMAN2007AK' && movie.uploadedBy === 'dev.Aman') return true;
+         
+         return false;
+    })
+    .filter(isUploadCompleted);
 
     let target = 0;
     if (task.type === 'target') {
@@ -493,7 +495,7 @@ function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember,
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {activeTasks.map(task => {
-                             const { completed, target, progress } = getTaskProgress(task, allMovies, admin.id, admin.name);
+                             const { completed, target, progress } = getTaskProgress(task, allMovies, admin);
                              const Icon = task.type === 'target' ? Target : ListChecks;
 
                              return (
@@ -687,3 +689,5 @@ export default function AdminProfile() {
       </div>
     )
 }
+
+    
