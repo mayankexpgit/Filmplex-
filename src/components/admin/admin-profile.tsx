@@ -422,11 +422,14 @@ function AdminAnalytics({ admin, movies: allMovies }: { admin: ManagementMember,
             return parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime();
         };
 
-        // The ONLY rule for filtering movies: match by permanent ID.
-        const filteredAdminMovies = allMovies.filter(movie => movie.uploadedBy === admin.id);
+        const allAdminMovies = allMovies.filter(movie => {
+            if (!movie.uploadedBy) return false;
+            // The ONLY rule for filtering movies: match by permanent ID.
+            return movie.uploadedBy === admin.id;
+        });
         
-        const completed = filteredAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
-        const pending = filteredAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
+        const completed = allAdminMovies.filter(isUploadCompleted).sort(sortMoviesByDate);
+        const pending = allAdminMovies.filter(m => !isUploadCompleted(m)).sort(sortMoviesByDate);
         
         return { completedMovies: completed, pendingMovies: pending };
     }, [admin.id, allMovies]);
@@ -667,7 +670,7 @@ export default function AdminProfile() {
             </CardContent>
         </Card>
 
-        {isTopLevelAdmin && <DownloadAnalytics allMovies={allMovies} />}
+        {<DownloadAnalytics allMovies={allMovies} />}
       </div>
     )
 }
